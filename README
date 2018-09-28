@@ -1,0 +1,28 @@
+フォントデータ、画像データ等、は下記アドレスに置いてあります
+https://drive.google.com/open?id=0B_7bNzvT8p7UdzVpN3ZUUjBLaVE
+
+利用は自由です
+
+
+ソースコードはC++11以降で書かれています
+mainプログラムがSDL2を使用する以外は、
+標準C++ライブラリ,zlibのみで動くように作られています
+
+常に開発中であり、安定版はありません
+取り分け、CMakeLists.txtは汚いです
+
+ある程度、分量が肥大してきたら、
+リポジトリ名をgamebaby-dumped-YYYYMMDDという形式の名前に変更し、
+新たにgamebabyという名前のリポジトリを作成して、そちらで開発を継続するということをしています
+
+
+
+
+以下を入力して、ビルドします(-DEMSC=onを付けた場合、emscriptenを使い、javascript版ができる)
+cd builddir
+cmake .. [-DEMSC=on]
+make
+
+
+
+

@@ -10,6 +10,22 @@ namespace gbstd{
 
 value_list&
 value_list::
+assign(std::initializer_list<value>  ls) noexcept
+{
+  clear();
+
+    for(auto&&  v: ls)
+    {
+      push_back(std::move(v));
+    }
+
+
+  return *this;
+}
+
+
+value_list&
+value_list::
 assign(const value_list&   rhs) noexcept
 {
     if(this != &rhs)
@@ -91,7 +107,7 @@ resize(size_t  n) noexcept
 
 value&
 value_list::
-push_front(value  v) noexcept
+push_front(value&&  v) noexcept
 {
   auto  nd = new node(std::move(v));
 
@@ -120,7 +136,7 @@ push_front(value  v) noexcept
 
 value&
 value_list::
-push_back(value  v)  noexcept
+push_back(value&&  v)  noexcept
 {
   auto  nd = new node(std::move(v));
 
@@ -266,13 +282,15 @@ variable*
 value_list::
 find_variable(const char*  name) const noexcept
 {
+  std::string  name_s(name);
+
     for(auto&  v: *this)
     {
         if(v.is_variable())
         {
           auto&  var = v.get_variable();
 
-            if(var.get_name() == name)
+            if(var.get_name() == name_s)
             {
               return &var;
             }

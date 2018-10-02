@@ -16,7 +16,6 @@ namespace gbstd{
 int  reporting_counter;
 
 
-/*
 std::string
 make_string_from_file(const char*  filepath) noexcept
 {
@@ -36,7 +35,7 @@ make_string_from_file(const char*  filepath) noexcept
             }
 
 
-          s.append(c);
+          s += c;
         }
 
 
@@ -51,7 +50,6 @@ make_string_from_file(const char*  filepath) noexcept
 
   return std::move(s);
 }
-*/
 
 
 void

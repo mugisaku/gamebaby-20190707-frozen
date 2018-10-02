@@ -10,6 +10,24 @@ namespace gbstd{
 
 value_array&
 value_array::
+assign(std::initializer_list<value>  ls) noexcept
+{
+  resize(ls.size());
+
+  auto  it = ls.begin();
+
+    for(int  i = 0;  i < m_length;  ++i)
+    {
+      m_data[i] = std::move(*it++);
+    }
+
+
+  return *this;
+}
+
+
+value_array&
+value_array::
 assign(const value_array&   rhs) noexcept
 {
     if(this != &rhs)
@@ -97,7 +115,7 @@ resize(size_t  n) noexcept
 
 value&
 value_array::
-push(value  v) noexcept
+push(value&&  v) noexcept
 {
     if(m_length >= m_number_of_elements)
     {
@@ -129,13 +147,15 @@ variable*
 value_array::
 find_variable(const char*  name) const noexcept
 {
+  std::string  name_s(name);
+
     for(auto&  v: *this)
     {
         if(v.is_variable())
         {
           auto&  var = v.get_variable();
 
-            if(var.get_name() == name)
+            if(var.get_name() == name_s)
             {
               return &var;
             }

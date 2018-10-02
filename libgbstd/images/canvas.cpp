@@ -62,32 +62,6 @@ void
 canvas::
 fill(color  c, int  x, int  y, int  w, int  h) const noexcept
 {
-    if(x < 0)
-    {
-      w += x    ;
-           x = 0;
-    }
-
-
-    if(y < 0)
-    {
-      h += y    ;
-           y = 0;
-    }
-
-
-    if((x+w) >= m_width)
-    {
-      w = m_width-x;
-    }
-
-
-    if((y+h) >= m_height)
-    {
-      h = m_height-y;
-    }
-
-
   auto  p = get_pixel_pointer(x,y);
 
     for(int  yy = 0;  yy < h;  ++yy)

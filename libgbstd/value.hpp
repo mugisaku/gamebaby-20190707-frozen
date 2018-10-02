@@ -152,15 +152,18 @@ value_array
 
 public:
   value_array() noexcept{}
+  value_array(std::initializer_list<value>  ls) noexcept{assign(ls);}
   value_array(const value_array&   rhs) noexcept{assign(rhs);}
   value_array(      value_array&&  rhs) noexcept{assign(std::move(rhs));}
  ~value_array(){clear();}
 
+  value_array&  operator=(std::initializer_list<value>  ls) noexcept{return assign(ls);}
   value_array&  operator=(const value_array&   rhs) noexcept{return assign(rhs);}
   value_array&  operator=(      value_array&&  rhs) noexcept{return assign(std::move(rhs));}
 
   value&  operator[](int  i) const noexcept{return m_data[i];}
 
+  value_array&  assign(std::initializer_list<value>  ls) noexcept;
   value_array&  assign(const value_array&   rhs) noexcept;
   value_array&  assign(      value_array&&  rhs) noexcept;
 
@@ -168,7 +171,8 @@ public:
 
   void  resize(size_t  n) noexcept;
 
-  value&  push(value  v) noexcept;
+  value&  push(const value&   v) noexcept{return push(value(v));}
+  value&  push(      value&&  v) noexcept;
 
   value&   pop()       noexcept;
   value&  back() const noexcept{return m_data[m_length-1];}
@@ -204,13 +208,16 @@ value_list
 
 public:
   value_list() noexcept{}
+  value_list(std::initializer_list<value>  ls) noexcept{assign(ls);}
   value_list(const value_list&   rhs) noexcept{assign(rhs);}
   value_list(      value_list&&  rhs) noexcept{assign(std::move(rhs));}
  ~value_list(){clear();}
 
+  value_list&  operator=(std::initializer_list<value>  ls) noexcept{return assign(ls);}
   value_list&  operator=(const value_list&   rhs) noexcept{return assign(rhs);}
   value_list&  operator=(      value_list&&  rhs) noexcept{return assign(std::move(rhs));}
 
+  value_list&  assign(std::initializer_list<value>  ls) noexcept;
   value_list&  assign(const value_list&   rhs) noexcept;
   value_list&  assign(      value_list&&  rhs) noexcept;
 
@@ -218,8 +225,11 @@ public:
 
   void  resize(size_t  n) noexcept;
 
-  value&  push_front(value  v) noexcept;
-  value&  push_back(value  v)  noexcept;
+  value&  push_front(const value&   v) noexcept{return push_front(value(v));}
+  value&  push_front(      value&&  v) noexcept;
+
+  value&  push_back(const value&   v)  noexcept{return push_back(value(v));}
+  value&  push_back(      value&&  v)  noexcept;
 
   value   pop_back()  noexcept;
   value   pop_front() noexcept;

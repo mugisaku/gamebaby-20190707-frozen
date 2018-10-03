@@ -15,18 +15,23 @@ frame: public widget
 {
   std::u16string  m_text;
 
+  widget*  m_container=nullptr;
+
   character_color  m_character_color;
 
   color  m_line_color;
 
-  static color  m_default_character_color;
-  static color  m_default_line_color;
+  static character_color  m_default_character_color;
+  static color            m_default_line_color;
 
 public:
-  frame(widget*  target, const char*  text) noexcept;
+  frame(const char*  text) noexcept;
 
   const char*  get_class_name() const noexcept override{return "frame";}
 
+  void  append_content(widget*  wg, int  x, int  y) noexcept;
+
+  void  set_text(const char*  s) noexcept;
   void  set_line_color(color  new_color) noexcept;
 
   void  render(const canvas&  cv) noexcept override;

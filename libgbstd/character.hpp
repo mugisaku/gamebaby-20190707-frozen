@@ -130,6 +130,7 @@ utf8_encoder
 };
 
 
+std::u16string  make_u16string(const std::string&  s) noexcept;
 
 
 class

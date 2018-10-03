@@ -45,6 +45,33 @@ u8slen(const char*  s) noexcept
 }
 
 
+std::u16string
+make_u16string(const std::string&  s) noexcept
+{
+  std::u16string  u16s;
+
+  utf8_decoder  dec(s.data());
+
+    while(dec)
+    {
+      auto  c = static_cast<char16_t>(dec());
+
+        if(!c)
+        {
+          break;
+        }
+
+
+      u16s += c;
+    }
+
+
+  return std::move(u16s);
+}
+
+
+
+
 namespace{
 int
 decode(int  c, int  shift_amount=0) noexcept

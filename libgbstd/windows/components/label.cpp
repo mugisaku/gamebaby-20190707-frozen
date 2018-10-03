@@ -92,23 +92,7 @@ void
 label::
 modify_text(const char*  s) noexcept
 {
-  utf8_decoder  dec(s);
-
-  m_text.clear();
-
-    while(dec)
-    {
-      auto  c = static_cast<char16_t>(dec());
-
-        if(!c)
-        {
-          break;
-        }
-
-
-      m_text += c;
-    }
-
+  m_text = make_u16string(s);
 
   request_redraw();
 }

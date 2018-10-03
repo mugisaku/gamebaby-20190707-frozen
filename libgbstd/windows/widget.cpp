@@ -84,7 +84,7 @@ request_redraw() noexcept
 {
     if(!m_window)
     {
-      printf("widget::need_to_redraw error: %s::%s rootがない\n",get_class_name(),m_name.data());
+//      printf("widget request_redraw error: %s::%s windowがない\n",get_class_name(),m_name.data());
 
       return;
     }
@@ -144,17 +144,43 @@ reform(point  parent_absolute_position) noexcept
   auto&  w = m_width ;
   auto&  h = m_height;
 
+  const widget*  previous = nullptr;
+
     for(auto&  child: m_children)
     {
         if(child->is_displayed())
         {
-          child->reform(m_absolute_position);
+          auto  abs_pos = m_absolute_position;
+
+            if(previous)
+            {
+                if(child->m_follow_style == follow_style::right)
+                {
+                  abs_pos = previous->get_absolute_position();
+
+                  abs_pos.x += previous->get_width();
+                }
+
+              else
+                if(child->m_follow_style == follow_style::bottom)
+                {
+                  abs_pos = previous->get_absolute_position();
+
+                  abs_pos.y += previous->get_height();
+                }
+            }
+
+
+          child->reform(abs_pos);
 
 
           auto&  child_relpos = child->m_relative_position;
 
           w = std::max(w,child_relpos.x+child->m_width );
           h = std::max(h,child_relpos.y+child->m_height);
+
+
+          previous = child.get();
         }
     }
 }
@@ -235,6 +261,34 @@ append_child(widget*  child, int  x, int  y) noexcept
 }
 
 
+void
+widget::
+append_column_child(widget*  child) noexcept
+{
+    if(child)
+    {
+      child->set_relative_position(point(0,0));
+
+      child->m_follow_style = follow_style::bottom;
+
+      m_children.emplace_back(child);
+    }
+}
+
+
+void
+widget::
+append_row_child(widget*  child) noexcept
+{
+    if(child)
+    {
+      child->set_relative_position(point(0,0));
+
+      child->m_follow_style = follow_style::right;
+
+      m_children.emplace_back(child);
+    }
+}
 
 
 void

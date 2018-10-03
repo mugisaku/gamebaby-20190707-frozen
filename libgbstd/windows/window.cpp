@@ -95,6 +95,8 @@ finish_redraw_if_necessary() noexcept
 
       m_whether_need_to_total_redraw = false;
 
+      m_redraw_queue.clear();
+
       ++m_update_counter;
     }
 
@@ -167,6 +169,8 @@ void
 window::
 process_user_input(point  pt) noexcept
 {
+  pt -= m_position;
+
   process_by_mouse_position(pt);
 
     if(m_current)

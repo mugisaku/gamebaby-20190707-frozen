@@ -181,6 +181,14 @@ widget
   void  unset_flag(uint32_t  flag) noexcept{m_state &= ~flag;}
   bool   test_flag(uint32_t  flag) const noexcept{return m_state&flag;}
 
+  enum class follow_style{
+    none,
+    right,
+    bottom,
+
+  } m_follow_style=follow_style::none;
+
+
   window*  m_window=nullptr;
 
   point  m_absolute_position;
@@ -283,6 +291,9 @@ public:
   window*  get_window(          ) const noexcept{return m_window;}
 
   void  append_child(widget*  child, int  x, int  y) noexcept;
+
+  void  append_column_child(widget*  child) noexcept;
+  void  append_row_child(   widget*  child) noexcept;
 
 };
 

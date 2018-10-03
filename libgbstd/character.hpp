@@ -71,6 +71,12 @@ character_color
   color  m_colors[4];
 
 public:
+  constexpr character_color() noexcept{}
+  constexpr character_color(color  a                              ) noexcept: m_colors{colors::null,a}{}
+  constexpr character_color(color  a, color  b                    ) noexcept: m_colors{a,b}{}
+  constexpr character_color(color  a, color  b, color  c          ) noexcept: m_colors{colors::null,a,b,c}{}
+  constexpr character_color(color  a, color  b, color  c, color  d) noexcept: m_colors{a,b,c,d}{}
+
         color&  operator[](int  i)       noexcept{return m_colors[i];}
   const color&  operator[](int  i) const noexcept{return m_colors[i];}
 

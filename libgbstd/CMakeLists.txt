@@ -23,6 +23,8 @@ set(SOURCES
   windows/window.cpp
 #  windows/window_manager.cpp
   windows/widget.cpp
+  windows/components/label.cpp
+#  windows/components/button.cpp
   programs/process.cpp
   programs/program.cpp
   programs/sleep.cpp

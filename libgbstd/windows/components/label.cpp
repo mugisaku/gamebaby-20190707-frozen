@@ -60,7 +60,7 @@ set_text(const char16_t*  s) noexcept
 {
   modify_text(s);
 
-  set_width((8*m_text.size())+4);
+  set_content_width((8*m_text.size())+4);
 
   request_reform();
 }
@@ -72,7 +72,7 @@ set_text(const char*  s) noexcept
 {
   modify_text(s);
 
-  set_width((8*m_text.size())+4);
+  set_content_width((8*m_text.size())+4);
 
   request_reform();
 }

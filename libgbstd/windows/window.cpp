@@ -122,7 +122,7 @@ process_by_mouse_position(point&  pt) noexcept
 {
     if(!m_current)
     {
-      m_current = m_root->find_by_absolute_point(pt);
+      m_current = m_root->find_by_point(pt);
 
         if(m_current)
         {
@@ -131,30 +131,30 @@ process_by_mouse_position(point&  pt) noexcept
     }
 
   else
-    if(!m_current->test_by_absolute_point(pt))
+    if(!m_current->test_by_point(pt))
     {
         if(g_input.test_mouse_left() ||
            g_input.test_mouse_right())
         {
-          auto  abs_pt = m_current->get_absolute_position();
+          auto  cnt_pt = m_current->get_content_position();
 
-          int    left = abs_pt.x                        ;
-          int   right = abs_pt.x+m_current->get_width() ;
-          int     top = abs_pt.y                        ;
-          int  bottom = abs_pt.y+m_current->get_height();
+          int    left = cnt_pt.x                                ;
+          int   right = cnt_pt.x+m_current->get_content_width() ;
+          int     top = cnt_pt.y                                ;
+          int  bottom = cnt_pt.y+m_current->get_content_height();
 
-               if(pt.x <   left){pt.x =  left  ;}
-          else if(pt.x >= right){pt.x = right-1;}
+               if(cnt_pt.x <   left){pt.x =  left  ;}
+          else if(cnt_pt.x >= right){pt.x = right-1;}
 
-               if(pt.y <     top){pt.y =    top  ;}
-          else if(pt.y >= bottom){pt.y = bottom-1;}
+               if(cnt_pt.y <     top){pt.y =    top  ;}
+          else if(cnt_pt.y >= bottom){pt.y = bottom-1;}
         }
 
       else
         {
           m_current->do_on_mouse_leave();
 
-          m_current = m_root->find_by_absolute_point(pt);
+          m_current = m_root->find_by_point(pt);
 
             if(m_current)
             {

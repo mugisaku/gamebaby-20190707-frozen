@@ -4,6 +4,7 @@
 
 #include"libgbstd/image.hpp"
 #include<memory>
+#include<cstdio>
 
 
 namespace gbstd{
@@ -164,7 +165,67 @@ public:
 
 
 class
-widget
+style_box
+{
+  point  m_base_position;
+
+  int  m_content_width =0;
+  int  m_content_height=0;
+
+  int  m_left_padding  =0;
+  int  m_top_padding   =0;
+  int  m_right_padding =0;
+  int  m_bottom_padding=0;
+
+public:
+  style_box(int  w, int  h) noexcept: m_content_width(w), m_content_height(h){}
+
+  const point&  get_base_position() const noexcept{return m_base_position;}
+
+  void  set_base_position(int  x, int  y) noexcept{m_base_position  = point(x,y);}
+  void  set_base_position(point  pt)      noexcept{m_base_position  = pt;}
+  void  add_base_position(int  x, int  y) noexcept{m_base_position += point(x,y);}
+  void  add_base_position(point  pt)      noexcept{m_base_position += pt;}
+
+  int  get_top_padding()    const noexcept{return m_top_padding   ;}
+  int  get_left_padding()   const noexcept{return m_left_padding  ;}
+  int  get_right_padding()  const noexcept{return m_right_padding ;}
+  int  get_bottom_padding() const noexcept{return m_bottom_padding;}
+
+  void  set_top_padding(   int  v) noexcept{m_top_padding    = v;}
+  void  set_left_padding(  int  v) noexcept{m_left_padding   = v;}
+  void  set_right_padding( int  v) noexcept{m_right_padding  = v;}
+  void  set_bottom_padding(int  v) noexcept{m_bottom_padding = v;}
+
+  int  get_content_top()  const noexcept{return m_base_position.y+ m_top_padding;}
+  int  get_content_left() const noexcept{return m_base_position.x+m_left_padding;}
+
+  point  get_content_position() const noexcept{return point(get_content_left(),get_content_top());}
+
+  int  get_content_width()  const noexcept{return m_content_width ;}
+  int  get_content_height() const noexcept{return m_content_height;}
+
+  rectangle  get_content_rectangle() const noexcept{return rectangle(get_content_left(),
+                                                                     get_content_top(),
+                                                                     get_content_width(),
+                                                                     get_content_height());}
+
+
+  void  set_content_width( int  v) noexcept{m_content_width  = v;}
+  void  set_content_height(int  v) noexcept{m_content_height = v;}
+
+  int  get_width()  const noexcept{return m_left_padding+m_content_width+m_right_padding;}
+  int  get_height() const noexcept{return m_top_padding+m_content_height+m_bottom_padding;}
+
+  void  print() const noexcept{
+    printf("top-padding:%d,\nleft-padding:%d,\nright-padding:%d,\nbottom-padding:%d,\n",m_top_padding,m_left_padding,m_right_padding,m_bottom_padding);
+  }
+
+};
+
+
+class
+widget: public style_box
 {
   struct flags{
     static constexpr uint32_t         hidden =  2;
@@ -191,11 +252,7 @@ widget
 
   window*  m_window=nullptr;
 
-  point  m_absolute_position;
-  point  m_relative_position;
-
-  int  m_width =0;
-  int  m_height=0;
+  point  m_offset;
 
   void*  m_userdata=nullptr;
 
@@ -234,23 +291,14 @@ public:
   void  hide() noexcept{  set_flag(flags::hidden);}
 
 
-  bool     test_by_absolute_point(point  pt) const noexcept;
-  widget*  find_by_absolute_point(point  pt)       noexcept;
+  void  set_offset(int  x, int  y) noexcept{m_offset = point(x,y);}
+  void  set_offset(point  pt)      noexcept{m_offset  = pt;}
+  void  add_offset(int  x, int  y) noexcept{m_offset += point(x,y);}
+  void  add_offset(point  pt)      noexcept{m_offset += pt;}
 
-  const point&  get_absolute_position() const noexcept{return m_absolute_position;}
-  const point&  get_relative_position() const noexcept{return m_relative_position;}
 
-  void  set_relative_position(int  x, int  y) noexcept{m_relative_position = point(x,y);}
-  void  set_relative_position(point  pt) noexcept{m_relative_position  = pt;}
-  void  add_relative_position(int  x, int  y) noexcept{m_relative_position += point(x,y);}
-  void  add_relative_position(point  pt) noexcept{m_relative_position += pt;}
-
-  int  get_width()  const noexcept{return m_width;}
-  int  get_height() const noexcept{return m_height;}
-
-  void  set_width( int  v) noexcept{ m_width = v;}
-  void  set_height(int  v) noexcept{m_height = v;}
-
+  bool  test_by_point(point  pt) const noexcept;
+  widget*  find_by_point(point  pt) noexcept;
 
   void    set_solo_widget_by_name(const char*  name) noexcept;
   void  unset_solo_widget() noexcept{m_solo_widget = nullptr;}
@@ -260,7 +308,7 @@ public:
   void  request_reform() noexcept;
 
 
-  void  reform(point  parent_absolute_position) noexcept;
+  void  reform(point  parent_content_position) noexcept;
   void  redraw(const image&  img) noexcept;
 
   virtual void  do_on_mouse_enter() noexcept{}

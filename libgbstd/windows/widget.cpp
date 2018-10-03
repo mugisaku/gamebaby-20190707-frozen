@@ -9,7 +9,7 @@ namespace gbstd{
 
 widget::
 widget(int  w, int  h) noexcept:
-m_width(w), m_height(h)
+style_box(w,h)
 {
      show();
   display();
@@ -20,20 +20,22 @@ m_width(w), m_height(h)
 
 bool
 widget::
-test_by_absolute_point(point  pt) const noexcept
+test_by_point(point  pt) const noexcept
 {
-  return((pt.x >= m_absolute_position.x) &&
-         (pt.y >= m_absolute_position.y) &&
-         (pt.x <  (m_absolute_position.x+m_width )) &&
-         (pt.y <  (m_absolute_position.y+m_height)));
+  auto  pos = get_content_position();
+
+  return((pt.x >=  pos.x                      ) &&
+         (pt.y >=  pos.y                      ) &&
+         (pt.x <  (pos.x+get_content_width() )) &&
+         (pt.y <  (pos.y+get_content_height())));
 }
 
 
 widget*
 widget::
-find_by_absolute_point(point  pt) noexcept
+find_by_point(point  pt) noexcept
 {
-    if(test_by_absolute_point(pt) && is_displayed())
+    if(test_by_point(pt) && is_displayed())
     {
         if(m_children.empty())
         {
@@ -45,7 +47,7 @@ find_by_absolute_point(point  pt) noexcept
         {
             if(m_solo_widget->is_displayed())
             {
-              auto  w = m_solo_widget->find_by_absolute_point(pt);
+              auto  w = m_solo_widget->find_by_point(pt);
 
                 if(w)
                 {
@@ -60,7 +62,7 @@ find_by_absolute_point(point  pt) noexcept
             {
                 if(child->is_displayed())
                 {
-                  auto  w = child->find_by_absolute_point(pt);
+                  auto  w = child->find_by_point(pt);
 
                     if(w)
                     {
@@ -137,12 +139,18 @@ set_solo_widget_by_name(const char*  name) noexcept
 
 void
 widget::
-reform(point  parent_absolute_position) noexcept
+reform(point  parent_content_position) noexcept
 {
-  m_absolute_position = parent_absolute_position+m_relative_position;
+  set_base_position(parent_content_position+m_offset);
 
-  auto&  w = m_width ;
-  auto&  h = m_height;
+    if(m_children.empty())
+    {
+      return;
+    }
+
+
+  int  w = 0;
+  int  h = 0;
 
   const widget*  previous = nullptr;
 
@@ -150,39 +158,43 @@ reform(point  parent_absolute_position) noexcept
     {
         if(child->is_displayed())
         {
-          auto  abs_pos = m_absolute_position;
+          auto  pos = get_content_position();
 
             if(previous)
             {
                 if(child->m_follow_style == follow_style::right)
                 {
-                  abs_pos = previous->get_absolute_position();
+                  pos = previous->get_base_position();
 
-                  abs_pos.x += previous->get_width();
+                  pos.x += previous->get_width();
                 }
 
               else
                 if(child->m_follow_style == follow_style::bottom)
                 {
-                  abs_pos = previous->get_absolute_position();
+                  pos = previous->get_base_position();
 
-                  abs_pos.y += previous->get_height();
+                  pos.y += previous->get_height();
                 }
             }
 
 
-          child->reform(abs_pos);
+          child->reform(pos);
 
 
-          auto&  child_relpos = child->m_relative_position;
+          auto  child_pos = child->get_content_position()-get_content_position();
 
-          w = std::max(w,child_relpos.x+child->m_width );
-          h = std::max(h,child_relpos.y+child->m_height);
+          w = std::max(w,child_pos.x+child->get_width() );
+          h = std::max(h,child_pos.y+child->get_height());
 
 
           previous = child.get();
         }
     }
+
+
+  set_content_width( w);
+  set_content_height(h);
 }
 
 
@@ -192,7 +204,9 @@ redraw(const image&  img) noexcept
 {
     if(!is_hidden() && is_displayed())
     {
-      canvas  cv(img,m_absolute_position.x,m_absolute_position.y,m_width,m_height);
+      auto  rect = get_content_rectangle();
+
+      canvas  cv(img,rect);
 
       render(cv);
 
@@ -254,7 +268,7 @@ append_child(widget*  child, int  x, int  y) noexcept
 {
     if(child)
     {
-      child->set_relative_position(point(x,y));
+      child->set_offset(point(x,y));
 
       m_children.emplace_back(child);
     }
@@ -267,7 +281,7 @@ append_column_child(widget*  child) noexcept
 {
     if(child)
     {
-      child->set_relative_position(point(0,0));
+      child->set_offset(point(0,0));
 
       child->m_follow_style = follow_style::bottom;
 
@@ -282,7 +296,7 @@ append_row_child(widget*  child) noexcept
 {
     if(child)
     {
-      child->set_relative_position(point(0,0));
+      child->set_offset(point(0,0));
 
       child->m_follow_style = follow_style::right;
 
@@ -297,12 +311,12 @@ print(int  indent) const noexcept
 {
   printf("%p %s(%s) - flags:%d w:%4d h:%4d rel_pt{%4d,%4d} abs_pt{%4d,%4d}",this,m_name.data(),get_class_name(),
     m_state,
-    m_width,
-    m_height,
-    m_relative_position.x,
-    m_relative_position.y,
-    m_absolute_position.x,
-    m_absolute_position.y
+    get_width(),
+    get_height(),
+    m_offset.x,
+    m_offset.y,
+    get_base_position().x,
+    get_base_position().y
   );
 
 

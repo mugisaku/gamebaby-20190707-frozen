@@ -10,7 +10,6 @@ namespace gbstd{
 
 
 
-/*
 class
 frame: public widget
 {
@@ -20,28 +19,21 @@ frame: public widget
 
   color  m_line_color;
 
+  static color  m_default_character_color;
   static color  m_default_line_color;
 
 public:
-  frame(widget*  target, const char*  text, const character_color&  color) noexcept:
-  m_text(text), m_character_color(cooor),
-  m_line_color(m_default_line_color)
-  {}
+  frame(widget*  target, const char*  text) noexcept;
 
   const char*  get_class_name() const noexcept override{return "frame";}
 
-  void  reform(point  base_pt) noexcept override;
-
   void  set_line_color(color  new_color) noexcept;
 
-  void  render(image_cursor  cur) noexcept override;
+  void  render(const canvas&  cv) noexcept override;
 
   static void  set_default_line_color(color  new_color) noexcept{m_default_line_color = new_color;}
 
 };
-*/
-
-
 
 
 class

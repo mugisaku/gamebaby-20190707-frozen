@@ -49,6 +49,8 @@ point
   point&  operator/=(point  rhs) noexcept;
   point&  operator%=(point  rhs) noexcept;
 
+  void  print() const noexcept{printf("{x:%d,y:%d}",x,y);}
+
 };
 
 

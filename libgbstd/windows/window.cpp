@@ -143,11 +143,11 @@ process_by_mouse_position(point&  pt) noexcept
           int     top = cnt_pt.y                                ;
           int  bottom = cnt_pt.y+m_current->get_content_height();
 
-               if(cnt_pt.x <   left){pt.x =  left  ;}
-          else if(cnt_pt.x >= right){pt.x = right-1;}
+               if(pt.x <   left){pt.x =  left  ;}
+          else if(pt.x >= right){pt.x = right-1;}
 
-               if(cnt_pt.y <     top){pt.y =    top  ;}
-          else if(cnt_pt.y >= bottom){pt.y = bottom-1;}
+               if(pt.y <     top){pt.y =    top  ;}
+          else if(pt.y >= bottom){pt.y = bottom-1;}
         }
 
       else

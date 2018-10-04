@@ -73,13 +73,34 @@ public:
 };
 
 
-/*
+class button;
+
+
+class
+button_event
+{
+  button*  m_button;
+
+  int  m_data;
+
+public:
+  constexpr button_event(button&  btn,  int  dat) noexcept: m_button(&btn), m_data(dat){}
+
+  constexpr button*  operator->() const noexcept{return  m_button;}
+  constexpr button&  operator*()  const noexcept{return *m_button;}
+
+  constexpr bool  is_press()   const noexcept{return m_data == 1;}
+  constexpr bool  is_release() const noexcept{return m_data == 0;}
+
+};
+
+
 class
 button: public widget
 {
-  std::unique_ptr<widget>  m_target;
+  widget*  m_container=nullptr;
 
-  void  (*m_callback)(button&  button)=nullptr;
+  void  (*m_callback)(button_event)=nullptr;
 
   enum class state{
     released,
@@ -87,35 +108,25 @@ button: public widget
   } m_state=state::released;
 
 
-  int  m_count=0;
-
 public:
-  button(widget*  target, void  (*callback)(button&)) noexcept;
+  button(widget*  target, void  (*callback)(button_event)) noexcept;
 
   const char*  get_class_name() const noexcept override{return "button";}
-
-  int  get_count() const noexcept{return m_count;}
-
-  void  reset_count() noexcept{m_count = 0;}
 
   bool  is_pressed()  const noexcept{return m_state ==  state::pressed;}
   bool  is_released() const noexcept{return m_state == state::released;}
 
-  void  reform(point  base_pt) noexcept override;
+  void  do_on_mouse_leave() noexcept override;
+  void  do_on_mouse_act(point  mouse_pos) noexcept override;
 
-  void  do_when_cursor_got_out() noexcept override;
-
-  void  update() noexcept override;
-
-  void  render(image_cursor  cur) noexcept override;
+  void  render(const canvas&  cv) noexcept override;
 
   void  print(int  indent=0) const noexcept override;
-
-  void  show_all() noexcept override;
 
 };
 
 
+/*
 class
 radio_button: public widget
 {

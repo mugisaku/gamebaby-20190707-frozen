@@ -232,6 +232,7 @@ widget: public style_box
     static constexpr uint32_t      displayed =  4;
     static constexpr uint32_t         frozen =  8;
     static constexpr uint32_t  redraw_queued = 16;
+    static constexpr uint32_t     autonomous = 32;
 
   };
 
@@ -277,9 +278,12 @@ public:
   const std::string&  get_name() const noexcept{return m_name;}
 
 
-  bool  is_frozen()    const noexcept{return test_flag(flags::frozen);}
-  bool  is_hidden()    const noexcept{return test_flag(flags::hidden);}
-  bool  is_displayed() const noexcept{return test_flag(flags::displayed);}
+  bool  is_frozen()     const noexcept{return test_flag(flags::frozen);}
+  bool  is_hidden()     const noexcept{return test_flag(flags::hidden);}
+  bool  is_displayed()  const noexcept{return test_flag(flags::displayed);}
+  bool  is_autonomous() const noexcept{return test_flag(flags::autonomous);}
+
+  void  be_autonomous() noexcept{set_flag(flags::autonomous);}
 
   void    freeze() noexcept{  set_flag(flags::frozen);}
   void  unfreeze() noexcept{unset_flag(flags::frozen);}
@@ -311,9 +315,9 @@ public:
   void  reform(point  parent_content_position) noexcept;
   void  redraw(const image&  img) noexcept;
 
-  virtual void  do_on_mouse_enter() noexcept{}
-  virtual void  do_on_mouse_leave() noexcept{}
-  virtual void  do_on_mouse_act(point  mouse_pos) noexcept{}
+  virtual void  do_on_mouse_enter() noexcept;
+  virtual void  do_on_mouse_leave() noexcept;
+  virtual void  do_on_mouse_act(point  mouse_pos) noexcept;
 
   virtual void  render(const canvas&  cv) noexcept{}
 

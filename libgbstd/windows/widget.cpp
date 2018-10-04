@@ -37,7 +37,7 @@ find_by_point(point  pt) noexcept
 {
     if(test_by_point(pt) && is_displayed())
     {
-        if(m_children.empty())
+        if(is_autonomous() || m_children.empty())
         {
           return this;
         }
@@ -218,6 +218,29 @@ redraw(const image&  img) noexcept
 
 
   unset_flag(flags::redraw_queued);
+}
+
+
+
+
+void
+widget::
+do_on_mouse_enter() noexcept
+{
+}
+
+
+void
+widget::
+do_on_mouse_leave() noexcept
+{
+}
+
+
+void
+widget::
+do_on_mouse_act(point  mouse_pos) noexcept
+{
 }
 
 

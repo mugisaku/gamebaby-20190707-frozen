@@ -25,7 +25,7 @@ set(SOURCES
   windows/widget.cpp
   windows/components/frame.cpp
   windows/components/label.cpp
-#  windows/components/button.cpp
+  windows/components/button.cpp
   programs/process.cpp
   programs/program.cpp
   programs/sleep.cpp

@@ -64,9 +64,9 @@ add_executable("test_sdl${EXECUTABLE_EXTENSION}" test_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkicon_sdl${EXECUTABLE_EXTENSION}" mkicon_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkforest_sdl${EXECUTABLE_EXTENSION}" mkforest_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkanigra_sdl${EXECUTABLE_EXTENSION}" mkanigra_sdl.cpp ${SDL_SOURCES})
-#add_executable("mkeyesquat${EXECUTABLE_EXTENSION}" mkeyesquat.cpp ${SDL_SOURCES})
+add_executable("mkeyesquat${EXECUTABLE_EXTENSION}" mkeyesquat.cpp ${SDL_SOURCES})
 target_link_libraries("test_sdl${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
-#target_link_libraries("mkeyesquat${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
+target_link_libraries("mkeyesquat${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
 
 
 if(EMSC)

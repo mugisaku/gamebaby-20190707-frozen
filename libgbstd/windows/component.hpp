@@ -226,12 +226,14 @@ iconshow: public widget
 
 public:
   iconshow(std::initializer_list<const icon*>  ls={}, void  (*cb)(iconshow_event)=nullptr) noexcept:
-  widget(g_icon_size,g_icon_size), m_icons(ls), m_callback(cb){}
+  widget(g_icon_size,g_icon_size){assign(ls,cb);}
 
   const icon*  operator*() const noexcept{return m_icons[m_index];}
 
   int   get_index(      ) const noexcept{return m_index;}
   void  set_index(int  i)       noexcept;
+
+  void  assign(std::initializer_list<const icon*>  ls={}, void  (*cb)(iconshow_event)=nullptr) noexcept;
 
   const char*  get_class_name() const noexcept override{return "iconshow";}
 
@@ -250,19 +252,18 @@ class checkbox;
 
 
 class
-checkbox_event
+checkbox_event: public event<checkbox>
 {
-  checkbox*  m_checkbox;
-
-  int  m_kind;
-
 public:
-  checkbox_event(checkbox&  chkbox, int  k) noexcept: m_checkbox(&chkbox), m_kind(k){}
+  enum class kind{
+      set,
+    unset,
+  };
 
-  checkbox*  operator->() const noexcept{return m_checkbox;}
+  using event::event;
 
-  bool  is_change_to_set()   const noexcept{return m_kind == 0;}
-  bool  is_change_to_unset() const noexcept{return m_kind == 1;}
+  bool  is_set()   const noexcept{return test_kind(kind::set);}
+  bool  is_unset() const noexcept{return test_kind(kind::unset);}
 
 };
 
@@ -279,22 +280,40 @@ checkbox: public widget
   iconshow*  m_iconshow;
   label*     m_label;
 
-  uint32_t  m_bit_id;
+  uint32_t  m_entry_number=0;
 
   checkbox*  m_next=nullptr;
 
-  static void  iconshow_callback(iconshow_event  evt) noexcept;
+  static void  iconshow_callback(      iconshow_event  evt) noexcept;
+  static void  iconshow_radio_callback(iconshow_event  evt) noexcept;
+
+protected:
+  void  revise_to_radio() noexcept;
 
 public:
-  checkbox(                         const char16_t*  text) noexcept;
+  checkbox(                         const char16_t*  text, void  (*callback)(checkbox_event)) noexcept;
   checkbox(const checkbox&  member, const char16_t*  text) noexcept;
  ~checkbox();
 
   const char*  get_class_name() const noexcept override{return "checkbox";}
 
-  void  do_on_mouse_act(point  mouse_pos) noexcept;
+  operator bool() const noexcept{return m_iconshow->get_index();}
 
-  uint32_t  get_bit_id() const noexcept{return m_bit_id;}
+  uint32_t  get_entry_number() const noexcept{return m_entry_number;}
+
+};
+
+
+
+
+class
+radio_button: public checkbox
+{
+public:
+  radio_button(                             const char16_t*  text, void  (*callback)(checkbox_event)) noexcept;
+  radio_button(const radio_button&  member, const char16_t*  text) noexcept;
+
+  const char*  get_class_name() const noexcept override{return "radio_button";}
 
 };
 
@@ -302,51 +321,6 @@ public:
 
 
 /*
-class
-radio_button: public widget
-{
-public:
-  using callback_prototype = void  (*)(radio_button&  btn, uint32_t  old_state, uint32_t  new_state);
-
-private:
-  struct shared_data;
-
-  shared_data*  m_data;
-
-  radio_button*  m_next=nullptr;
-
-protected:
-  uint32_t  m_bit_id;
-
-  icon_selector*  m_icons;
-
-  virtual const icon**  get_icons() const noexcept;
-
-  void  call(uint32_t  new_state) noexcept;
-
-public:
-  radio_button(widget*  target, callback_prototype  cb) noexcept;
-  radio_button(widget*  target, radio_button&  first) noexcept;
- ~radio_button();
-
-  const char*  get_class_name() const noexcept override{return "radio_button";}
-
-  void  update() noexcept override;
-
-  bool  is_checked() const noexcept;
-
-  virtual void  change_state() noexcept;
-
-  uint32_t  get_bit_id() const noexcept{return m_bit_id;}
-
-  uint32_t  get_state(            ) const noexcept;
-  void      set_state(uint32_t  st)       noexcept;
-
-};
-
-
-
-
 class
 dial: public table_row
 {

@@ -19,6 +19,18 @@ set_index(int  i) noexcept
 
 void
 iconshow::
+assign(std::initializer_list<const icon*>  ls, void  (*cb)(iconshow_event)) noexcept
+{
+  m_icons = ls;
+
+  m_callback = cb;
+
+  set_index(0);
+}
+
+
+void
+iconshow::
 do_on_mouse_leave() noexcept
 {
   m_whether_touched = false;

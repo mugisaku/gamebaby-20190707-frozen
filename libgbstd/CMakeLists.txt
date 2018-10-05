@@ -27,6 +27,7 @@ set(SOURCES
   windows/components/label.cpp
   windows/components/button.cpp
   windows/components/checkbox.cpp
+  windows/components/radio_button.cpp
   windows/components/iconshow.cpp
   windows/icons/icon.cpp
   programs/process.cpp

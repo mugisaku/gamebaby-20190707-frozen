@@ -315,6 +315,19 @@ append_column_child(widget*  child) noexcept
 
 void
 widget::
+append_column_child(std::initializer_list<widget*>  children) noexcept
+{
+    for(auto  child: children)
+    {
+      append_column_child(child);
+    }
+}
+
+
+
+
+void
+widget::
 append_row_child(widget*  child) noexcept
 {
     if(child)
@@ -326,6 +339,19 @@ append_row_child(widget*  child) noexcept
       m_children.emplace_back(child);
     }
 }
+
+
+void
+widget::
+append_row_child(std::initializer_list<widget*>  children) noexcept
+{
+    for(auto  child: children)
+    {
+      append_row_child(child);
+    }
+}
+
+
 
 
 void

@@ -345,7 +345,9 @@ public:
   void  append_child(widget*  child, int  x, int  y) noexcept;
 
   void  append_column_child(widget*  child) noexcept;
+  void  append_column_child(std::initializer_list<widget*>  children) noexcept;
   void  append_row_child(   widget*  child) noexcept;
+  void  append_row_child(std::initializer_list<widget*>  children) noexcept;
 
 };
 

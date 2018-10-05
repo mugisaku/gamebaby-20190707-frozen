@@ -4,6 +4,7 @@
 
 #include"libgbstd/control.hpp"
 #include<string>
+#include<initializer_list>
 
 
 
@@ -62,7 +63,19 @@ constexpr color      yellow = color(7,7,0);
 constexpr int  g_font_width  =  8;
 constexpr int  g_font_height = 16;
 
-const uint16_t*  get_glyph_data(char16_t  c) noexcept;
+struct
+glyph
+{
+  char16_t  unicode;
+
+  uint16_t  data[g_font_height];
+
+};
+
+
+const glyph*  get_glyph(char16_t  c) noexcept;
+
+
 
 
 class

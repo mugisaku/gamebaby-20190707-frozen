@@ -207,6 +207,9 @@ public:
   void  draw_stripe_rectangle(color  first, color  second, int  interval, int  x, int  y, int  w, int  h) const noexcept;
   void  draw_stripe_rectangle(color  first, color  second, int  interval, const rectangle&  rect) const noexcept;
 
+  void  draw_glyph(       const character_color&  chr_color, const glyph&  gl, int  x, int  y) const noexcept;
+  void  draw_glyph_safely(const character_color&  chr_color, const glyph&  gl, int  x, int  y) const noexcept;
+
   void  draw_character(const character&  c, int  x, int  y) const noexcept;
   void  draw_character(const character&  c, point  pt) const noexcept{draw_character(c,pt.x,pt.y);}
 

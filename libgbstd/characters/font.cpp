@@ -9,16 +9,6 @@ namespace gbstd{
 namespace{
 
 
-struct
-glyph
-{
-  uint16_t  unicode;
-
-  uint16_t  data[g_font_height];
-
-};
-
-
 const glyph
 g_glyphs[] =
 {
@@ -26,7 +16,7 @@ g_glyphs[] =
 };
 
 
-const uint16_t*
+const glyph*
 g_table[0x10000] = {0};
 
 
@@ -43,14 +33,14 @@ initializer() noexcept
 {
     for(auto&  gly: g_glyphs)
     {
-      g_table[gly.unicode] = gly.data;
+      g_table[gly.unicode] = &gly;
     }
 }
 }
 
 
-const uint16_t*
-get_glyph_data(char16_t  c) noexcept
+const glyph*
+get_glyph(char16_t  c) noexcept
 {
   return g_table[c];
 }

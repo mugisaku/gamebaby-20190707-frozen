@@ -26,6 +26,9 @@ set(SOURCES
   windows/components/frame.cpp
   windows/components/label.cpp
   windows/components/button.cpp
+  windows/components/checkbox.cpp
+  windows/components/iconshow.cpp
+  windows/icons/icon.cpp
   programs/process.cpp
   programs/program.cpp
   programs/sleep.cpp

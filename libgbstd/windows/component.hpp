@@ -51,7 +51,7 @@ label: public widget
   std::u16string  m_text;
 
 public:
-  label(const char*      s                               ) noexcept;
+  label(const char*      s=""                            ) noexcept;
   label(const char*      s, const character_color&  color) noexcept;
   label(const char16_t*  s                               ) noexcept;
   label(const char16_t*  s, const character_color&  color) noexcept;
@@ -126,6 +126,181 @@ public:
 };
 
 
+
+
+constexpr int  g_icon_size = 16;
+
+
+class
+icon
+{
+  color  m_data[g_icon_size][g_icon_size];
+
+public:
+  icon(std::initializer_list<int>  ls) noexcept;
+
+  color  get_color(int  x, int  y) const noexcept{return m_data[y][x];}
+
+};
+
+
+namespace icons{
+extern const icon    checked;
+extern const icon  unchecked;
+
+extern const icon    radio_checked;
+extern const icon  radio_unchecked;
+
+extern const icon         up;
+//  static const icon  sunken_up;
+
+extern const icon         left;
+extern const icon  sunken_left;
+
+extern const icon         right;
+extern const icon  sunken_right;
+
+extern const icon         down;
+//  static const icon  sunken_down;
+
+extern const icon   plus;
+extern const icon  minus;
+}
+
+
+
+
+template<typename  T>
+class
+event
+{
+  T*  m_caller;
+
+  int  m_kind;
+
+public:
+  template<typename  E>constexpr event(T&  caller, E  kind) noexcept: m_caller(&caller), m_kind(static_cast<int>(kind)){}
+
+  constexpr T*  operator->() const noexcept{return  m_caller;}
+  constexpr T&  operator*()  const noexcept{return *m_caller;}
+
+  template<typename  E>constexpr bool  test_kind(E  k) const noexcept{return m_kind == static_cast<int>(k);}
+
+};
+
+
+
+
+class iconshow;
+
+
+class
+iconshow_event: public event<iconshow>
+{
+public:
+  using event::event; 
+
+  enum class kind{
+    enter,
+    leave,
+    click,
+  };
+
+  bool  is_enter() const noexcept{return test_kind(kind::enter);}
+  bool  is_leave() const noexcept{return test_kind(kind::leave);}
+  bool  is_click() const noexcept{return test_kind(kind::click);}
+
+};
+
+
+class
+iconshow: public widget
+{
+  std::vector<const icon*>  m_icons;
+
+  int  m_index=0;
+
+  bool  m_whether_touched=false;
+
+  void  (*m_callback)(iconshow_event  evt)=nullptr;
+
+public:
+  iconshow(std::initializer_list<const icon*>  ls={}, void  (*cb)(iconshow_event)=nullptr) noexcept:
+  widget(g_icon_size,g_icon_size), m_icons(ls), m_callback(cb){}
+
+  const icon*  operator*() const noexcept{return m_icons[m_index];}
+
+  int   get_index(      ) const noexcept{return m_index;}
+  void  set_index(int  i)       noexcept;
+
+  const char*  get_class_name() const noexcept override{return "iconshow";}
+
+  void  do_on_mouse_enter() noexcept override{if(m_callback){m_callback({*this,iconshow_event::kind::enter});}}
+  void  do_on_mouse_leave() noexcept override;
+  void  do_on_mouse_act(point  mouse_pos) noexcept override;
+
+  void  render(const canvas&  cv) noexcept override;
+
+};
+
+
+
+
+class checkbox;
+
+
+class
+checkbox_event
+{
+  checkbox*  m_checkbox;
+
+  int  m_kind;
+
+public:
+  checkbox_event(checkbox&  chkbox, int  k) noexcept: m_checkbox(&chkbox), m_kind(k){}
+
+  checkbox*  operator->() const noexcept{return m_checkbox;}
+
+  bool  is_change_to_set()   const noexcept{return m_kind == 0;}
+  bool  is_change_to_unset() const noexcept{return m_kind == 1;}
+
+};
+
+
+
+
+class
+checkbox: public widget
+{
+  struct shared_data;
+
+  shared_data*  m_data;
+
+  iconshow*  m_iconshow;
+  label*     m_label;
+
+  uint32_t  m_bit_id;
+
+  checkbox*  m_next=nullptr;
+
+  static void  iconshow_callback(iconshow_event  evt) noexcept;
+
+public:
+  checkbox(                         const char16_t*  text) noexcept;
+  checkbox(const checkbox&  member, const char16_t*  text) noexcept;
+ ~checkbox();
+
+  const char*  get_class_name() const noexcept override{return "checkbox";}
+
+  void  do_on_mouse_act(point  mouse_pos) noexcept;
+
+  uint32_t  get_bit_id() const noexcept{return m_bit_id;}
+
+};
+
+
+
+
 /*
 class
 radio_button: public widget
@@ -166,21 +341,6 @@ public:
 
   uint32_t  get_state(            ) const noexcept;
   void      set_state(uint32_t  st)       noexcept;
-
-};
-
-
-class
-check_button: public radio_button
-{
-  const icon**  get_icons() const noexcept override;
-
-public:
-  using radio_button::radio_button;
-
-  const char*  get_class_name() const noexcept override{return "check_button";}
-
-  void  change_state() noexcept override;
 
 };
 

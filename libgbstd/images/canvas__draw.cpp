@@ -266,24 +266,59 @@ draw_stripe_rectangle(color  first, color  second, int  interval, int  x, int  y
 
 void
 canvas::
-draw_character(const character&  c, int  x, int  y) const noexcept
+draw_glyph(const character_color&  chr_color, const glyph&  gl, int  x, int  y) const noexcept
 {
-  auto  p = get_glyph_data(c.unicode);
+  auto  p = &gl.data[0];
 
-    if(p)
+    for(int  yy = 0;  yy < g_font_height;  yy += 1)
     {
-        for(int  yy = 0;  yy < g_font_height;  yy += 1)
-        {
-          auto   dst = get_pixel_pointer(x,y+yy);
-          auto  code = *p++;
+      auto   dst = get_pixel_pointer(x,y+yy);
+      auto  code = *p++;
 
+        for(int  xx = 0;  xx < g_font_width;  xx += 1)
+        {
+          auto  color = chr_color[code>>14];
+
+            if(color)
+            {
+              dst->color = color;
+            }
+
+
+           dst  += 1;
+          code <<= 2;
+        }
+    }
+}
+
+
+void
+canvas::
+draw_glyph_safely(const character_color&  chr_color, const glyph&  gl, int  x, int  y) const noexcept
+{
+  auto  p = &gl.data[0];
+
+    for(int  yy = 0;  yy < g_font_height;  yy += 1)
+    {
+      auto   dst = get_pixel_pointer(x,y+yy);
+      auto  code = *p++;
+
+      int  yyy = y+yy;
+
+        if((yyy >= 0) && (yyy < get_height()))
+        {
             for(int  xx = 0;  xx < g_font_width;  xx += 1)
             {
-              auto  color = c.color[code>>14];
+              int  xxx = x+xx;
 
-                if(color)
+                if((xxx >= 0) && (xxx < get_width()))
                 {
-                  dst->color = color;
+                  auto  color = chr_color[code>>14];
+
+                    if(color)
+                    {
+                      dst->color = color;
+                    }
                 }
 
 
@@ -291,6 +326,19 @@ draw_character(const character&  c, int  x, int  y) const noexcept
               code <<= 2;
             }
         }
+    }
+}
+
+
+void
+canvas::
+draw_character(const character&  c, int  x, int  y) const noexcept
+{
+  auto  gl = get_glyph(c.unicode);
+
+    if(gl)
+    {
+      draw_glyph(c.color,*gl,x,y);
     }
 }
 
@@ -357,29 +405,11 @@ void
 canvas::
 draw_character_safely(const character&  c, int  x, int  y) const noexcept
 {
-  auto  p = get_glyph_data(c.unicode);
+  auto  gl = get_glyph(c.unicode);
 
-    if(p)
+    if(gl)
     {
-        for(int  yy = 0;  yy < g_font_height;  yy += 1)
-        {
-          auto   dst = get_pixel_pointer(x,y+yy);
-          auto  code = *p++;
-
-            for(int  xx = 0;  xx < g_font_width;  xx += 1)
-            {
-              auto  color = c.color[code>>14];
-
-                if(color)
-                {
-                  dst->color = color;
-                }
-
-
-               dst  += 1;
-              code <<= 2;
-            }
-        }
+      draw_glyph_safely(c.color,*gl,x,y);
     }
 }
 

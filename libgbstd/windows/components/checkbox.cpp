@@ -18,6 +18,8 @@ shared_data
   checkbox*  m_first=nullptr;
   checkbox*  m_last =nullptr;
 
+  checkbox*  m_last_changed=nullptr;
+
 };
 
 
@@ -63,25 +65,21 @@ iconshow_radio_callback(iconshow_event  evt) noexcept
 
         if(cb && !chkbox)
         {
-          auto  next = chkbox.m_data->m_first;
+          auto  dat = chkbox.m_data;
 
-            while(next)
+            if(dat->m_last_changed)
             {
-                if(*next)
-                {
-                  next->m_iconshow->set_index(0);
+              dat->m_last_changed->m_iconshow->set_index(0);
 
-                  cb({*next,checkbox_event::kind::unset});
-                }
-
-
-              next = next->m_next;
+              cb({*dat->m_last_changed,checkbox_event::kind::unset});
             }
 
 
           evt->set_index(1);
 
           cb({chkbox,checkbox_event::kind::set});
+
+          dat->m_last_changed = &chkbox;
         }
     }
 }

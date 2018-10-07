@@ -10,6 +10,29 @@ namespace gbstd{
 
 
 
+template<typename  T>
+class
+event
+{
+  T*  m_caller;
+
+  int  m_kind;
+
+public:
+  template<typename  E>constexpr event(T&  caller, E  kind) noexcept: m_caller(&caller), m_kind(static_cast<int>(kind)){}
+
+  constexpr T*  operator->() const noexcept{return  m_caller;}
+  constexpr T&  operator*()  const noexcept{return *m_caller;}
+
+  template<typename  E>constexpr bool  test_kind(E  k) const noexcept{return m_kind == static_cast<int>(k);}
+
+  constexpr int  get_value() const noexcept{return m_kind;}
+
+};
+
+
+
+
 class
 frame: public widget
 {
@@ -77,20 +100,18 @@ class button;
 
 
 class
-button_event
+button_event: public event<button>
 {
-  button*  m_button;
-
-  int  m_data;
-
 public:
-  constexpr button_event(button&  btn,  int  dat) noexcept: m_button(&btn), m_data(dat){}
+  using event::event;
 
-  constexpr button*  operator->() const noexcept{return  m_button;}
-  constexpr button&  operator*()  const noexcept{return *m_button;}
+  enum class kind{
+    release,
+    press,
+  };
 
-  constexpr bool  is_press()   const noexcept{return m_data == 1;}
-  constexpr bool  is_release() const noexcept{return m_data == 0;}
+  constexpr bool  is_press()   const noexcept{return test_kind(kind::press  );}
+  constexpr bool  is_release() const noexcept{return test_kind(kind::release);}
 
 };
 
@@ -166,27 +187,6 @@ extern const icon         down;
 extern const icon   plus;
 extern const icon  minus;
 }
-
-
-
-
-template<typename  T>
-class
-event
-{
-  T*  m_caller;
-
-  int  m_kind;
-
-public:
-  template<typename  E>constexpr event(T&  caller, E  kind) noexcept: m_caller(&caller), m_kind(static_cast<int>(kind)){}
-
-  constexpr T*  operator->() const noexcept{return  m_caller;}
-  constexpr T&  operator*()  const noexcept{return *m_caller;}
-
-  template<typename  E>constexpr bool  test_kind(E  k) const noexcept{return m_kind == static_cast<int>(k);}
-
-};
 
 
 
@@ -320,48 +320,56 @@ public:
 
 
 
-/*
+class dial;
+
+
 class
-dial: public table_row
+dial_event: public event<dial>
+{
+public:
+  using event::event;
+
+  int  get_new_value() const noexcept;
+  int  get_old_value() const noexcept{return get_value();}
+
+};
+
+
+class
+dial: public widget
 {
   int  m_current=0;
 
   int  m_min=0;
   int  m_max=0;
 
-  void  (*m_callback)(dial&  dial, int  old_value, int  new_value)=nullptr;
+  void  (*m_callback)(dial_event  evt)=nullptr;
 
-  icon_selector*     m_up_selector;
-  icon_selector*   m_down_selector;
+  iconshow*     m_up_show;
+  iconshow*   m_down_show;
 
   button*     m_up_button;
   button*   m_down_button;
 
   label*   m_label;
 
-  static void    up(button&  btn);
-  static void  down(button&  btn);
+  static void    up(button_event  evt) noexcept;
+  static void  down(button_event  evt) noexcept;
 
   void  update_label() noexcept;
 
 public:
-  dial(int  min, int  max, void  (*callback)(dial&,int,int)) noexcept;
+  dial(int  min, int  max, void  (*callback)(dial_event  evt)) noexcept;
 
   void  set_current(int  v) noexcept;
 
   int  get_current() const noexcept{return m_current;}
+
   int  get_min() const noexcept{return m_min;}
   int  get_max() const noexcept{return m_max;}
 
 };
 
-
-using rbcb = radio_button::callback_prototype;
-using wls = std::initializer_list<widget*>;
-
-widget*  create_radio_menu(wls  ls, rbcb  cb, uint32_t  initial_state=0, void*  userdata=nullptr) noexcept;
-widget*  create_check_menu(wls  ls, rbcb  cb, uint32_t  initial_state=0, void*  userdata=nullptr) noexcept;
-*/
 
 
 

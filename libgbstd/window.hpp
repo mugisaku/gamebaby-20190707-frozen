@@ -352,6 +352,26 @@ public:
 };
 
 
+inline widget*
+make_column(std::initializer_list<widget*>  children) noexcept
+{
+  auto  wg = new widget;
+
+  wg->append_column_child(children);
+
+  return wg;
+}
+
+
+inline widget*
+make_row(std::initializer_list<widget*>  children) noexcept
+{
+  auto  wg = new widget;
+
+  wg->append_row_child(children);
+
+  return wg;
+}
 
 
 }

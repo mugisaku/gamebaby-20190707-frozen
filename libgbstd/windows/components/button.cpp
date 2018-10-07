@@ -36,7 +36,7 @@ do_on_mouse_leave() noexcept
 
         if(m_callback)
         {
-          m_callback({*this,0});
+          m_callback({*this,button_event::kind::release});
         }
 
 
@@ -57,7 +57,7 @@ do_on_mouse_act(point  mouse_pos) noexcept
 
             if(m_callback)
             {
-              m_callback({*this,1});
+              m_callback({*this,button_event::kind::press});
             }
 
 

@@ -29,6 +29,7 @@ set(SOURCES
   windows/components/checkbox.cpp
   windows/components/radio_button.cpp
   windows/components/iconshow.cpp
+  windows/components/dial.cpp
   windows/icons/icon.cpp
   programs/process.cpp
   programs/program.cpp

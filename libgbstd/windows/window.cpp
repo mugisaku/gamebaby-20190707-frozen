@@ -78,7 +78,11 @@ set_root_widget(widget*  wg) noexcept
     {
       m_root->set_window(this);
 
-      m_whether_need_to_total_redraw = true;
+      m_whether_received_reform_request = true;
+
+      do_total_reform_if_necessary();
+
+      finish_redraw_if_necessary();
     }
 }
 
@@ -175,7 +179,7 @@ process_user_input(point  pt) noexcept
 
     if(m_current)
     {
-      m_current->do_on_mouse_act(pt);
+      m_current->do_on_mouse_act(pt-m_current->get_content_position());
     }
 }
 

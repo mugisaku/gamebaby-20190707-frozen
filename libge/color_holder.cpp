@@ -28,6 +28,8 @@ color_holder(std::initializer_list<gbstd::color>  colors, void  (*callback)(colo
 m_colors(colors),
 m_callback(callback)
 {
+  set_content_width(rect_size+(gbstd::g_font_width*3));
+  set_content_height(gbstd::g_font_height*m_colors.size());
 }
 
 

@@ -13,12 +13,16 @@ shared_data
 {
   uint32_t  m_reference_count=0;
 
+  void*  m_userdata=nullptr;
+
   void  (*m_callback)(checkbox_event  evt)=nullptr;
 
   checkbox*  m_first=nullptr;
   checkbox*  m_last =nullptr;
 
   checkbox*  m_last_changed=nullptr;
+
+  bool  m_radio_mark=false;
 
 };
 
@@ -31,24 +35,8 @@ iconshow_callback(iconshow_event  evt) noexcept
     {
       auto&  chkbox = *evt->get_userdata<checkbox>();
 
-      auto  cb = chkbox.m_data->m_callback;
-
-        if(cb)
-        {
-            if(chkbox)
-            {
-              evt->set_index(0);
-
-              cb({chkbox,checkbox_event::kind::unset});
-            }
-
-          else
-            {
-              evt->set_index(1);
-
-              cb({chkbox,checkbox_event::kind::set});
-            }
-        }
+        if(chkbox.is_checked()){chkbox.uncheck();}
+      else                     {chkbox.check();}
     }
 }
 
@@ -61,25 +49,9 @@ iconshow_radio_callback(iconshow_event  evt) noexcept
     {
       auto&  chkbox = *evt->get_userdata<checkbox>();
 
-      auto  cb = chkbox.m_data->m_callback;
-
-        if(cb && !chkbox)
+        if(!chkbox.is_checked())
         {
-          auto  dat = chkbox.m_data;
-
-            if(dat->m_last_changed)
-            {
-              dat->m_last_changed->m_iconshow->set_index(0);
-
-              cb({*dat->m_last_changed,checkbox_event::kind::unset});
-            }
-
-
-          evt->set_index(1);
-
-          cb({chkbox,checkbox_event::kind::set});
-
-          dat->m_last_changed = &chkbox;
+          chkbox.check();
         }
     }
 }
@@ -142,11 +114,99 @@ checkbox::
 
 
 
+void*
+checkbox::
+get_common_userdata_internal() const noexcept
+{
+  return m_data->m_userdata;
+}
+
+
+void
+checkbox::
+set_common_userdata(void*  ptr) const noexcept
+{
+  m_data->m_userdata = ptr;
+}
+
+
+
+
+void
+checkbox::
+check() noexcept
+{
+    if(is_checked())
+    {
+      return;
+    }
+
+
+  auto  cb = m_data->m_callback;
+
+    if(m_data->m_radio_mark)
+    {
+        if(m_data->m_last_changed)
+        {
+          m_data->m_last_changed->m_iconshow->set_index(0);
+
+            if(cb)
+            {
+              cb({*m_data->m_last_changed,checkbox_event::kind::unset});
+            }
+        }
+
+
+      m_iconshow->set_index(1);
+
+        if(cb)
+        {
+          cb({*this,checkbox_event::kind::set});
+        }
+
+
+      m_data->m_last_changed = this;
+    }
+
+  else
+    {
+      m_iconshow->set_index(1);
+
+        if(cb)
+        {
+          cb({*this,checkbox_event::kind::set});
+        }
+    }
+}
+
+
+void
+checkbox::
+uncheck() noexcept
+{
+  auto  cb = m_data->m_callback;
+
+    if(!m_data->m_radio_mark && is_checked())
+    {
+      m_iconshow->set_index(0);
+
+        if(cb)
+        {
+          cb({*this,checkbox_event::kind::unset});
+        }
+    }
+}
+
+
+
+
 void
 checkbox::
 revise_to_radio() noexcept
 {
   m_iconshow->assign({&icons::radio_unchecked,&icons::radio_checked},iconshow_radio_callback);
+
+  m_data->m_radio_mark = true;
 }
 
 

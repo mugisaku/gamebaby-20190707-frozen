@@ -23,7 +23,7 @@ m_default_line_color = colors::yellow;
 
 
 frame::
-frame(const char*  text) noexcept:
+frame(const char*  text, widget*  wg, int  x, int  y) noexcept:
 m_character_color(m_default_character_color),
 m_line_color(m_default_line_color)
 {
@@ -37,6 +37,9 @@ m_line_color(m_default_line_color)
   append_child(m_container,0,0);
 
   set_text(text);
+
+
+  insert_content(wg,x,y);
 }
 
 
@@ -44,9 +47,12 @@ m_line_color(m_default_line_color)
 
 void
 frame::
-append_content(widget*  wg, int  x, int  y) noexcept
+insert_content(widget*  wg, int  x, int  y) noexcept
 {
-  m_container->append_child(wg,0,0);
+    if(wg)
+    {
+      m_container->append_child(wg,x,y);
+    }
 }
 
 

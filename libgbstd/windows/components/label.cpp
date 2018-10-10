@@ -43,6 +43,16 @@ widget(0,16+4)
 
 
 label::
+label(const char16_t*  s, gbstd::color  color) noexcept:
+widget(0,16+4)
+{
+  set_text(s);
+
+  set_color(color);
+}
+
+
+label::
 label(const char16_t*  s, const character_color&  color) noexcept:
 widget(0,16+4)
 {

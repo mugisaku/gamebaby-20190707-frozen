@@ -48,11 +48,11 @@ frame: public widget
   static color            m_default_line_color;
 
 public:
-  frame(const char*  text) noexcept;
+  frame(const char*  text, widget*  wg=nullptr, int  x=0, int  y=0) noexcept;
 
   const char*  get_class_name() const noexcept override{return "frame";}
 
-  void  append_content(widget*  wg, int  x, int  y) noexcept;
+  void  insert_content(widget*  wg, int  x, int  y) noexcept;
 
   void  set_text(const char*  s) noexcept;
   void  set_line_color(color  new_color) noexcept;
@@ -77,6 +77,7 @@ public:
   label(const char*      s=""                            ) noexcept;
   label(const char*      s, const character_color&  color) noexcept;
   label(const char16_t*  s                               ) noexcept;
+  label(const char16_t*  s, gbstd::color  color          ) noexcept;
   label(const char16_t*  s, const character_color&  color) noexcept;
 
   const char*  get_class_name() const noexcept override{return "label";}
@@ -284,6 +285,8 @@ checkbox: public widget
 
   checkbox*  m_next=nullptr;
 
+  void*  get_common_userdata_internal() const noexcept;
+
   static void  iconshow_callback(      iconshow_event  evt) noexcept;
   static void  iconshow_radio_callback(iconshow_event  evt) noexcept;
 
@@ -295,11 +298,21 @@ public:
   checkbox(const checkbox&  member, const char16_t*  text) noexcept;
  ~checkbox();
 
+  void    check() noexcept;
+  void  uncheck() noexcept;
+
   const char*  get_class_name() const noexcept override{return "checkbox";}
 
-  operator bool() const noexcept{return m_iconshow->get_index();}
+  bool  is_checked() const noexcept{return m_iconshow->get_index();}
+
+  operator bool() const noexcept{return is_checked();}
 
   uint32_t  get_entry_number() const noexcept{return m_entry_number;}
+
+  void  set_common_userdata(void*  ptr) const noexcept;
+
+  template<typename  T>
+  T*  get_common_userdata() const noexcept{return static_cast<T*>(get_common_userdata_internal());}
 
 };
 
@@ -371,6 +384,255 @@ public:
 };
 
 
+
+
+class
+item_cursor
+{
+  point  m_base  ;
+  point  m_offset;
+
+public:
+  constexpr item_cursor() noexcept{}
+  constexpr item_cursor(point  base, point  off) noexcept: m_base(base), m_offset(off){}
+
+  constexpr item_cursor  operator+(point  pt) const noexcept
+  {
+    return item_cursor(m_base,m_offset+pt);
+  }
+
+  constexpr const point&    get_base() const noexcept{return m_base;}
+  constexpr const point&  get_offset() const noexcept{return m_offset;}
+
+  void    add_base(int  x, int   y) noexcept{m_base   += point(x,y);}
+  void  add_offset(int  x, int   y) noexcept{m_offset += point(x,y);}
+
+  constexpr point  get_point() const noexcept{return m_base+m_offset;}
+
+};
+
+
+template<typename  T>
+class
+item_table_shell
+{
+public:
+  virtual int  get_x_length() const noexcept=0;
+  virtual int  get_y_length() const noexcept=0;
+
+  virtual int  get_item_width()  const noexcept=0;
+  virtual int  get_item_height() const noexcept=0;
+
+  virtual void  render(item_cursor  cur, const canvas&  cv) const noexcept;
+
+  int  get_content_width()  const noexcept{return get_item_width() *get_x_length();}
+  int  get_content_height() const noexcept{return get_item_height()*get_y_length();}
+
+};
+
+
+template<typename  T>class  menu;
+
+
+template<typename  T>
+class
+menu_event: public event<menu<T>>
+{
+public:
+  using event<menu<T>>::event;
+
+  enum class kind{
+    move,
+  };
+
+  bool  is_move() const noexcept{return test_kind(kind::move);}
+
+};
+
+
+template<typename  T>
+class
+menu: public widget
+{
+  item_table_shell<T>  m_shell;
+
+  int  m_number_of_columns=0;
+  int  m_number_of_rows=0;
+
+  item_cursor  m_cursor;
+
+  bool  m_whether_show_cursor=true;
+
+public:
+  using callback = void(*)(menu_event<T>  evt);
+
+private:
+  callback  m_callback=nullptr;
+
+  void  call(menu_event<T>  k) noexcept{if(m_callback){m_callback(*this,k);}}
+
+public:
+  menu() noexcept{}
+  menu(const item_table_shell<T>&  shell, int  ncols, int  nrows) noexcept{reset(shell,ncols,nrows);}
+
+  int  get_number_of_columns() const noexcept{return m_number_of_columns;}
+  int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
+
+  int  get_item_width()  const noexcept{return m_shell.get_item_width() ;}
+  int  get_item_height() const noexcept{return m_shell.get_item_height();}
+
+  const item_table_shell<T>&  get_shell() const noexcept{return m_shell;}
+
+  void  resize(int  ncols, int  nrows) noexcept
+  {
+    m_number_of_columns = ncols;
+    m_number_of_rows    = nrows;
+
+    m_cursor = item_cursor();
+
+    call(menu_event<T>::kind::move);
+
+    set_content_width( m_shell.get_content_width() *ncols);
+    set_content_height(m_shell.get_content_height()*nrows);
+
+    request_reform();
+  }
+
+
+  void  reset(const item_table_shell<T>&  shell, int  ncols, int  nrows) noexcept
+  {
+    m_shell = shell;
+
+    resize(ncols,nrows);
+  }
+
+  bool  does_show_cursor() const noexcept{return m_whether_show_cursor;}
+  void  show_cursor() noexcept{m_whether_show_cursor =  true;}
+  void  hide_cursor() noexcept{m_whether_show_cursor = false;}
+
+  const item_cursor&  get_cursor()  const noexcept{return m_cursor;}
+
+  void  move_up() noexcept
+  {
+      if(m_cursor.get_offset().y)
+      {
+        m_cursor.add_offset(0,-1);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+
+    else
+      if(m_cursor.get_base().y)
+      {
+        m_cursor.add_base(0,-1);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+  }
+
+  void  move_down() noexcept
+  {
+      if(m_cursor.get_offset().y < (m_number_of_rows-1))
+      {
+        m_cursor.add_offset(0,1);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+
+    else
+      if((m_cursor.get_base().y+m_number_of_rows) < (m_shell.get_y_length()-1))
+      {
+        m_cursor.add_base(0,1);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+  }
+
+  void  move_left() noexcept
+  {
+      if(m_cursor.get_offset().x)
+      {
+        m_cursor.add_offset(-1,0);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+
+    else
+      if(m_cursor.get_base().x)
+      {
+        m_cursor.add_base(-1,0);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+  }
+
+  void  move_right() noexcept
+  {
+      if(m_cursor.get_offset().x < (m_number_of_columns-1))
+      {
+        m_cursor.add_offset(1,0);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+
+    else
+      if((m_cursor.get_base().x+m_number_of_columns) < (m_shell.get_x_length()-1))
+      {
+        m_cursor.add_base(1,0);
+
+        call(menu_event<T>::kind::move);
+
+        request_redraw();
+      }
+  }
+
+  void  render(const canvas&  cv) noexcept override
+  {
+    int  item_w = m_shell.get_item_width() ;
+    int  item_h = m_shell.get_item_height();
+
+      for(int  y = 0;  y < m_number_of_rows   ;  ++y){
+      for(int  x = 0;  x < m_number_of_columns;  ++x){
+        canvas  cocv(cv,item_w*x,item_h*y,
+                        item_w  ,item_h  );
+
+        m_shell.render(m_cursor+point(x,y),cocv);
+      }}
+
+
+      if(does_show_cursor())
+      {
+        point  pt(item_w*m_cursor.get_offset().x,
+                  item_h*m_cursor.get_offset().y);
+
+        render_cursor(pt,cv);
+      }
+  }
+
+
+  virtual void  render_cursor(point  item_pos, const canvas&  cv) const noexcept
+  {
+    int  w = m_shell.get_item_width() ;
+    int  h = m_shell.get_item_height();
+
+    cv.draw_rectangle(colors::yellow,item_pos.x,item_pos.y,w,h);
+  }
+
+};
 
 
 }

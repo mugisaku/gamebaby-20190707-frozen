@@ -83,6 +83,55 @@ rectangle
            (pt.y <  (y+h)));
   }
 
+
+  constexpr int  get_x()     const noexcept{return x  ;}
+  constexpr int  get_x_end() const noexcept{return x+w;}
+  constexpr int  get_y()     const noexcept{return y  ;}
+  constexpr int  get_y_end() const noexcept{return y+h;}
+
+  static constexpr int  get_left(const rectangle&  a, const rectangle&  b) noexcept
+  {
+    return (a.x < b.x)? b.x:a.x;
+ }
+
+
+  static constexpr int  get_top(const rectangle&  a, const rectangle&  b) noexcept
+  {
+    return (a.y < b.y)? b.y:a.y;
+  }
+
+
+  static constexpr int  get_right(const rectangle&  a, const rectangle&  b) noexcept
+  {
+    return (a.get_x_end() < b.get_x_end())? a.get_x_end():b.get_x_end();
+  }
+
+
+  static constexpr int  get_bottom(const rectangle&  a, const rectangle&  b) noexcept
+  {
+    return (a.get_y_end() < b.get_y_end())? a.get_y_end():b.get_y_end();
+  }
+
+
+  static constexpr rectangle  get_overlap(const rectangle&  a, const rectangle&  b) noexcept
+  {
+    return rectangle(get_left(a,b),
+                     get_top(a,b),
+                     get_right(a,b)-get_left(a,b)+1,
+                     get_bottom(a,b)-get_top(a,b)+1);
+  }
+
+  constexpr rectangle  operator&(const rectangle&  rhs) const noexcept
+  {
+    return get_overlap(*this,rhs);
+  }
+
+  rectangle&  operator&=(const rectangle&  rhs) noexcept
+  {
+           *this = (*this)&rhs;
+    return *this              ;
+  }
+
 };
 
 

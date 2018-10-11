@@ -120,7 +120,7 @@ public:
   const widget*  get_current_widget() const noexcept{return m_current;}
 
   void  do_total_reform_if_necessary() noexcept;
-  void    finish_redraw_if_necessary() noexcept;
+  bool           redraw_if_necessary() noexcept;
 
   void  process_user_input(point  pt) noexcept;
 

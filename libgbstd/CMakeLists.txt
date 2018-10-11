@@ -30,6 +30,7 @@ set(SOURCES
   windows/components/radio_button.cpp
   windows/components/iconshow.cpp
   windows/components/dial.cpp
+  windows/components/menu.cpp
   windows/icons/icon.cpp
   programs/process.cpp
   programs/program.cpp

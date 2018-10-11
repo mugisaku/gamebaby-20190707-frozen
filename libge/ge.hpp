@@ -261,10 +261,6 @@ public:
 };
 
 
-
-
-
-
 struct
 context
 {
@@ -304,7 +300,7 @@ context
   gbstd::button*   m_png_save_button;
   gbstd::button*  m_apng_save_button;
 
-//  gbstd::menu*  m_menu;
+  gbstd::menu*  m_menu;
 
 
   std::string  m_filepath;

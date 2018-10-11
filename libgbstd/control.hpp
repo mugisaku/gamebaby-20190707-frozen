@@ -227,8 +227,6 @@ extern bool  g_needed_to_redraw;
 extern user_input  g_modified_input;
 extern user_input           g_input;
 
-void  update_user_input(user_input  in) noexcept;
-
 
 }
 

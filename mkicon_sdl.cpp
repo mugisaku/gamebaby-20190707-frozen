@@ -77,13 +77,14 @@ main_loop()
     }
 
 
-  g_window->finish_redraw_if_necessary();
+    if(g_window->redraw_if_necessary() || g_needed_to_redraw)
+    {
+      auto  cv = canvas(g_window->get_content_image());
 
-  auto  cv = canvas(g_window->get_content_image());
+      g_canvas.copy_canvas(cv,0,0);
 
-  g_canvas.copy_canvas(cv,0,0);
-
-  sdl::update_screen(g_canvas);
+      sdl::update_screen(g_canvas);
+    }
 }
 
 

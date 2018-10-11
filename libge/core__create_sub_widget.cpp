@@ -140,6 +140,7 @@ create_tool_widget() noexcept
   auto  first = new radio_button(u"draw dot",cb);
 
   first->set_common_userdata(this);
+  first->check();
 
   container->append_column_child(first);
 

@@ -10,29 +10,29 @@ namespace{
 
 
 void
-process_key_down(const SDL_KeyboardEvent&  evt, gbstd::user_input&  in) noexcept
+process_key_down(const SDL_KeyboardEvent&  evt) noexcept
 {
   if(!evt.repeat)
   {
       switch(evt.keysym.sym)
       {
-    case(SDLK_UP   ): in.set_up();break;
-    case(SDLK_LEFT ): in.set_left();break;
-    case(SDLK_RIGHT): in.set_right();break;
-    case(SDLK_DOWN ): in.set_down();break;
+    case(SDLK_UP   ): gbstd::g_input.set_up();break;
+    case(SDLK_LEFT ): gbstd::g_input.set_left();break;
+    case(SDLK_RIGHT): gbstd::g_input.set_right();break;
+    case(SDLK_DOWN ): gbstd::g_input.set_down();break;
 
-    case(SDLK_SPACE ): in.set_start();break;
+    case(SDLK_SPACE ): gbstd::g_input.set_start();break;
     case(SDLK_LSHIFT):
-    case(SDLK_RSHIFT): in.set_shift();break;
+    case(SDLK_RSHIFT): gbstd::g_input.set_shift();break;
 
     case(SDLK_RETURN):
     case(SDLK_z):
-        in.set_p();
+        gbstd::g_input.set_p();
         break;
     case(SDLK_RCTRL):
     case(SDLK_LCTRL):
     case(SDLK_x    ):
-        in.set_n();
+        gbstd::g_input.set_n();
         break;
     case(SDLK_F1):
 //        SDL_SaveBMP(surface,"__SCREEN.bmp");
@@ -43,61 +43,61 @@ process_key_down(const SDL_KeyboardEvent&  evt, gbstd::user_input&  in) noexcept
 
 
 void
-process_key_up(const SDL_KeyboardEvent&  evt, gbstd::user_input&  in) noexcept
+process_key_up(const SDL_KeyboardEvent&  evt) noexcept
 {
     switch(evt.keysym.sym)
     {
-  case(SDLK_UP   ): in.unset_up();break;
-  case(SDLK_LEFT ): in.unset_left();break;
-  case(SDLK_RIGHT): in.unset_right();break;
-  case(SDLK_DOWN ): in.unset_down();break;
+  case(SDLK_UP   ): gbstd::g_input.unset_up();break;
+  case(SDLK_LEFT ): gbstd::g_input.unset_left();break;
+  case(SDLK_RIGHT): gbstd::g_input.unset_right();break;
+  case(SDLK_DOWN ): gbstd::g_input.unset_down();break;
 
-  case(SDLK_SPACE ): in.unset_start();break;
+  case(SDLK_SPACE ): gbstd::g_input.unset_start();break;
   case(SDLK_LSHIFT):
-  case(SDLK_RSHIFT): in.unset_shift();break;
+  case(SDLK_RSHIFT): gbstd::g_input.unset_shift();break;
 
   case(SDLK_RETURN):
   case(SDLK_z     ):
-      in.unset_p();
+      gbstd::g_input.unset_p();
       break;
   case(SDLK_RCTRL):
   case(SDLK_LCTRL):
   case(SDLK_x    ):
-      in.unset_n();
+      gbstd::g_input.unset_n();
       break;
     }
 }
 
 
 void
-process_mouse(const SDL_MouseButtonEvent&  evt, gbstd::user_input&  in) noexcept
+process_mouse(const SDL_MouseButtonEvent&  evt) noexcept
 {
   gbstd::g_point_buffer.emplace_back(evt.x,evt.y);
 
     if(evt.state == SDL_PRESSED)
     {
-           if(evt.button == SDL_BUTTON_LEFT ){in.set_mouse_left();}
-      else if(evt.button == SDL_BUTTON_RIGHT){in.set_mouse_right();}
+           if(evt.button == SDL_BUTTON_LEFT ){gbstd::g_input.set_mouse_left();}
+      else if(evt.button == SDL_BUTTON_RIGHT){gbstd::g_input.set_mouse_right();}
     }
 
   else
     {
-           if(evt.button == SDL_BUTTON_LEFT ){in.unset_mouse_left();}
-      else if(evt.button == SDL_BUTTON_RIGHT){in.unset_mouse_right();}
+           if(evt.button == SDL_BUTTON_LEFT ){gbstd::g_input.unset_mouse_left();}
+      else if(evt.button == SDL_BUTTON_RIGHT){gbstd::g_input.unset_mouse_right();}
     }
 }
 
 
 void
-process_mouse_motion(const SDL_MouseMotionEvent&  evt, gbstd::user_input&  in) noexcept
+process_mouse_motion(const SDL_MouseMotionEvent&  evt) noexcept
 {
   gbstd::g_point_buffer.emplace_back(evt.x,evt.y);
 
-    if(evt.state&SDL_BUTTON_LMASK){in.set_mouse_left();}
-  else                            {in.unset_mouse_left();}
+    if(evt.state&SDL_BUTTON_LMASK){gbstd::g_input.set_mouse_left();}
+  else                            {gbstd::g_input.unset_mouse_left();}
 
-    if(evt.state&SDL_BUTTON_RMASK){in.set_mouse_right();}
-  else                            {in.unset_mouse_right();}
+    if(evt.state&SDL_BUTTON_RMASK){gbstd::g_input.set_mouse_right();}
+  else                            {gbstd::g_input.unset_mouse_right();}
 }
 
 
@@ -148,7 +148,8 @@ update_control() noexcept
 {
   static SDL_Event  evt;
 
-  gbstd::user_input  tmp;
+  static gbstd::user_input  previous_input                 ;
+                            previous_input = gbstd::g_input;
 
   gbstd::g_time             = SDL_GetTicks();
   gbstd::g_needed_to_redraw = false;
@@ -163,11 +164,11 @@ update_control() noexcept
     {
         switch(evt.type)
         {
-      case(SDL_KEYDOWN): process_key_down(evt.key,tmp);break;
-      case(SDL_KEYUP  ): process_key_up(  evt.key,tmp);break;
-      case(SDL_MOUSEBUTTONUP  ): process_mouse(evt.button,tmp);break;
-      case(SDL_MOUSEBUTTONDOWN): process_mouse(evt.button,tmp);break;
-      case(SDL_MOUSEMOTION): process_mouse_motion(evt.motion,tmp);break;
+      case(SDL_KEYDOWN): process_key_down(evt.key);break;
+      case(SDL_KEYUP  ): process_key_up(  evt.key);break;
+      case(SDL_MOUSEBUTTONUP  ): process_mouse(evt.button);break;
+      case(SDL_MOUSEBUTTONDOWN): process_mouse(evt.button);break;
+      case(SDL_MOUSEMOTION): process_mouse_motion(evt.motion);break;
       case(SDL_WINDOWEVENT):
              switch(evt.window.event)
              {
@@ -190,7 +191,7 @@ update_control() noexcept
     }
 
 
-  gbstd::update_user_input(tmp);
+  gbstd::g_modified_input = previous_input^gbstd::g_input;
 }
 
 

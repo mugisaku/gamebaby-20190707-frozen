@@ -82,14 +82,14 @@ set_root_widget(widget*  wg) noexcept
 
       do_total_reform_if_necessary();
 
-      finish_redraw_if_necessary();
+      redraw_if_necessary();
     }
 }
 
 
-void
+bool
 window::
-finish_redraw_if_necessary() noexcept
+redraw_if_necessary() noexcept
 {
     if(m_whether_need_to_total_redraw)
     {
@@ -101,7 +101,7 @@ finish_redraw_if_necessary() noexcept
 
       m_redraw_queue.clear();
 
-      ++m_update_counter;
+      return true;
     }
 
   else
@@ -115,8 +115,11 @@ finish_redraw_if_necessary() noexcept
 
       m_redraw_queue.clear();
 
-      ++m_update_counter;
+      return true;
     }
+
+
+  return false;
 }
 
 

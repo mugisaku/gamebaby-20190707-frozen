@@ -27,46 +27,14 @@ shared_data
 };
 
 
-void
-checkbox::
-iconshow_callback(iconshow_event  evt) noexcept
-{
-    if(evt.is_click())
-    {
-      auto&  chkbox = *evt->get_userdata<checkbox>();
-
-        if(chkbox.is_checked()){chkbox.uncheck();}
-      else                     {chkbox.check();}
-    }
-}
-
-
-void
-checkbox::
-iconshow_radio_callback(iconshow_event  evt) noexcept
-{
-    if(evt.is_click())
-    {
-      auto&  chkbox = *evt->get_userdata<checkbox>();
-
-        if(!chkbox.is_checked())
-        {
-          chkbox.check();
-        }
-    }
-}
-
-
-
-
 checkbox::
 checkbox(const char16_t*  text, void  (*cb)(checkbox_event)) noexcept:
 m_label(new label(text)),
 m_data(new shared_data),
-m_iconshow(new iconshow({&icons::unchecked,&icons::checked},iconshow_callback)),
+m_iconshow(new iconshow({&icons::unchecked,&icons::checked})),
 m_entry_number(0)
 {
-  m_iconshow->set_userdata(this);
+  be_autonomous();
 
   m_data->m_callback = cb;
 
@@ -83,10 +51,10 @@ checkbox::
 checkbox(const checkbox&  member, const char16_t*  text) noexcept:
 m_label(new label(text)),
 m_data(member.m_data),
-m_iconshow(new iconshow({&icons::unchecked,&icons::checked},iconshow_callback)),
+m_iconshow(new iconshow({&icons::unchecked,&icons::checked})),
 m_entry_number(member.m_entry_number+1)
 {
-  m_iconshow->set_userdata(this);
+  be_autonomous();
 
   m_data->m_last->m_next = this;
   m_data->m_last         = this;
@@ -198,13 +166,36 @@ uncheck() noexcept
 }
 
 
+void
+checkbox::
+do_on_mouse_act(point  mouse_pos) noexcept
+{
+    if(!g_input.test_mouse_left() && g_modified_input.test_mouse_left())
+    {
+        if(m_data->m_radio_mark)
+        {
+            if(!is_checked())
+            {
+              check();
+            }
+        }
+
+      else
+        {
+            if(is_checked()){uncheck();}
+          else              {  check();}
+        }
+    }
+}
+
+
 
 
 void
 checkbox::
 revise_to_radio() noexcept
 {
-  m_iconshow->assign({&icons::radio_unchecked,&icons::radio_checked},iconshow_radio_callback);
+  m_iconshow->assign({&icons::radio_unchecked,&icons::radio_checked});
 
   m_data->m_radio_mark = true;
 }

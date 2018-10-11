@@ -71,9 +71,25 @@ build_for_coloring(context*  ctx) noexcept
 }
 
 
+namespace{
+void
+render_item(void*  userdata, const item_cursor&  cur,const canvas&  cv) noexcept
+{
+}
+}
+
+
 void
 build_cell_table(context*  ctx) noexcept
 {
+  item_table_spec  spec = {ctx->m_cell_width,
+                           ctx->m_cell_height,
+                           ctx->m_table_width,
+                           ctx->m_table_height,ctx,render_item};
+
+  ctx->m_menu = new menu(spec,ctx->m_table_width,
+                              ctx->m_table_height);
+
 /*
   menu_item_parameter  mip = {0,0,
     [](menu&  menu, point  index, mouse_button  left, mouse_button  right)
@@ -113,19 +129,13 @@ build_cell_table(context*  ctx) noexcept
         }
     }
   };
-
-
-  ctx->m_menu = new menu(mip,ctx->m_table_width,ctx->m_table_height);
+*/
 
   ctx->m_menu->set_userdata(ctx);
 
-  static const icons::icon*    up_ico[] = {&icons::up};
-  static const icons::icon*  down_ico[] = {&icons::down};
-  static const icons::icon*  plus_ico[] = {&icons::plus};
+  ctx->m_table_offset_label = new label(u" 1/ 1");
 
-  ctx->m_table_offset_label = new label(u" 1/ 1",styles::a_white_based_text_style);
-
-  auto  up_btn = new button(new iconshow({up_ico}),[](button_event  evt){
+  auto  up_btn = new button(new iconshow({&icons::up}),[](button_event  evt){
   auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_press())
@@ -141,7 +151,7 @@ build_cell_table(context*  ctx) noexcept
       }
   });
 
-  auto  down_btn = new button(new iconshow({down_ico}),[](button_event  evt){
+  auto  down_btn = new button(new iconshow({&icons::down}),[](button_event  evt){
   auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_press())
@@ -157,7 +167,7 @@ build_cell_table(context*  ctx) noexcept
       }
   });
 
-  auto  ext_btn = new button(new icon_selector(plus_ico),[](button_event  evt){
+  auto  ext_btn = new button(new iconshow({&icons::plus}),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_press())
@@ -170,13 +180,12 @@ build_cell_table(context*  ctx) noexcept
   });
 
 
-  widget::set_userdata(ctx,{up_btn,down_btn,ext_btn});
+  //widget::set_userdata(ctx,{up_btn,down_btn,ext_btn});
 
   auto     btn_col = make_column({up_btn,down_btn,ext_btn});
   auto  celtbl_col = make_column({ctx->m_menu,ctx->m_table_offset_label});
 
-  ctx->m_cell_table_frame = new frame(make_row({btn_col,celtbl_col}),"cell table");
-*/
+  ctx->m_cell_table_frame = new frame("cell table",make_row({btn_col,celtbl_col}));
 }
 
 
@@ -328,8 +337,6 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
   ctx->m_cell_height  = cell_h;
   ctx->m_table_width  = table_w;
   ctx->m_table_height = table_h;
-//  ctx->m_bg_style = background_style(color(0,0,4),color(0,0,6),4);
-//  ctx->m_callback = [](){};
 
   build_canvas(ctx);
   build_for_coloring(ctx);

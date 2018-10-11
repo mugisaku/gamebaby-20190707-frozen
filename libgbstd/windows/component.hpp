@@ -287,9 +287,6 @@ checkbox: public widget
 
   void*  get_common_userdata_internal() const noexcept;
 
-  static void  iconshow_callback(      iconshow_event  evt) noexcept;
-  static void  iconshow_radio_callback(iconshow_event  evt) noexcept;
-
 protected:
   void  revise_to_radio() noexcept;
 
@@ -313,6 +310,8 @@ public:
 
   template<typename  T>
   T*  get_common_userdata() const noexcept{return static_cast<T*>(get_common_userdata_internal());}
+
+  void  do_on_mouse_act(point  mouse_pos) noexcept override;
 
 };
 
@@ -412,34 +411,30 @@ public:
 };
 
 
-template<typename  T>
-class
-item_table_shell
+struct
+item_table_spec
 {
-public:
-  virtual int  get_x_length() const noexcept=0;
-  virtual int  get_y_length() const noexcept=0;
+  int  x_length;
+  int  y_length;
 
-  virtual int  get_item_width()  const noexcept=0;
-  virtual int  get_item_height() const noexcept=0;
+  int  item_width ;
+  int  item_height;
 
-  virtual void  render(item_cursor  cur, const canvas&  cv) const noexcept;
+  void*  userdata;
 
-  int  get_content_width()  const noexcept{return get_item_width() *get_x_length();}
-  int  get_content_height() const noexcept{return get_item_height()*get_y_length();}
+  void  (*render)(void*  userdata, const item_cursor&  cur, const canvas&  cv);
 
 };
 
 
-template<typename  T>class  menu;
+class menu;
 
 
-template<typename  T>
 class
-menu_event: public event<menu<T>>
+menu_event: public event<menu>
 {
 public:
-  using event<menu<T>>::event;
+  using event::event;
 
   enum class kind{
     move,
@@ -450,11 +445,10 @@ public:
 };
 
 
-template<typename  T>
 class
 menu: public widget
 {
-  item_table_shell<T>  m_shell;
+  item_table_spec  m_spec;
 
   int  m_number_of_columns=0;
   int  m_number_of_rows=0;
@@ -464,47 +458,26 @@ menu: public widget
   bool  m_whether_show_cursor=true;
 
 public:
-  using callback = void(*)(menu_event<T>  evt);
+  using callback = void(*)(menu_event  evt);
 
 private:
   callback  m_callback=nullptr;
 
-  void  call(menu_event<T>  k) noexcept{if(m_callback){m_callback(*this,k);}}
+  void  call(menu_event::kind  k) noexcept{if(m_callback){m_callback({*this,k});}}
 
 public:
   menu() noexcept{}
-  menu(const item_table_shell<T>&  shell, int  ncols, int  nrows) noexcept{reset(shell,ncols,nrows);}
+  menu(const item_table_spec&  spec, int  ncols, int  nrows) noexcept{reset(spec,ncols,nrows);}
 
   int  get_number_of_columns() const noexcept{return m_number_of_columns;}
   int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
 
-  int  get_item_width()  const noexcept{return m_shell.get_item_width() ;}
-  int  get_item_height() const noexcept{return m_shell.get_item_height();}
+  int  get_item_width()  const noexcept{return m_spec.item_width ;}
+  int  get_item_height() const noexcept{return m_spec.item_height;}
 
-  const item_table_shell<T>&  get_shell() const noexcept{return m_shell;}
+  void  resize(int  ncols, int  nrows) noexcept;
 
-  void  resize(int  ncols, int  nrows) noexcept
-  {
-    m_number_of_columns = ncols;
-    m_number_of_rows    = nrows;
-
-    m_cursor = item_cursor();
-
-    call(menu_event<T>::kind::move);
-
-    set_content_width( m_shell.get_content_width() *ncols);
-    set_content_height(m_shell.get_content_height()*nrows);
-
-    request_reform();
-  }
-
-
-  void  reset(const item_table_shell<T>&  shell, int  ncols, int  nrows) noexcept
-  {
-    m_shell = shell;
-
-    resize(ncols,nrows);
-  }
+  void  reset(const item_table_spec&  spec, int  ncols, int  nrows) noexcept;
 
   bool  does_show_cursor() const noexcept{return m_whether_show_cursor;}
   void  show_cursor() noexcept{m_whether_show_cursor =  true;}
@@ -512,125 +485,14 @@ public:
 
   const item_cursor&  get_cursor()  const noexcept{return m_cursor;}
 
-  void  move_up() noexcept
-  {
-      if(m_cursor.get_offset().y)
-      {
-        m_cursor.add_offset(0,-1);
+  void  move_up() noexcept;
+  void  move_down() noexcept;
+  void  move_left() noexcept;
+  void  move_right() noexcept;
 
-        call(menu_event<T>::kind::move);
+  void  render(const canvas&  cv) noexcept override;
 
-        request_redraw();
-      }
-
-    else
-      if(m_cursor.get_base().y)
-      {
-        m_cursor.add_base(0,-1);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-  }
-
-  void  move_down() noexcept
-  {
-      if(m_cursor.get_offset().y < (m_number_of_rows-1))
-      {
-        m_cursor.add_offset(0,1);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-
-    else
-      if((m_cursor.get_base().y+m_number_of_rows) < (m_shell.get_y_length()-1))
-      {
-        m_cursor.add_base(0,1);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-  }
-
-  void  move_left() noexcept
-  {
-      if(m_cursor.get_offset().x)
-      {
-        m_cursor.add_offset(-1,0);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-
-    else
-      if(m_cursor.get_base().x)
-      {
-        m_cursor.add_base(-1,0);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-  }
-
-  void  move_right() noexcept
-  {
-      if(m_cursor.get_offset().x < (m_number_of_columns-1))
-      {
-        m_cursor.add_offset(1,0);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-
-    else
-      if((m_cursor.get_base().x+m_number_of_columns) < (m_shell.get_x_length()-1))
-      {
-        m_cursor.add_base(1,0);
-
-        call(menu_event<T>::kind::move);
-
-        request_redraw();
-      }
-  }
-
-  void  render(const canvas&  cv) noexcept override
-  {
-    int  item_w = m_shell.get_item_width() ;
-    int  item_h = m_shell.get_item_height();
-
-      for(int  y = 0;  y < m_number_of_rows   ;  ++y){
-      for(int  x = 0;  x < m_number_of_columns;  ++x){
-        canvas  cocv(cv,item_w*x,item_h*y,
-                        item_w  ,item_h  );
-
-        m_shell.render(m_cursor+point(x,y),cocv);
-      }}
-
-
-      if(does_show_cursor())
-      {
-        point  pt(item_w*m_cursor.get_offset().x,
-                  item_h*m_cursor.get_offset().y);
-
-        render_cursor(pt,cv);
-      }
-  }
-
-
-  virtual void  render_cursor(point  item_pos, const canvas&  cv) const noexcept
-  {
-    int  w = m_shell.get_item_width() ;
-    int  h = m_shell.get_item_height();
-
-    cv.draw_rectangle(colors::yellow,item_pos.x,item_pos.y,w,h);
-  }
+  virtual void  render_cursor(point  item_pos, const canvas&  cv) const noexcept;
 
 };
 

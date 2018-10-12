@@ -52,7 +52,7 @@ checkbox(const checkbox&  member, const char16_t*  text) noexcept:
 m_label(new label(text)),
 m_data(member.m_data),
 m_iconshow(new iconshow({&icons::unchecked,&icons::checked})),
-m_entry_number(member.m_entry_number+1)
+m_entry_number(member.m_data->m_last->m_entry_number+1)
 {
   be_autonomous();
 

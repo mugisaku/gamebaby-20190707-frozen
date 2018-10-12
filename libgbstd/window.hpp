@@ -321,6 +321,9 @@ public:
 
   virtual void  render(const canvas&  cv) noexcept{}
 
+  void  fill(const canvas&  cv, gbstd::color  color) const noexcept;
+  void  fill(const canvas&  cv, color  color0, color  color1, int  interval) const noexcept;
+
 
   template<typename  T>T*  get_userdata() const noexcept{return static_cast<T*>(m_userdata);}
   void*  get_userdata() const noexcept{return m_userdata;}
@@ -350,6 +353,16 @@ public:
   void  append_row_child(std::initializer_list<widget*>  children) noexcept;
 
 };
+
+
+inline void
+set_userdata(std::initializer_list<widget*>  ls, void*  data) noexcept
+{
+    for(auto  wg: ls)
+    {
+      wg->set_userdata(data);
+    }
+}
 
 
 inline widget*

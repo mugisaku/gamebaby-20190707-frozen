@@ -246,28 +246,20 @@ do_on_mouse_act(point  mouse_pos) noexcept
 
 
 
-/*
 void
 widget::
-render_background(image_cursor  cur) const noexcept
+fill(const canvas&  cv, gbstd::color  color) const noexcept
 {
-  int  w = m_width;
-  int  h = m_height;
-
-  auto&  bgst = *m_background_style;
-
-    if(bgst.is_single_color())
-    {
-      cur.fill_rectangle(bgst.get_first_color(),0,0,w,h);
-    }
-
-  else
-    if(bgst.is_stripe())
-    {
-      cur.draw_stripe_rectangle(bgst.get_first_color(),bgst.get_second_color(),bgst.get_interval(),0,0,w,h);
-    }
+  cv.fill_rectangle(color,0,0,get_content_width(),get_content_height());
 }
-*/
+
+
+void
+widget::
+fill(const canvas&  cv, color  color0, color  color1, int  interval) const noexcept
+{
+  cv.draw_stripe_rectangle(color0,color1,interval,0,0,get_content_width(),get_content_height());
+}
 
 
 

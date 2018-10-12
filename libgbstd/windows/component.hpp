@@ -403,26 +403,13 @@ public:
   constexpr const point&    get_base() const noexcept{return m_base;}
   constexpr const point&  get_offset() const noexcept{return m_offset;}
 
-  void    add_base(int  x, int   y) noexcept{m_base   += point(x,y);}
-  void  add_offset(int  x, int   y) noexcept{m_offset += point(x,y);}
+  void    add_base(point  pt) noexcept{m_base   += pt;}
+  void  add_offset(point  pt) noexcept{m_offset += pt;}
 
-  constexpr point  get_point() const noexcept{return m_base+m_offset;}
+  void    set_base(point  pt) noexcept{m_base   = pt;}
+  void  set_offset(point  pt) noexcept{m_offset = pt;}
 
-};
-
-
-struct
-item_table_spec
-{
-  int  x_length;
-  int  y_length;
-
-  int  item_width ;
-  int  item_height;
-
-  void*  userdata;
-
-  void  (*render)(void*  userdata, const item_cursor&  cur, const canvas&  cv);
+  constexpr point  operator*() const noexcept{return m_base+m_offset;}
 
 };
 
@@ -437,10 +424,37 @@ public:
   using event::event;
 
   enum class kind{
-    move,
+    enter,
+    leave,
+    press,
+    release,
   };
 
-  bool  is_move() const noexcept{return test_kind(kind::move);}
+  bool  is_enter() const noexcept{return test_kind(kind::enter);}
+  bool  is_leave() const noexcept{return test_kind(kind::leave);}
+  bool  is_press() const noexcept{return test_kind(kind::press);}
+  bool  is_release() const noexcept{return test_kind(kind::release);}
+
+};
+
+
+struct
+item_table_spec
+{
+  using this_type = item_table_spec;
+
+  int  x_length;
+  int  y_length;
+
+  int  item_width ;
+  int  item_height;
+
+  void*  userdata;
+
+  void  (*render)(const this_type&  spec, const item_cursor&  cur, const canvas&  cv);
+
+  template<typename  T>
+  constexpr T*  get_userdata() const noexcept{return static_cast<T*>(userdata);}
 
 };
 
@@ -454,8 +468,6 @@ menu: public widget
   int  m_number_of_rows=0;
 
   item_cursor  m_cursor;
-
-  bool  m_whether_show_cursor=true;
 
 public:
   using callback = void(*)(menu_event  evt);
@@ -472,16 +484,14 @@ public:
   int  get_number_of_columns() const noexcept{return m_number_of_columns;}
   int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
 
+  const item_table_spec&  get_item_table_spec() const noexcept{return m_spec;}
+
   int  get_item_width()  const noexcept{return m_spec.item_width ;}
   int  get_item_height() const noexcept{return m_spec.item_height;}
 
   void  resize(int  ncols, int  nrows) noexcept;
 
   void  reset(const item_table_spec&  spec, int  ncols, int  nrows) noexcept;
-
-  bool  does_show_cursor() const noexcept{return m_whether_show_cursor;}
-  void  show_cursor() noexcept{m_whether_show_cursor =  true;}
-  void  hide_cursor() noexcept{m_whether_show_cursor = false;}
 
   const item_cursor&  get_cursor()  const noexcept{return m_cursor;}
 
@@ -490,9 +500,9 @@ public:
   void  move_left() noexcept;
   void  move_right() noexcept;
 
-  void  render(const canvas&  cv) noexcept override;
+  void  do_on_mouse_act(point  mouse_pos) noexcept override;
 
-  virtual void  render_cursor(point  item_pos, const canvas&  cv) const noexcept;
+  void  render(const canvas&  cv) noexcept override;
 
 };
 

@@ -126,6 +126,15 @@ public:
 };
 
 
+struct
+background_style
+{
+  gbstd::color  first_color ;
+  gbstd::color  second_color;
+
+};
+
+
 class
 core: public gbstd::widget
 {
@@ -174,6 +183,8 @@ core: public gbstd::widget
 
   gbstd::rectangle  m_operation_rect;
 
+  background_style  m_bg_style;
+
   void  (*m_callback)(core_event  evt)=nullptr;
 
   void  try_to_push_solid_record()    noexcept;
@@ -205,6 +216,9 @@ public:
 
   void          set_drawing_color(gbstd::color  color)       noexcept{       m_drawing_color = color;}
   gbstd::color  get_drawing_color(                   ) const noexcept{return m_drawing_color        ;}
+
+  void                     set_background_style(background_style  bgst)       noexcept;
+  const background_style&  get_background_style(                      ) const noexcept{return m_bg_style;}
 
   drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
 

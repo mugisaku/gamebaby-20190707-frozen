@@ -12,6 +12,9 @@ core::
 core(const gbstd::image&  img, int  w, int  h, void  (*callback)(core_event  evt)) noexcept:
 m_callback(callback)
 {
+  m_bg_style.first_color  = gbstd::color(0,0,7);
+  m_bg_style.second_color = gbstd::color(0,0,5);
+
   set_image(img,w,h);
 }
 
@@ -261,12 +264,22 @@ get_temporary_image() const noexcept
 
 void
 core::
+set_background_style(background_style  bgst) noexcept
+{
+  m_bg_style = bgst;
+
+  request_redraw();
+}
+
+
+void
+core::
 render(const gbstd::canvas&  cv) noexcept
 {
   const int  w = m_editing_width ;
   const int  h = m_editing_height;
 
-//  render_background(cur);
+  fill(cv,m_bg_style.first_color,m_bg_style.second_color,m_pixel_size/2);
 
     if(m_underlay_point_list)
     {

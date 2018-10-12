@@ -73,8 +73,17 @@ build_for_coloring(context*  ctx) noexcept
 
 namespace{
 void
-render_item(void*  userdata, const item_cursor&  cur,const canvas&  cv) noexcept
+render_item(const item_table_spec&  spec, const item_cursor&  cur,const canvas&  cv) noexcept
 {
+  auto&  ctx = *spec.get_userdata<context>();
+
+  auto  pt = *cur;
+
+  canvas  src_cv(ctx.m_source_image,ctx.m_cell_width*pt.x,ctx.m_cell_height*pt.y,
+                                    ctx.m_cell_width     ,ctx.m_cell_height      );
+
+  cv.draw_canvas(src_cv,ctx.m_cell_width *cur.get_offset().x,
+                        ctx.m_cell_height*cur.get_offset().y);
 }
 }
 
@@ -180,7 +189,7 @@ build_cell_table(context*  ctx) noexcept
   });
 
 
-  //widget::set_userdata(ctx,{up_btn,down_btn,ext_btn});
+  gbstd::set_userdata({up_btn,down_btn,ext_btn},ctx);
 
   auto     btn_col = make_column({up_btn,down_btn,ext_btn});
   auto  celtbl_col = make_column({ctx->m_menu,ctx->m_table_offset_label});
@@ -198,10 +207,14 @@ build_misc_buttons(context*  ctx) noexcept
 
       if(evt.is_release())
       {
-//        ctx->m_bg_style.set_first_color(ctx->m_color_maker->get_color());
+        auto  bgst = ctx->m_core->get_background_style();
+
+        bgst.first_color = ctx->m_color_maker->get_color();
+
+        ctx->m_core->set_background_style(bgst);
 
         ctx->m_core->request_redraw();
-//        ctx->m_menu->request_redraw();
+        ctx->m_menu->request_redraw();
       }
   });
 
@@ -210,10 +223,14 @@ build_misc_buttons(context*  ctx) noexcept
 
       if(evt.is_release())
       {
-//        ctx->m_bg_style.set_second_color(ctx->m_color_maker->get_color());
+        auto  bgst = ctx->m_core->get_background_style();
+
+        bgst.second_color = ctx->m_color_maker->get_color();
+
+        ctx->m_core->set_background_style(bgst);
 
         ctx->m_core->request_redraw();
-//        ctx->m_menu->request_redraw();
+        ctx->m_menu->request_redraw();
       }
   });
 
@@ -227,7 +244,7 @@ build_misc_buttons(context*  ctx) noexcept
 
 
 void
-build_canvas(context*  ctx) noexcept
+build_core(context*  ctx) noexcept
 {
   ctx->m_cursor_label = new label(u"X: -- Y: -- PIX: ---");
 
@@ -236,7 +253,7 @@ build_canvas(context*  ctx) noexcept
 
       if(evt.is_image_modified())
       {
-//        ctx->m_menu->request_redraw();
+        ctx->m_menu->request_redraw();
         ctx->m_callback();
       }
 
@@ -338,7 +355,7 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
   ctx->m_table_width  = table_w;
   ctx->m_table_height = table_h;
 
-  build_canvas(ctx);
+  build_core(ctx);
   build_for_coloring(ctx);
   build_misc_buttons(ctx);
   build_cell_table(ctx);
@@ -352,9 +369,6 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
   ctx->m_source_image.resize(cell_w*table_w,cell_h*table_h);
 
 //  ctx->m_menu->set_item_size(cell_w,cell_h);
-
-//  ctx->m_core->set_style(ctx->m_bg_style);
-//  ctx->m_menu->set_style(  ctx->m_bg_style);
 
   ctx->m_png_save_button = new button(new label(u"save as PNG"),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();

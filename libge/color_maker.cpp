@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 class
 sample: public gbstd::widget
 {
@@ -89,6 +92,11 @@ update_color() noexcept
 
 
   m_sample->request_redraw();
+}
+
+
+
+
 }
 
 

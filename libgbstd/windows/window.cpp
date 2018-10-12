@@ -68,8 +68,6 @@ void
 window::
 set_root_widget(widget*  wg) noexcept
 {
-  m_update_counter = 0;
-
   m_root.reset(wg);
 
   m_current = nullptr;

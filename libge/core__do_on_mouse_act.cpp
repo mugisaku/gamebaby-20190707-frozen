@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 void
 core::
 do_on_mouse_act(gbstd::point  mouse_pos) noexcept
@@ -234,7 +237,7 @@ do_on_mouse_act(gbstd::point  mouse_pos) noexcept
           else
             if(gbstd::g_input.test_mouse_right())
             {
-              m_operation_rect = gbstd::rectangle(0,0,m_editing_width,m_editing_height);
+              m_operation_rect = gbstd::rectangle(0,0,m_canvas.get_width(),m_canvas.get_height());
 
               request_redraw();
             }
@@ -289,6 +292,11 @@ do_on_mouse_act(gbstd::point  mouse_pos) noexcept
         }
       break;
     }
+}
+
+
+
+
 }
 
 

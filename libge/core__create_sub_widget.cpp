@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 using namespace gbstd;
 
 
@@ -154,6 +157,9 @@ create_tool_widget() noexcept
 
 
   return container;
+}
+
+
 }
 
 

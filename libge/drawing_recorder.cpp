@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 struct
 drawing_recorder::
 record
@@ -150,6 +153,10 @@ clear() noexcept
   m_record_list = nullptr;
 
   m_dot_buffer.resize(0);
+}
+
+
+
 }
 
 

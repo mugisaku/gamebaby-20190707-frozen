@@ -13,7 +13,7 @@ using namespace gbstd;
 namespace{
 
 
-core*
+ge::core*
 g_core;
 
 
@@ -25,11 +25,11 @@ window*
 g_window;
 
 
-color_holder*
+ge::color_holder*
 g_colhol;
 
 
-color_maker*
+ge::color_maker*
 g_colmak;
 
 
@@ -96,7 +96,9 @@ main_loop()
 int
 main(int  argc, char**  argv)
 {
-  g_core = new core(g_image,g_icon_size,g_icon_size,nullptr);
+  canvas  cv(g_image,0,0,g_icon_size,g_icon_size);
+
+  g_core = new ge::core(cv,nullptr);
 
   g_core->set_grid();
   g_core->set_pixel_size(12);
@@ -124,14 +126,14 @@ main(int  argc, char**  argv)
   };
 
 
-  g_colhol = new color_holder(color_list,[](color_holder&  holder, gbstd::color  color){
+  g_colhol = new ge::color_holder(color_list,[](ge::color_holder&  holder, gbstd::color  color){
     g_colmak->set_color(color);
 
     g_core->set_drawing_color(color);
   });
 
 
-  g_colmak = new color_maker([](color_maker&  maker, gbstd::color  color){
+  g_colmak = new ge::color_maker([](ge::color_maker&  maker, gbstd::color  color){
     g_colhol->set_color(color);
 
     g_core->set_drawing_color(color);

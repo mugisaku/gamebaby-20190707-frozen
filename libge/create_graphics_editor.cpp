@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 using namespace gbstd;
 
 
@@ -85,6 +88,28 @@ render_item(const item_table_spec&  spec, const item_cursor&  cur,const canvas& 
   cv.draw_canvas(src_cv,ctx.m_cell_width *cur.get_offset().x,
                         ctx.m_cell_height*cur.get_offset().y);
 }
+void
+process(menu_event  evt) noexcept
+{
+  auto&  ctx = *evt->get_userdata<context>();
+
+    if(evt.is_press())
+    {
+/*
+      ctx->m_current_index = point(0,ctx->m_table_offset)+index;
+
+      ctx->m_core->set_cursor_offset(ctx->m_cell_width *ctx->m_current_index.x,
+                                      ctx->m_cell_height*ctx->m_current_index.y);
+
+*/
+      ctx.m_menu->request_redraw();
+
+        if(ctx.m_callback)
+        {
+          ctx.m_callback();
+        }
+    }
+}
 }
 
 
@@ -97,66 +122,21 @@ build_cell_table(context*  ctx) noexcept
                            ctx->m_table_height,ctx,render_item};
 
   ctx->m_menu = new menu(spec,ctx->m_table_width,
-                              ctx->m_table_height);
-
-/*
-  menu_item_parameter  mip = {0,0,
-    [](menu&  menu, point  index, mouse_button  left, mouse_button  right)
-    {
-      auto  ctx = menu.get_userdata<context>();
-
-        if(left)
-        {
-          ctx->m_current_index = point(0,ctx->m_table_offset)+index;
-
-          ctx->m_core->set_cursor_offset(ctx->m_cell_width *ctx->m_current_index.x,
-                                          ctx->m_cell_height*ctx->m_current_index.y);
-
-          menu.request_redraw();
-
-            if(ctx->m_callback)
-            {
-              ctx->m_callback();
-            }
-        }
-    },
-
-    [](menu&  menu, point  index, imactx_cursor  cur)
-    {
-      auto  ctx = menu.get_userdata<context>();
-
-      auto  i = point(0,ctx->m_table_offset)+index;
-
-      auto  src_rect = ctx->get_rect(i);
-
-      imactxs::overlay(ctx->m_source_image,src_rect,cur);
-
-        if(i == ctx->m_current_index)
-        {
-          cur.draw_rectangle(colors::white,0,0,ctx->m_cell_width,
-                                               ctx->m_cell_height);
-        }
-    }
-  };
-*/
+                              ctx->m_table_height,process);
 
   ctx->m_menu->set_userdata(ctx);
+
 
   ctx->m_table_offset_label = new label(u" 1/ 1");
 
   auto  up_btn = new button(new iconshow({&icons::up}),[](button_event  evt){
-  auto  ctx = evt->get_userdata<context>();
+    auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_press())
       {
-          if(ctx->m_table_offset >= ctx->m_table_height)
-          {
-            ctx->m_table_offset -= ctx->m_table_height;
+        ctx->m_menu->move_up();
 
-            update_table_offset_label(ctx);
-
-            ctx->m_menu->request_redraw();
-          }
+        update_table_offset_label(ctx);
       }
   });
 
@@ -165,14 +145,9 @@ build_cell_table(context*  ctx) noexcept
 
       if(evt.is_press())
       {
-          if((ctx->m_table_offset+ctx->m_table_height) < (ctx->m_source_image.get_height()/ctx->m_cell_height))
-          {
-            ctx->m_table_offset += ctx->m_table_height;
+        ctx->m_menu->move_down();
 
-            update_table_offset_label(ctx);
-
-            ctx->m_menu->request_redraw();
-          }
+        update_table_offset_label(ctx);
       }
   });
 
@@ -248,7 +223,9 @@ build_core(context*  ctx) noexcept
 {
   ctx->m_cursor_label = new label(u"X: -- Y: -- PIX: ---");
 
-  ctx->m_core = new core(ctx->m_source_image,ctx->m_cell_width,ctx->m_cell_height,[](core_event  evt){
+  gbstd::canvas  cv(ctx->m_source_image,0,0,ctx->m_cell_width,ctx->m_cell_height);
+
+  ctx->m_core = new core(cv,[](core_event  evt){
     auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_image_modified())
@@ -355,6 +332,8 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
   ctx->m_table_width  = table_w;
   ctx->m_table_height = table_h;
 
+  ctx->m_source_image.resize(cell_w*table_w,cell_h*table_h);
+
   build_core(ctx);
   build_for_coloring(ctx);
   build_misc_buttons(ctx);
@@ -362,13 +341,6 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
 
   ctx->m_tool_widget_frame      = new frame(     "tool",ctx->m_core->create_tool_widget()     );
   ctx->m_operation_widget_frame = new frame("operation",ctx->m_core->create_operation_widget());
-
-  ctx->m_core->set_cursor_offset(0,0);
-  ctx->m_core->set_editing_size(cell_w,cell_h);
-
-  ctx->m_source_image.resize(cell_w*table_w,cell_h*table_h);
-
-//  ctx->m_menu->set_item_size(cell_w,cell_h);
 
   ctx->m_png_save_button = new button(new label(u"save as PNG"),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
@@ -417,6 +389,10 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
 
 
   return ctx;
+}
+
+
+
 }
 
 

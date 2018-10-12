@@ -5,6 +5,7 @@
 #include"libgbstd/windows/component.hpp"
 
 
+namespace ge{
 
 
 class
@@ -138,14 +139,7 @@ background_style
 class
 core: public gbstd::widget
 {
-  const gbstd::image*  m_image=nullptr;
-
   gbstd::canvas  m_canvas;
-
-  gbstd::point  m_cursor_offset;
-
-  int  m_editing_width ;
-  int  m_editing_height;
 
   int  m_pixel_size=1;
 
@@ -194,18 +188,13 @@ core: public gbstd::widget
 
 public:
   core() noexcept;
-  core(const gbstd::image&  img, int  w, int  h, void  (*callback)(core_event  evt)) noexcept;
+  core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept;
 
   const std::vector<gbstd::point>*  get_underlay_point_list(                                    ) const noexcept{return m_underlay_point_list     ;}
   void                              set_underlay_point_list(const std::vector<gbstd::point>*  ls)       noexcept{       m_underlay_point_list = ls;}
 
-  gbstd::point  get_cursor_offset(              ) const noexcept{return m_cursor_offset;}
-  void          set_cursor_offset(int  x, int  y) noexcept;
-
-  void  set_editing_size(int  w, int  h) noexcept;
-
-  int  get_editing_width()  const noexcept{return m_editing_width;}
-  int  get_editing_height() const noexcept{return m_editing_height;}
+  const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas;}
+  void                  set_canvas(const gbstd::canvas&  cv)       noexcept;
 
   int   get_pixel_size(      ) const noexcept{return m_pixel_size;}
   void  set_pixel_size(int  n)       noexcept;
@@ -319,7 +308,7 @@ context
 
   std::string  m_filepath;
 
-  void  (*m_callback)();
+  void  (*m_callback)()=nullptr;
 
 
   gbstd::rectangle  get_rect(gbstd::point  index) const noexcept;
@@ -333,9 +322,10 @@ context
 };
 
 
-context*  create_graphics_editor(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept;
+context*  create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept;
 
 
+}
 
 
 #endif

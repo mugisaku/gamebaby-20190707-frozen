@@ -147,6 +147,8 @@ public:
   canvas(const canvas&  cv, int  x, int  y, int  w, int  h) noexcept{assign(cv,x,y,w,h);}
   canvas(const canvas&  cv, const rectangle&  rect) noexcept{assign(cv,rect);}
 
+  operator bool() const noexcept{return m_pointer;}
+
   canvas&  assign(const image&  img                                ) noexcept;
   canvas&  assign(const image&  img, int  x, int  y, int  w, int  h) noexcept;
   canvas&  assign(const image&  img, const rectangle&  rect) noexcept{return assign(img,rect.x,rect.y,rect.w,rect.h);}

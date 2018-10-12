@@ -2,6 +2,9 @@
 #include"libgbpng/png.hpp"
 
 
+namespace ge{
+
+
 using namespace gbstd;
 using namespace gbpng;
 
@@ -11,11 +14,11 @@ core::
 make_apng_stream(const std::vector<point>&  pts, uint32_t  delay) const noexcept
 {
   std::vector<uint8_t>   buf;
-
+/*
     try
     {
-      const int  w = get_editing_width() ;
-      const int  h = get_editing_height();
+      const int  w = m_canvas.get_width() ;
+      const int  h = m_canvas.get_height();
 
       image_header  ihdr(w,h,pixel_format::rgba);
 
@@ -29,8 +32,8 @@ make_apng_stream(const std::vector<point>&  pts, uint32_t  delay) const noexcept
         {
           auto  dst = dst_img.get_row_pointer(0);
 
-          const int  x_base = get_editing_width() *pt.x;
-          const int  y_base = get_editing_height()*pt.y;
+          const int  x_base = width() *pt.x;
+          const int  y_base = _height()*pt.y;
 
             for(int  y = 0;  y < h;  ++y){
             for(int  x = 0;  x < w;  ++x){
@@ -70,9 +73,14 @@ make_apng_stream(const std::vector<point>&  pts, uint32_t  delay) const noexcept
     {
       printf("error: %s\n",e.what());
     }
-
+*/
 
   return std::move(buf);
+}
+
+
+
+
 }
 
 

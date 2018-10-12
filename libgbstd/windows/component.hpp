@@ -479,7 +479,7 @@ private:
 
 public:
   menu() noexcept{}
-  menu(const item_table_spec&  spec, int  ncols, int  nrows) noexcept{reset(spec,ncols,nrows);}
+  menu(const item_table_spec&  spec, int  ncols, int  nrows, callback  cb=nullptr) noexcept{reset(spec,ncols,nrows,cb);}
 
   int  get_number_of_columns() const noexcept{return m_number_of_columns;}
   int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
@@ -491,7 +491,7 @@ public:
 
   void  resize(int  ncols, int  nrows) noexcept;
 
-  void  reset(const item_table_spec&  spec, int  ncols, int  nrows) noexcept;
+  void  reset(const item_table_spec&  spec, int  ncols, int  nrows, callback  cb=nullptr) noexcept;
 
   const item_cursor&  get_cursor()  const noexcept{return m_cursor;}
 

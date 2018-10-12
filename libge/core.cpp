@@ -2,6 +2,10 @@
 
 
 
+
+namespace ge{
+
+
 core::
 core() noexcept
 {
@@ -9,13 +13,13 @@ core() noexcept
 
 
 core::
-core(const gbstd::image&  img, int  w, int  h, void  (*callback)(core_event  evt)) noexcept:
+core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept:
 m_callback(callback)
 {
   m_bg_style.first_color  = gbstd::color(0,0,7);
   m_bg_style.second_color = gbstd::color(0,0,5);
 
-  set_image(img,w,h);
+  set_canvas(cv);
 }
 
 
@@ -23,35 +27,24 @@ m_callback(callback)
 
 void
 core::
-set_cursor_offset(int  x, int  y) noexcept
+set_canvas(const gbstd::canvas&  cv) noexcept
 {
-  m_cursor_offset = {x,y};
-
-  m_canvas = gbstd::canvas(*m_image,x,y,m_editing_width,m_editing_height);
-
-  request_redraw();
-}
-
-
-void
-core::
-set_editing_size(int  w, int  h) noexcept
-{
-    if(m_image)
+    if(m_canvas)
     {
       cancel_select();
       cancel_drawing();
+
+      m_drawing_is_fixed = true;
+
+      m_recorder.clear();
     }
 
 
-  m_editing_width  = w;
-  m_editing_height = h;
-
-  m_drawing_is_fixed = true;
-
-  m_recorder.clear();
+  m_canvas = cv;
 
   reset();
+
+  request_redraw();
 }
 
 
@@ -91,23 +84,15 @@ void
 core::
 reset() noexcept
 {
-  m_operation_rect = gbstd::rectangle(0,0,m_editing_width,m_editing_height);
+  int  w = m_canvas.get_width();
+  int  h = m_canvas.get_height();
 
-  set_content_width( m_pixel_size*m_editing_width );
-  set_content_height(m_pixel_size*m_editing_height);
+  m_operation_rect = gbstd::rectangle(0,0,w,h);
+
+  set_content_width( m_pixel_size*w);
+  set_content_height(m_pixel_size*h);
 
   request_reform();
-}
-
-
-void
-core::
-set_image(const gbstd::image&  img, int  w, int  h) noexcept
-{
-  set_editing_size(w,h);
-
-  m_image = &img;
-  m_canvas = gbstd::canvas(img,0,0,w,h);
 }
 
 
@@ -119,8 +104,7 @@ modify_dot(gbstd::color  new_color, int  x, int  y) noexcept
 
     if(pix.color != new_color)
     {
-      m_recorder.put(pix.color,m_cursor_offset.x+x,
-                               m_cursor_offset.y+y);
+      m_recorder.put(pix.color,x,y);
 
       pix.color = new_color;
 
@@ -198,8 +182,8 @@ cancel_select() noexcept
 {
   m_operation_rect.x = 0;
   m_operation_rect.y = 0;
-  m_operation_rect.w = m_editing_width ;
-  m_operation_rect.h = m_editing_height;
+  m_operation_rect.w = m_canvas.get_width();
+  m_operation_rect.h = m_canvas.get_height();
 
   request_redraw();
 }
@@ -248,10 +232,13 @@ gbstd::image
 core::
 get_temporary_image() const noexcept
 {
-  gbstd::image  img(m_editing_width,m_editing_height);
+  int  w = m_canvas.get_width() ;
+  int  h = m_canvas.get_height();
 
-    for(int  y = 0;  y < m_editing_height;  ++y){
-    for(int  x = 0;  x < m_editing_width ;  ++x){
+  gbstd::image  img(w,h);
+
+    for(int  y = 0;  y < h;  ++y){
+    for(int  x = 0;  x < w;  ++x){
       auto  pix = *m_canvas.get_pixel_pointer(x,y);
 
       *img.get_pixel_pointer(x,y) = pix;
@@ -276,13 +263,14 @@ void
 core::
 render(const gbstd::canvas&  cv) noexcept
 {
-  const int  w = m_editing_width ;
-  const int  h = m_editing_height;
+  int  w = m_canvas.get_width() ;
+  int  h = m_canvas.get_height();
 
   fill(cv,m_bg_style.first_color,m_bg_style.second_color,m_pixel_size/2);
 
     if(m_underlay_point_list)
     {
+/*
         for(auto&  pt: *m_underlay_point_list)
         {
             for(int  y = 0;  y < h;  ++y){
@@ -295,6 +283,7 @@ render(const gbstd::canvas&  cv) noexcept
                 }
             }}
         }
+*/
     }
 
 
@@ -340,6 +329,11 @@ render(const gbstd::canvas&  cv) noexcept
     m_pixel_size*m_operation_rect.w,
     m_pixel_size*m_operation_rect.h
   );
+}
+
+
+
+
 }
 
 

@@ -81,8 +81,6 @@ window
 
   color  m_background_color;
 
-  uint32_t  m_update_counter=0;
-
   void  process_by_mouse_position(point&  pt) noexcept;
 
 public:
@@ -123,8 +121,6 @@ public:
   bool           redraw_if_necessary() noexcept;
 
   void  process_user_input(point  pt) noexcept;
-
-  uint32_t  get_update_ccounter() const noexcept{return m_update_counter;}
 
   void  print() const noexcept;
 

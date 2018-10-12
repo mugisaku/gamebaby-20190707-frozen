@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 void
 core::
 paste(gbstd::point  pt, bool  layer) noexcept
@@ -11,7 +14,7 @@ paste(gbstd::point  pt, bool  layer) noexcept
 
 
   gbstd::rectangle  src_rect = m_clipped_image.get_rectangle();
-  gbstd::rectangle  dst_rect(pt,m_editing_width,m_editing_height);
+  gbstd::rectangle  dst_rect(pt,m_canvas.get_width(),m_canvas.get_height());
 
   auto  rect = src_rect&dst_rect;
 
@@ -239,6 +242,10 @@ shift_down(bool  rotate) noexcept
   try_to_push_solid_record();
 }
 
+
+
+
+}
 
 
 

@@ -3,6 +3,9 @@
 
 
 
+namespace ge{
+
+
 void
 core::
 draw_line(gbstd::color  color, gbstd::point  a, gbstd::point  b) noexcept
@@ -81,8 +84,8 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
     }
 
 
-  const int  w = m_editing_width ;
-  const int  h = m_editing_height;
+  const int  w = m_canvas.get_width() ;
+  const int  h = m_canvas.get_height();
 
   m_canvas.fill(gbstd::color(),0,0,w,h);
 
@@ -92,8 +95,6 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
   std::vector<gbstd::point>  stack;
 
   int  i = 0;
-
-  auto&  offset = m_cursor_offset;
 
   stack.emplace_back(pt);
 
@@ -109,8 +110,8 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
 
             if(pix.color == target_color)
             {
-              m_recorder.put(pix.color,offset.x+pt.x,
-                                       offset.y+pt.y);
+              m_recorder.put(pix.color,pt.x,
+                                       pt.y);
 
               pix.color = color;
 
@@ -128,6 +129,10 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
   m_drawing_is_fixed = true;
 }
 
+
+
+
+}
 
 
 

@@ -3,6 +3,11 @@
 
 
 
+namespace ge{
+
+
+
+
 constexpr int  rect_size = 16;
 
 
@@ -97,6 +102,10 @@ do_on_mouse_act(gbstd::point  mouse_pos) noexcept
     }
 }
 
+
+
+
+}
 
 
 

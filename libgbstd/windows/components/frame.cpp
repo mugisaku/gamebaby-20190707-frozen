@@ -28,13 +28,16 @@ m_character_color(m_default_character_color),
 m_line_color(m_default_line_color)
 {
   m_container = new widget;
+  m_label     = new label;
 
   m_container->set_left_padding(margin/2);
   m_container->set_right_padding(margin/2);
-  m_container->set_top_padding(margin);
+//  m_container->set_top_padding(margin);
   m_container->set_bottom_padding(margin/2);
 
-  append_child(m_container,0,0);
+  append_column_child({m_label,m_container});
+
+  m_label->set_color(m_default_character_color);
 
   set_text(text);
 
@@ -60,7 +63,9 @@ void
 frame::
 set_text(const char*  s) noexcept
 {
-  m_text = make_u16string(s);
+  m_label->set_text(s);
+
+  request_reform();
 }
 
 
@@ -78,8 +83,6 @@ void
 frame::
 render(const canvas&  cv) noexcept
 {
-  cv.draw_string(m_character_color,m_text.data(),0,0);
-
   cv.draw_rectangle(m_line_color,0,0,get_width(),get_height());
 }
 

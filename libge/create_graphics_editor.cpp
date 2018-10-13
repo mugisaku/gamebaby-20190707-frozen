@@ -19,8 +19,8 @@ update_table_offset_label(const context*  ctx) noexcept
 {
   string_form  sf;
 
-  int  num = ctx->m_table_offset/ctx->m_table_height;
-  int  den = ctx->m_source_image.get_height()/(ctx->m_cell_height*ctx->m_table_height);
+  int  num = ctx->m_menu->get_item_cursor().get_base().y;
+  int  den = ctx->m_menu->get_item_table_size().y_length;
 
   ctx->m_table_offset_label->set_text(sf("%2d/%2d",num+1,den));
 }
@@ -75,19 +75,38 @@ build_for_coloring(context*  ctx) noexcept
 
 
 namespace{
-void
-render_item(const item_table_spec&  spec, const item_cursor&  cur,const canvas&  cv) noexcept
+class
+cell_menu: public menu
 {
-  auto&  ctx = *spec.get_userdata<context>();
+public:
+  using menu::menu;
 
-  auto  pt = *cur;
+  void  render_background(const canvas&  cv) noexcept override
+  {
+    auto&  ctx = *get_userdata<context>();
 
-  canvas  src_cv(ctx.m_source_image,ctx.m_cell_width*pt.x,ctx.m_cell_height*pt.y,
-                                    ctx.m_cell_width     ,ctx.m_cell_height      );
+    ctx.m_core->render_background(2,cv);
+  }
 
-  cv.draw_canvas(src_cv,ctx.m_cell_width *cur.get_offset().x,
-                        ctx.m_cell_height*cur.get_offset().y);
-}
+  void  render_item(point  item_index, const canvas&  cv) noexcept override
+  {
+    auto&  ctx = *get_userdata<context>();
+
+    int  w = ctx.m_cell_width ;
+    int  h = ctx.m_cell_height;
+
+    canvas  src_cv(ctx.m_source_image,w*item_index.x,h*item_index.y,
+                                      w             ,h             );
+
+    cv.draw_canvas(src_cv,0,0);
+
+         if(ctx.m_current_index == item_index){cv.draw_rectangle(colors::white,0,0,w  ,h  );}
+    else if(ctx.m_seeking_index == item_index){cv.draw_rectangle(colors::black,1,1,w-2,h-2);}
+  }
+
+};
+
+
 void
 process(menu_event  evt) noexcept
 {
@@ -95,19 +114,34 @@ process(menu_event  evt) noexcept
 
     if(evt.is_press())
     {
-/*
-      ctx->m_current_index = point(0,ctx->m_table_offset)+index;
+      ctx.m_current_index = evt->get_item_cursor().get_result();
 
-      ctx->m_core->set_cursor_offset(ctx->m_cell_width *ctx->m_current_index.x,
-                                      ctx->m_cell_height*ctx->m_current_index.y);
+      auto&  pt = ctx.m_current_index;
 
-*/
-      ctx.m_menu->request_redraw();
+      auto&  sz = evt->get_item_size();
+
+      int  w = sz.width;
+      int  h = sz.height;
+
+      canvas  cv(ctx.m_source_image,w*pt.x,h*pt.y,w,h);
+
+      ctx.m_core->set_canvas(cv);
 
         if(ctx.m_callback)
         {
           ctx.m_callback();
         }
+
+
+      ctx.m_menu->request_redraw();
+    }
+
+  else
+    if(evt.is_enter())
+    {
+      ctx.m_seeking_index = evt->get_item_cursor().get_result();
+
+      ctx.m_menu->request_redraw();
     }
 }
 }
@@ -116,18 +150,14 @@ process(menu_event  evt) noexcept
 void
 build_cell_table(context*  ctx) noexcept
 {
-  item_table_spec  spec = {ctx->m_cell_width,
-                           ctx->m_cell_height,
-                           ctx->m_table_width,
-                           ctx->m_table_height,ctx,render_item};
-
-  ctx->m_menu = new menu(spec,ctx->m_table_width,
-                              ctx->m_table_height,process);
+  ctx->m_menu = new cell_menu(item_size{ctx->m_cell_width,ctx->m_cell_height},
+                              item_table_size{ctx->m_table_width,ctx->m_table_height},
+                              ctx->m_table_width,ctx->m_table_height,process);
 
   ctx->m_menu->set_userdata(ctx);
 
 
-  ctx->m_table_offset_label = new label(u" 1/ 1");
+  ctx->m_table_offset_label = new label(u" 1/ 1",colors::black);
 
   auto  up_btn = new button(new iconshow({&icons::up}),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
@@ -177,7 +207,7 @@ build_cell_table(context*  ctx) noexcept
 void
 build_misc_buttons(context*  ctx) noexcept
 {
-  auto  ch1bg_btn = new button(new label(u"Chanctx bg1 color"),[](button_event  evt){
+  auto  ch1bg_btn = new button(new label(u"Change bg1 color",colors::black),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_release())
@@ -193,7 +223,7 @@ build_misc_buttons(context*  ctx) noexcept
       }
   });
 
-  auto  ch2bg_btn = new button(new label(u"Chanctx bg2 color"),[](button_event  evt){
+  auto  ch2bg_btn = new button(new label(u"Change bg2 color",colors::black),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_release())
@@ -218,10 +248,11 @@ build_misc_buttons(context*  ctx) noexcept
 
 
 
+
 void
 build_core(context*  ctx) noexcept
 {
-  ctx->m_cursor_label = new label(u"X: -- Y: -- PIX: ---");
+  ctx->m_cursor_label = new label(u"X: -- Y: -- PIX: ---",colors::black);
 
   gbstd::canvas  cv(ctx->m_source_image,0,0,ctx->m_cell_width,ctx->m_cell_height);
 
@@ -268,6 +299,91 @@ build_core(context*  ctx) noexcept
   ctx->m_core_frame = new frame("canvas",make_column({ctx->m_core,ctx->m_cursor_label}));
 
   ctx->m_core_frame->set_line_color(colors::white);
+}
+
+
+void
+build_underlay(context*  ctx) noexcept
+{
+  auto  onpush = [](button_event  evt) noexcept{
+      if(evt.is_release())
+      {
+        auto&  ctx = *evt->get_userdata<context>();
+
+  //      g_point_stack.emplace_back(ctx.m_core->get_cursor_offset());
+
+        string_form  sf;
+
+        ctx.m_underlay.m_counter_label->set_text(sf("%2d",ctx.m_animation_points.size()));
+
+
+        ctx.m_core->request_redraw();
+//        animator::view.request_redraw();
+      }
+  };
+
+
+  auto  onpop = [](button_event  evt) noexcept{
+      if(evt.is_release())
+      {
+        auto&  ctx = *evt->get_userdata<context>();
+
+          if(ctx.m_animation_points.size())
+          {
+            ctx.m_animation_points.pop_back();
+
+            string_form  sf;
+
+            ctx.m_underlay.m_counter_label->set_text(sf("%2d",ctx.m_animation_points.size()));
+
+
+            ctx.m_core->request_redraw();
+//            animator::view.request_redraw();
+          }
+      }
+  };
+
+
+  auto  onswitch = [](button_event  evt) noexcept{
+      if(evt.is_release())
+      {
+        auto&  ctx = *evt->get_userdata<context>();
+
+          if(ctx.m_core->test_whether_show_underlay())
+          {
+            ctx.m_core->hide_underlay();
+
+            ctx.m_underlay.m_switching_label->modify_text(u"show");
+          }
+
+        else
+          {
+            ctx.m_core->show_underlay();
+
+            ctx.m_underlay.m_switching_label->modify_text(u"hide");
+          }
+
+
+        ctx.m_core->request_redraw();
+//        animator::view.request_redraw();
+      }
+  };
+
+
+  ctx->m_underlay.m_switching_label = new label(u"hide",colors::black);
+  ctx->m_underlay.m_counter_label   = new label(u" 0",colors::black);
+
+
+  auto  psh_btn = new button(new label(u"push",colors::black),onpush);
+  auto  pop_btn = new button(new label(u"pop",colors::black),onpop);
+  auto  swi_btn = new button(ctx->m_underlay.m_switching_label,onswitch);
+
+  set_userdata({psh_btn,pop_btn,swi_btn},ctx);
+
+
+  auto  tbl = make_column({ctx->m_underlay.m_counter_label,psh_btn,pop_btn,swi_btn});
+
+  ctx->m_underlay.m_frame = new frame("underlay",tbl);
 }
 
 
@@ -342,7 +458,7 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
   ctx->m_tool_widget_frame      = new frame(     "tool",ctx->m_core->create_tool_widget()     );
   ctx->m_operation_widget_frame = new frame("operation",ctx->m_core->create_operation_widget());
 
-  ctx->m_png_save_button = new button(new label(u"save as PNG"),[](button_event  evt){
+  ctx->m_png_save_button = new button(new label(u"save as PNG",colors::black),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_release())
@@ -364,7 +480,7 @@ create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
 
 
 
-  ctx->m_apng_save_button = new button(new label(u"save as APNG"),[](button_event  evt){
+  ctx->m_apng_save_button = new button(new label(u"save as APNG",colors::black),[](button_event  evt){
     auto  ctx = evt->get_userdata<context>();
 
       if(evt.is_release())

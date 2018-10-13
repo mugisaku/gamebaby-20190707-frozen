@@ -87,7 +87,7 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
   const int  w = m_canvas.get_width() ;
   const int  h = m_canvas.get_height();
 
-  m_canvas.fill(gbstd::color(),0,0,w,h);
+  std::vector<uint8_t>  table(w*h,0);
 
   try_to_push_nonsolid_record();
 
@@ -102,11 +102,13 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
     {
       auto  pt = stack[i++];
 
-      auto&  pix = *m_canvas.get_pixel_pointer(pt.x,pt.y);
+      auto&  flag = table[(w*pt.y)+pt.x];
 
-        if(!pix.z)
+        if(!flag)
         {
-          pix.z = 1;
+          flag = 1;
+
+          auto&  pix = *m_canvas.get_pixel_pointer(pt.x,pt.y);
 
             if(pix.color == target_color)
             {
@@ -115,10 +117,10 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
 
               pix.color = color;
 
-                if(pt.x      ){stack.emplace_back((pt.x-1,pt.y  ));}
-                if(pt.y      ){stack.emplace_back((pt.x  ,pt.y-1));}
-                if(pt.x < w-1){stack.emplace_back((pt.x+1,pt.y  ));}
-                if(pt.y < h-1){stack.emplace_back((pt.x  ,pt.y+1));}
+                if(pt.x      ){stack.emplace_back(pt.x-1,pt.y  );}
+                if(pt.y      ){stack.emplace_back(pt.x  ,pt.y-1);}
+                if(pt.x < w-1){stack.emplace_back(pt.x+1,pt.y  );}
+                if(pt.y < h-1){stack.emplace_back(pt.x  ,pt.y+1);}
             }
         }
     }

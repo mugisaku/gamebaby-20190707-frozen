@@ -17,7 +17,7 @@ core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept:
 m_callback(callback)
 {
   m_bg_style.first_color  = gbstd::color(0,0,7);
-  m_bg_style.second_color = gbstd::color(0,0,5);
+  m_bg_style.second_color = gbstd::color(2,2,5);
 
   set_canvas(cv);
 }
@@ -261,29 +261,69 @@ set_background_style(background_style  bgst) noexcept
 
 void
 core::
+show_underlay() noexcept
+{
+  m_whether_show_underlay = true;
+
+  request_redraw();
+}
+
+
+void
+core::
+hide_underlay() noexcept
+{
+  m_whether_show_underlay = false;
+
+  request_redraw();
+}
+
+
+void
+core::
+render_background(int  pixel_size, const gbstd::canvas&  cv) const noexcept
+{
+  int  w = cv.get_width() ;
+  int  h = cv.get_height();
+
+  cv.draw_stripe_rectangle(m_bg_style.first_color,m_bg_style.second_color,pixel_size/2,0,0,w,h);
+}
+
+
+void
+core::
+render_underlay(int  pixel_size, const gbstd::canvas&  cv) const noexcept
+{
+  int  w = cv.get_width() ;
+  int  h = cv.get_height();
+
+    for(auto&  ulcv: m_underlay_stack)
+    {
+        for(int  y = 0;  y < h;  ++y){
+        for(int  x = 0;  x < w;  ++x){
+          auto&  pix = *ulcv.get_pixel_pointer(x,y);
+
+            if(pix.color)
+            {
+              cv.fill_rectangle(pix.color,m_pixel_size*x,m_pixel_size*y,m_pixel_size,m_pixel_size);
+            }
+        }}
+    }
+}
+
+
+void
+core::
 render(const gbstd::canvas&  cv) noexcept
 {
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
-  fill(cv,m_bg_style.first_color,m_bg_style.second_color,m_pixel_size/2);
+  render_background(m_pixel_size,cv);
 
-    if(m_underlay_point_list)
+    if(m_whether_show_underlay)
     {
-/*
-        for(auto&  pt: *m_underlay_point_list)
-        {
-            for(int  y = 0;  y < h;  ++y){
-            for(int  x = 0;  x < w;  ++x){
-              auto&  pix = *m_image->get_pixel_pointer(pt.x+x,pt.y+y);
-
-                if(pix.color)
-                {
-                  cv.fill_rectangle(pix.color,m_pixel_size*x,m_pixel_size*y,m_pixel_size,m_pixel_size);
-                }
-            }}
-        }
-*/
+      render_underlay(  m_pixel_size,cv);
     }
 
 

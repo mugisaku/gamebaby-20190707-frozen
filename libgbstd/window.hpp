@@ -308,6 +308,8 @@ public:
   void  request_reform() noexcept;
 
 
+  virtual void  process_before_reform() noexcept{}
+
   void  reform(point  parent_content_position) noexcept;
   void  redraw(const image&  img) noexcept;
 

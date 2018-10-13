@@ -161,12 +161,13 @@ core: public gbstd::widget
   drawing_recorder  m_recorder;
 
   bool  m_drawing_is_fixed=true;
+  bool  m_whether_show_underlay=true;
 
   gbstd::color  m_drawing_color=gbstd::color(0,0,0);
 
   gbstd::image  m_clipped_image;
 
-  const std::vector<gbstd::point>*  m_underlay_point_list=nullptr;
+  std::vector<gbstd::canvas>  m_underlay_stack;
 
   int  m_pointing_count=0;
 
@@ -190,8 +191,9 @@ public:
   core() noexcept;
   core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept;
 
-  const std::vector<gbstd::point>*  get_underlay_point_list(                                    ) const noexcept{return m_underlay_point_list     ;}
-  void                              set_underlay_point_list(const std::vector<gbstd::point>*  ls)       noexcept{       m_underlay_point_list = ls;}
+  void  push_underlay(const gbstd::canvas&  cv) noexcept{m_underlay_stack.emplace_back(cv);}
+  void   pop_underlay(                        ) noexcept{m_underlay_stack.pop_back();}
+  void  clear_underlay_stack() noexcept{m_underlay_stack.clear();}
 
   const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas;}
   void                  set_canvas(const gbstd::canvas&  cv)       noexcept;
@@ -210,6 +212,12 @@ public:
   const background_style&  get_background_style(                      ) const noexcept{return m_bg_style;}
 
   drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
+
+  void  show_underlay() noexcept;
+  void  hide_underlay() noexcept;
+
+  bool  test_whether_show_underlay() const noexcept{return m_whether_show_underlay;}
+
 
   void    set_grid() noexcept;
   void  unset_grid() noexcept;
@@ -259,6 +267,9 @@ public:
 
   void  render(const gbstd::canvas&  cv) noexcept override;
 
+  void  render_underlay(  int  pixel_size, const gbstd::canvas&  cv) const noexcept;
+  void  render_background(int  pixel_size, const gbstd::canvas&  cv) const noexcept;
+
   std::vector<uint8_t>  make_apng_stream(const std::vector<gbstd::point>&  pts, uint32_t  delay) const noexcept;
 
 };
@@ -276,8 +287,7 @@ context
   int  m_table_height;
 
   gbstd::point  m_current_index;
-
-  int  m_table_offset=0;
+  gbstd::point  m_seeking_index;
 
 
   core*  m_core;
@@ -305,6 +315,14 @@ context
 
   gbstd::menu*  m_menu;
 
+  struct{
+    gbstd::frame*  m_frame;
+
+    gbstd::label*    m_counter_label;
+    gbstd::label*  m_switching_label;
+
+  } m_underlay;
+
 
   std::string  m_filepath;
 
@@ -318,6 +336,8 @@ context
   std::vector<gbstd::point>  m_animation_points;
 
   uint32_t  m_animation_delay=1000;
+
+
 
 };
 

@@ -33,12 +33,15 @@ public:
 
 
 
+class label;
+
+
 class
 frame: public widget
 {
-  std::u16string  m_text;
-
   widget*  m_container=nullptr;
+
+  label*  m_label;
 
   character_color  m_character_color;
 
@@ -395,6 +398,16 @@ public:
   constexpr item_cursor() noexcept{}
   constexpr item_cursor(point  base, point  off) noexcept: m_base(base), m_offset(off){}
 
+  constexpr bool  operator==(const item_cursor&  rhs) const noexcept
+  {
+    return (m_base == rhs.m_base) && (m_offset == rhs.m_offset);
+  }
+
+  constexpr bool  operator!=(const item_cursor&  rhs) const noexcept
+  {
+    return !(*this == rhs);
+  }
+
   constexpr item_cursor  operator+(point  pt) const noexcept
   {
     return item_cursor(m_base,m_offset+pt);
@@ -402,14 +415,13 @@ public:
 
   constexpr const point&    get_base() const noexcept{return m_base;}
   constexpr const point&  get_offset() const noexcept{return m_offset;}
+  constexpr point         get_result() const noexcept{return m_base+m_offset;}
 
   void    add_base(point  pt) noexcept{m_base   += pt;}
   void  add_offset(point  pt) noexcept{m_offset += pt;}
 
   void    set_base(point  pt) noexcept{m_base   = pt;}
   void  set_offset(point  pt) noexcept{m_offset = pt;}
-
-  constexpr point  operator*() const noexcept{return m_base+m_offset;}
 
 };
 
@@ -439,22 +451,19 @@ public:
 
 
 struct
-item_table_spec
+item_table_size
 {
-  using this_type = item_table_spec;
-
   int  x_length;
   int  y_length;
 
-  int  item_width ;
-  int  item_height;
+};
 
-  void*  userdata;
 
-  void  (*render)(const this_type&  spec, const item_cursor&  cur, const canvas&  cv);
-
-  template<typename  T>
-  constexpr T*  get_userdata() const noexcept{return static_cast<T*>(userdata);}
+struct
+item_size
+{
+  int  width ;
+  int  height;
 
 };
 
@@ -462,7 +471,8 @@ item_table_spec
 class
 menu: public widget
 {
-  item_table_spec  m_spec;
+  item_table_size  m_item_table_size;
+  item_size        m_item_size;
 
   int  m_number_of_columns=0;
   int  m_number_of_rows=0;
@@ -479,21 +489,19 @@ private:
 
 public:
   menu() noexcept{}
-  menu(const item_table_spec&  spec, int  ncols, int  nrows, callback  cb=nullptr) noexcept{reset(spec,ncols,nrows,cb);}
+  menu(item_size  itm_sz, item_table_size  itmtbl_sz, int  ncols, int  nrows, callback  cb=nullptr) noexcept{reset(itm_sz,itmtbl_sz,ncols,nrows,cb);}
 
   int  get_number_of_columns() const noexcept{return m_number_of_columns;}
   int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
 
-  const item_table_spec&  get_item_table_spec() const noexcept{return m_spec;}
-
-  int  get_item_width()  const noexcept{return m_spec.item_width ;}
-  int  get_item_height() const noexcept{return m_spec.item_height;}
+  const item_size&        get_item_size()       const noexcept{return m_item_size;}
+  const item_table_size&  get_item_table_size() const noexcept{return m_item_table_size;}
 
   void  resize(int  ncols, int  nrows) noexcept;
 
-  void  reset(const item_table_spec&  spec, int  ncols, int  nrows, callback  cb=nullptr) noexcept;
+  void  reset(item_size  itm_sz, item_table_size  itmtbl_sz, int  ncols, int  nrows, callback  cb=nullptr) noexcept;
 
-  const item_cursor&  get_cursor()  const noexcept{return m_cursor;}
+  const item_cursor&  get_item_cursor()  const noexcept{return m_cursor;}
 
   void  move_up() noexcept;
   void  move_down() noexcept;
@@ -503,6 +511,9 @@ public:
   void  do_on_mouse_act(point  mouse_pos) noexcept override;
 
   void  render(const canvas&  cv) noexcept override;
+
+  virtual void  render_background(const canvas&  cv) noexcept{}
+  virtual void  render_item(point  item_index, const canvas&  cv) noexcept=0;
 
 };
 

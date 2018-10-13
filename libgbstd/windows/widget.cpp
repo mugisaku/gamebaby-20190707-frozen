@@ -141,6 +141,8 @@ void
 widget::
 reform(point  parent_content_position) noexcept
 {
+  process_before_reform();
+
   set_base_position(parent_content_position+m_offset);
 
     if(m_children.empty())

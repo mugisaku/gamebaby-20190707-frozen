@@ -259,6 +259,42 @@ set_background_style(background_style  bgst) noexcept
 }
 
 
+
+
+void
+core::
+push_underlay(const gbstd::image&  img, gbstd::point  pt) noexcept
+{
+  m_underlay_stack.emplace_back(img,pt.x,pt.y,m_canvas.get_width(),m_canvas.get_height());
+  m_underlay_points.emplace_back(pt);
+}
+
+
+void
+core::
+pop_underlay() noexcept
+{
+  m_underlay_stack.pop_back();
+  m_underlay_points.pop_back();
+}
+
+
+void
+core::
+rebase_underlay_stack(const gbstd::image&  img) noexcept
+{
+  m_underlay_stack.clear();
+
+  int  w = m_canvas.get_width() ;
+  int  h = m_canvas.get_height();
+
+    for(auto&  pt: m_underlay_points)
+    {
+      m_underlay_stack.emplace_back(img,w*pt.x,h*pt.y,w,h);
+    }
+}
+
+
 void
 core::
 show_underlay() noexcept

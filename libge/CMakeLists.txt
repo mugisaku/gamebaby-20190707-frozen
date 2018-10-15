@@ -3,14 +3,18 @@
 set(SOURCES
   color_maker.cpp
   color_holder.cpp
+  aniview.cpp
   drawing_recorder.cpp
+  underlay_stacker.cpp
   core.cpp
   core__do_on_mouse_act.cpp
   core__draw.cpp
   core__make_apng_stream.cpp
   core__operate.cpp
   core__create_sub_widget.cpp
-  create_graphics_editor.cpp
+  context.cpp
+  context__build_core.cpp
+  context__build_cell_table.cpp
 )
 
 

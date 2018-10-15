@@ -3,6 +3,7 @@
 
 
 #include"libgbstd/windows/component.hpp"
+#include"libgbstd/file_op.hpp"
 
 
 namespace ge{
@@ -58,6 +59,58 @@ public:
 
 };
 
+
+class context;
+
+
+class
+aniview: public gbstd::widget
+{
+  int  m_index=0;
+
+  uint32_t  m_delay_time=0;
+  uint32_t  m_next_time=0;
+
+  gbstd::label*  m_state_label;
+
+  std::vector<gbstd::canvas>  m_frames;
+  std::vector<gbstd::point>   m_points;
+
+  static void   psh(gbstd::button_event  evt) noexcept;
+  static void   pop(gbstd::button_event  evt) noexcept;
+  static void  dial_callback(gbstd::dial_event  evt) noexcept;
+
+public:
+  aniview(context&  ctx) noexcept;
+
+  void  clear() noexcept;
+  void  check() noexcept;
+
+  void  rebase(const gbstd::image&  img) noexcept;
+
+  void  update_state_label() noexcept;
+
+  void  render(const gbstd::canvas&  cv) noexcept override;
+
+};
+
+
+class
+underlay_stacker: public gbstd::widget
+{
+  gbstd::label*    m_counter_label;
+  gbstd::label*  m_switching_label;
+
+  static void   psh(gbstd::button_event  evt) noexcept;
+  static void   pop(gbstd::button_event  evt) noexcept;
+  static void   swi(gbstd::button_event  evt) noexcept;
+
+public:
+  underlay_stacker(context&  ctx) noexcept;
+
+  void  update_counter_label() noexcept;
+
+};
 
 
 
@@ -168,6 +221,7 @@ core: public gbstd::widget
   gbstd::image  m_clipped_image;
 
   std::vector<gbstd::canvas>  m_underlay_stack;
+  std::vector<gbstd::point>   m_underlay_points;
 
   int  m_pointing_count=0;
 
@@ -191,9 +245,12 @@ public:
   core() noexcept;
   core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept;
 
-  void  push_underlay(const gbstd::canvas&  cv) noexcept{m_underlay_stack.emplace_back(cv);}
-  void   pop_underlay(                        ) noexcept{m_underlay_stack.pop_back();}
-  void  clear_underlay_stack() noexcept{m_underlay_stack.clear();}
+  void  push_underlay(const gbstd::image&  img, gbstd::point  pt) noexcept;
+  void   pop_underlay(                                          ) noexcept;
+  int  get_number_of_underlays() const noexcept{return m_underlay_stack.size();}
+
+  void   clear_underlay_stack() noexcept{m_underlay_stack.clear();}
+  void  rebase_underlay_stack(const gbstd::image&  img) noexcept;
 
   const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas;}
   void                  set_canvas(const gbstd::canvas&  cv)       noexcept;
@@ -315,14 +372,12 @@ context
 
   gbstd::menu*  m_menu;
 
-  struct{
-    gbstd::frame*  m_frame;
 
-    gbstd::label*    m_counter_label;
-    gbstd::label*  m_switching_label;
+  aniview*  m_aniview=nullptr;
+  gbstd::frame*  m_aniview_frame;
 
-  } m_underlay;
-
+  underlay_stacker*  m_underlay_stacker=nullptr;
+  gbstd::frame*      m_underlay_stacker_frame;
 
   std::string  m_filepath;
 
@@ -333,16 +388,18 @@ context
 
   void  load(const std::vector<uint8_t>&  bin) noexcept;
 
-  std::vector<gbstd::point>  m_animation_points;
+  context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept;
 
-  uint32_t  m_animation_delay=1000;
+  void  build_core() noexcept;
+  void  build_bgcolor_changer() noexcept;
+  void  build_color_handler() noexcept;
+  void  build_cell_table() noexcept;
+  void  build_animation() noexcept;
+  void  build_underlay() noexcept;
 
-
+  void  update_table_offset_label() noexcept;
 
 };
-
-
-context*  create_context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept;
 
 
 }

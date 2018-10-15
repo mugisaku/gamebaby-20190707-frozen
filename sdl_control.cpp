@@ -9,6 +9,14 @@ namespace sdl{
 namespace{
 
 
+int
+g_mouse_counter;
+
+
+gbstd::point
+g_mouse_pos;
+
+
 void
 process_key_down(const SDL_KeyboardEvent&  evt) noexcept
 {
@@ -72,7 +80,9 @@ process_key_up(const SDL_KeyboardEvent&  evt) noexcept
 void
 process_mouse(const SDL_MouseButtonEvent&  evt) noexcept
 {
-  gbstd::g_point_buffer.emplace_back(evt.x,evt.y);
+  g_mouse_pos = gbstd::point(evt.x,evt.y);
+
+  ++g_mouse_counter;
 
     if(evt.state == SDL_PRESSED)
     {
@@ -91,7 +101,9 @@ process_mouse(const SDL_MouseButtonEvent&  evt) noexcept
 void
 process_mouse_motion(const SDL_MouseMotionEvent&  evt) noexcept
 {
-  gbstd::g_point_buffer.emplace_back(evt.x,evt.y);
+  g_mouse_pos = gbstd::point(evt.x,evt.y);
+
+  ++g_mouse_counter;
 
     if(evt.state&SDL_BUTTON_LMASK){gbstd::g_input.set_mouse_left();}
   else                            {gbstd::g_input.unset_mouse_left();}
@@ -140,6 +152,36 @@ read_dropped_file(const char*  filepath) noexcept
 #endif
 
 
+void
+process_event(const SDL_Event&  evt) noexcept
+{
+    switch(evt.type)
+    {
+  case(SDL_KEYDOWN): process_key_down(evt.key);break;
+  case(SDL_KEYUP  ): process_key_up(  evt.key);break;
+  case(SDL_MOUSEBUTTONUP  ): process_mouse(evt.button);break;
+  case(SDL_MOUSEBUTTONDOWN): process_mouse(evt.button);break;
+  case(SDL_MOUSEMOTION): process_mouse_motion(evt.motion);break;
+  case(SDL_WINDOWEVENT):
+         switch(evt.window.event)
+         {
+       case(SDL_WINDOWEVENT_EXPOSED):
+           gbstd::g_needed_to_redraw = true;
+           break;
+         }
+       break;
+#ifndef EMSCRIPTEN
+  case(SDL_DROPFILE):
+        read_dropped_file(evt.drop.file);
+
+        SDL_free(evt.drop.file);
+        break;
+#endif
+  case(SDL_QUIT):
+       quit();
+       break;
+    }
+}
 }
 
 
@@ -160,33 +202,31 @@ update_control() noexcept
 
   gbstd::g_point_buffer.clear();
 
+  gbstd::point  tmp_mouse_pos = g_mouse_pos;
+
+  g_mouse_counter = 0;
+
     while(SDL_PollEvent(&evt))
     {
-        switch(evt.type)
-        {
-      case(SDL_KEYDOWN): process_key_down(evt.key);break;
-      case(SDL_KEYUP  ): process_key_up(  evt.key);break;
-      case(SDL_MOUSEBUTTONUP  ): process_mouse(evt.button);break;
-      case(SDL_MOUSEBUTTONDOWN): process_mouse(evt.button);break;
-      case(SDL_MOUSEMOTION): process_mouse_motion(evt.motion);break;
-      case(SDL_WINDOWEVENT):
-             switch(evt.window.event)
-             {
-           case(SDL_WINDOWEVENT_EXPOSED):
-               gbstd::g_needed_to_redraw = true;
-               break;
-             }
-           break;
-#ifndef EMSCRIPTEN
-      case(SDL_DROPFILE):
-            read_dropped_file(evt.drop.file);
+      process_event(evt);
+    }
 
-            SDL_free(evt.drop.file);
-            break;
-#endif
-      case(SDL_QUIT):
-           quit();
-           break;
+
+    if(g_mouse_counter)
+    {
+      gbstd::liner  liner(tmp_mouse_pos,g_mouse_pos);
+
+        for(;;)
+        {
+          gbstd::g_point_buffer.emplace_back(liner.get_x(),liner.get_y());
+
+            if(!liner.get_distance())
+            {
+              break;
+            }
+
+
+          liner.step();
         }
     }
 

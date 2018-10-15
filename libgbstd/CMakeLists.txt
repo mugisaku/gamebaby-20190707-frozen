@@ -32,6 +32,10 @@ set(SOURCES
   windows/components/dial.cpp
   windows/components/menu.cpp
   windows/icons/icon.cpp
+  file_ops/file_op.cpp
+  file_ops/riff_chunk.cpp
+  file_ops/riff_subchunk_view.cpp
+  file_ops/wave.cpp
   programs/process.cpp
   programs/program.cpp
   programs/sleep.cpp

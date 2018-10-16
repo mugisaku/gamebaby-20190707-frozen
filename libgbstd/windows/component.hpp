@@ -508,10 +508,10 @@ public:
 
   const item_cursor&  get_item_cursor()  const noexcept{return m_cursor;}
 
-  void  move_up() noexcept;
-  void  move_down() noexcept;
-  void  move_left() noexcept;
-  void  move_right() noexcept;
+  bool  move_x_offset(int  n) noexcept;
+  bool  move_y_offset(int  n) noexcept;
+
+  void  move_base(int  x, int  y) noexcept;
 
   void  do_on_mouse_act(point  mouse_pos) noexcept override;
 

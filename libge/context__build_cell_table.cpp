@@ -91,9 +91,9 @@ build_cell_table() noexcept
   auto  up_btn = new button(new iconshow({&icons::up}),[](button_event  evt){
     auto&  ctx = *evt->get_userdata<context>();
 
-      if(evt.is_press())
+      if(evt.is_release())
       {
-        ctx.m_menu->move_up();
+        ctx.m_menu->move_base(0,-ctx.m_menu->get_number_of_rows());
 
         ctx.update_table_offset_label();
       }
@@ -102,9 +102,9 @@ build_cell_table() noexcept
   auto  down_btn = new button(new iconshow({&icons::down}),[](button_event  evt){
     auto&  ctx = *evt->get_userdata<context>();
 
-      if(evt.is_press())
+      if(evt.is_release())
       {
-        ctx.m_menu->move_down();
+        ctx.m_menu->move_base(0,ctx.m_menu->get_number_of_rows());
 
         ctx.update_table_offset_label();
       }
@@ -113,11 +113,13 @@ build_cell_table() noexcept
   auto  ext_btn = new button(new iconshow({&icons::plus}),[](button_event  evt){
     auto&  ctx = *evt->get_userdata<context>();
 
-      if(evt.is_press())
+      if(evt.is_release())
       {
         item_table_size  sz{ctx.get_table_width(),ctx.get_table_height()+ctx.m_menu->get_number_of_rows()};
 
         ctx.resize_table(sz);
+
+        ctx.update_table_offset_label();
       }
   });
 
@@ -139,8 +141,8 @@ update_table_offset_label() noexcept
 {
   string_form  sf;
 
-  int  num = m_menu->get_item_cursor().get_base().y;
-  int  den = m_menu->get_item_table_size().y_length;
+  int  num = m_menu->get_item_cursor().get_base().y/m_menu->get_number_of_rows();
+  int  den = m_menu->get_item_table_size().y_length/m_menu->get_number_of_rows();
 
   m_table_offset_label->set_text(sf("%2d/%2d",num+1,den));
 }

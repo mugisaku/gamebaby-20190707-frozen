@@ -57,88 +57,108 @@ resize(int  ncols, int  nrows) noexcept
 
 
 
-void
-menu::
-move_up() noexcept
-{
-    if(m_cursor.get_offset().y)
-    {
-      m_cursor.add_offset({0,-1});
-
-      request_redraw();
-    }
-
-  else
-    if(m_cursor.get_base().y)
-    {
-      m_cursor.add_base({0,-1});
-
-      request_redraw();
-    }
-}
-
 
 void
 menu::
-move_down() noexcept
+move_base(int  x, int  y) noexcept
 {
-    if(m_cursor.get_offset().y < (m_number_of_rows-1))
-    {
-      m_cursor.add_offset({0,1});
+  int  x_res = (m_cursor.get_base().x+x);
+  int  y_res = (m_cursor.get_base().y+y);
 
-      request_redraw();
+    if(x_res < 0)
+    {
+      x_res = 0;
     }
 
   else
-    if((m_cursor.get_base().y+m_number_of_rows) < (m_item_table_size.y_length-1))
+    if((x_res+m_number_of_columns) >= m_item_table_size.x_length)
     {
-      m_cursor.add_base({0,1});
-
-      request_redraw();
+      x_res = (m_item_table_size.x_length-m_number_of_columns);
     }
+
+
+    if(y_res < 0)
+    {
+      y_res = 0;
+    }
+
+  else
+    if((y_res+m_number_of_rows) >= m_item_table_size.y_length)
+    {
+      y_res = (m_item_table_size.y_length-m_number_of_rows);
+    }
+
+
+  m_cursor.set_base({x_res,y_res});
+
+  request_redraw();
 }
 
 
-void
+bool
 menu::
-move_left() noexcept
+move_x_offset(int  n) noexcept
 {
-    if(m_cursor.get_offset().x)
-    {
-      m_cursor.add_offset({-1,0});
+  bool  b = false;
 
-      request_redraw();
+  int  x_res = (m_cursor.get_offset().x+n);
+
+    if(x_res < 0)
+    {
+      x_res = 0;
+
+      b = true;
     }
 
   else
-    if(m_cursor.get_base().x)
+    if(x_res >= m_number_of_columns)
     {
-      m_cursor.add_base({-1,0});
+      x_res = m_number_of_columns-1;
 
-      request_redraw();
+      b = true;
     }
+
+
+  m_cursor.set_offset({x_res,m_cursor.get_offset().y});
+
+  request_redraw();
+
+  return b;
 }
 
 
-void
+bool
 menu::
-move_right() noexcept
+move_y_offset(int  n) noexcept
 {
-    if(m_cursor.get_offset().x < (m_number_of_columns-1))
-    {
-      m_cursor.add_offset({1,0});
+  bool  b = false;
 
-      request_redraw();
+  int  y_res = (m_cursor.get_offset().y+n);
+
+    if(y_res < 0)
+    {
+      y_res = 0;
+
+      b = true;
     }
 
   else
-    if((m_cursor.get_base().x+m_number_of_columns) < (m_item_table_size.x_length-1))
+    if(y_res >= m_number_of_rows)
     {
-      m_cursor.add_base({1,0});
+      y_res = m_number_of_rows-1;
 
-      request_redraw();
+      b = true;
     }
+
+
+  m_cursor.set_offset({m_cursor.get_offset().x,y_res});
+
+  request_redraw();
+
+  return b;
 }
+
+
 
 
 void

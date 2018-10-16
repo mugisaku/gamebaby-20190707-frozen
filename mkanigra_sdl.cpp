@@ -100,10 +100,9 @@ main(int  argc, char**  argv)
   );
 #endif
 
-  g_ge_context = new ge::context(g_cell_size,g_cell_size,6,2);
-  
+  g_ge_context = new ge::context(gbstd::item_size{g_cell_size,g_cell_size},
+                                 gbstd::item_table_size{6,2});
 
-//  g_ge_context->m_callback = [](){animator::view.request_redraw();};
 
   auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_change_buttons,g_ge_context->m_aniview_frame});
 

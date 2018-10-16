@@ -9,15 +9,25 @@ namespace gbstd{
 
 void
 menu::
-resize(int  ncols, int  nrows) noexcept
+process_before_reform() noexcept
 {
-  m_number_of_columns = ncols;
-  m_number_of_rows    = nrows;
+  set_content_width( m_item_size.width *m_number_of_columns);
+  set_content_height(m_item_size.height*m_number_of_rows   );
+}
 
-  m_cursor = item_cursor();
 
-  set_content_width( m_item_size.width *ncols);
-  set_content_height(m_item_size.height*nrows);
+void
+menu::
+revise_cursor() noexcept
+{
+}
+
+
+void
+menu::
+set_item_size(item_size  itm_sz) noexcept
+{
+  m_item_size = itm_sz;
 
   request_reform();
 }
@@ -25,14 +35,24 @@ resize(int  ncols, int  nrows) noexcept
 
 void
 menu::
-reset(item_size  itm_sz, item_table_size  itmtbl_sz, int  ncols, int  nrows, callback  cb) noexcept
+set_item_table_size(item_table_size  itmtbl_sz) noexcept
 {
-  m_item_size       = itm_sz;
   m_item_table_size = itmtbl_sz;
 
-  m_callback = cb;
+  revise_cursor();
+}
 
-  resize(ncols,nrows);
+
+void
+menu::
+resize(int  ncols, int  nrows) noexcept
+{
+  m_number_of_columns = ncols;
+  m_number_of_rows    = nrows;
+
+  revise_cursor();
+
+  request_reform();
 }
 
 

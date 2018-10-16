@@ -9,6 +9,64 @@ namespace ge{
 using namespace gbstd;
 
 
+
+
+void
+context::
+resize_cell(gbstd::item_size  cell_size) noexcept
+{
+  resize_image(cell_size,m_menu->get_item_table_size());
+}
+
+
+void
+context::
+resize_table(gbstd::item_table_size  table_size) noexcept
+{
+  resize_image(m_menu->get_item_size(),table_size);
+}
+
+
+void
+context::
+resize_image(item_size  cell_size, item_table_size  table_size) noexcept
+{
+  auto&  w = cell_size.width ;
+  auto&  h = cell_size.height;
+
+  w = (w+7)/8*8;
+  h = (h+7)/8*8;
+
+  m_source_image.resize(w*table_size.x_length,h*table_size.y_length);
+
+  m_menu->set_item_size({w,h});
+  m_menu->set_item_table_size(table_size);
+  m_menu->resize(5,2);
+
+
+  revise();
+}
+
+
+void
+context::
+revise() noexcept
+{
+  gbstd::canvas  cv(m_source_image,get_cell_width() *m_current_index.x,
+                                   get_cell_height()*m_current_index.y,
+                                   get_cell_width(),get_cell_height());
+
+  m_core->set_canvas(cv);
+
+  m_core->rebase_underlay_stack(m_source_image);
+
+  m_aniview->rebase(m_source_image);
+
+  m_core->request_redraw();
+  m_menu->request_redraw();
+}
+
+
 void
 context::
 load(const std::vector<uint8_t>&  bin) noexcept
@@ -19,11 +77,11 @@ load(const std::vector<uint8_t>&  bin) noexcept
 
     if(img.get_width())
     {
-      int  w = std::max(img.get_width() ,m_cell_width *m_table_width );
-      int  h = std::max(img.get_height(),m_cell_height*m_table_height);
+      int  w = std::max(img.get_width() ,get_cell_width() *get_table_width() );
+      int  h = std::max(img.get_height(),get_cell_height()*get_table_height());
 
-      w = (w+(m_cell_width -1))/m_cell_width *m_cell_width ;
-      h = (h+(m_cell_height-1))/m_cell_height*m_cell_height;
+      w = (w+(get_cell_width() -1))/get_cell_width() *get_cell_width() ;
+      h = (h+(get_cell_height()-1))/get_cell_height()*get_cell_height();
 
       img.resize(w,h);
 
@@ -34,18 +92,7 @@ load(const std::vector<uint8_t>&  bin) noexcept
 
       m_source_image = std::move(img);
 
-
-      canvas  cv(m_source_image,0,0,m_cell_width,m_cell_height);
-
-      m_core->set_canvas(cv);
-
-      m_core->request_redraw();
-      m_menu->request_redraw();
-
-        if(m_callback)
-        {
-          m_callback();
-        }
+      revise();
     }
 }
 
@@ -54,23 +101,16 @@ rectangle
 context::
 get_rect(point  index) const noexcept
 {
-   return rectangle(m_cell_width *index.x,
-                    m_cell_height*index.y,
-                    m_cell_width,
-                    m_cell_height);
+   return rectangle(get_cell_width() *index.x,
+                    get_cell_height()*index.y,
+                    get_cell_width(),
+                    get_cell_height());
 }
 
 
 context::
-context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
+context(item_size  cell_size, item_table_size  table_size) noexcept
 {
-  m_cell_width   = cell_w;
-  m_cell_height  = cell_h;
-  m_table_width  = table_w;
-  m_table_height = table_h;
-
-  m_source_image.resize(cell_w*table_w,cell_h*table_h);
-
   build_core();
   build_color_handler();
   build_bgcolor_changer();
@@ -81,6 +121,8 @@ context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept
 
   m_underlay_stacker       = new underlay_stacker(*this);
   m_underlay_stacker_frame = new frame("underlay",m_underlay_stacker);
+
+  resize_image(cell_size,table_size);
 
   m_tool_widget_frame      = new frame(     "tool",m_core->create_tool_widget()     );
   m_operation_widget_frame = new frame("operation",m_core->create_operation_widget());

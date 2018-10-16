@@ -27,8 +27,8 @@ public:
   {
     auto&  ctx = *get_userdata<context>();
 
-    int  w = ctx.m_cell_width ;
-    int  h = ctx.m_cell_height;
+    int  w = ctx.get_cell_width() ;
+    int  h = ctx.get_cell_height();
 
     canvas  src_cv(ctx.m_source_image,w*item_index.x,h*item_index.y,
                                       w             ,h             );
@@ -62,11 +62,6 @@ process(menu_event  evt) noexcept
 
       ctx.m_core->set_canvas(cv);
 
-        if(ctx.m_callback)
-        {
-          ctx.m_callback();
-        }
-
 
       ctx.m_menu->request_redraw();
     }
@@ -86,14 +81,12 @@ void
 context::
 build_cell_table() noexcept
 {
-  m_menu = new cell_menu(      item_size{ m_cell_width, m_cell_height},
-                         item_table_size{m_table_width,m_table_height},
-                          m_table_width,m_table_height,process);
+  m_menu = new cell_menu(process);
 
   m_menu->set_userdata(this);
 
 
-  m_table_offset_label = new label(u" 1/ 1",colors::black);
+  m_table_offset_label = new label(u" 1/ 1",colors::white);
 
   auto  up_btn = new button(new iconshow({&icons::up}),[](button_event  evt){
     auto&  ctx = *evt->get_userdata<context>();
@@ -122,10 +115,9 @@ build_cell_table() noexcept
 
       if(evt.is_press())
       {
-        ctx.m_source_image.resize(ctx.m_source_image.get_width(),
-                                  ctx.m_source_image.get_height()+(ctx.m_cell_height*ctx.m_table_height));
+        item_table_size  sz{ctx.get_table_width(),ctx.get_table_height()+ctx.m_menu->get_number_of_rows()};
 
-        ctx.update_table_offset_label();
+        ctx.resize_table(sz);
       }
   });
 

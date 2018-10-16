@@ -15,19 +15,12 @@ build_core() noexcept
 {
   m_cursor_label = new label(u"X: -- Y: -- PIX: ---",colors::black);
 
-  gbstd::canvas  cv(m_source_image,0,0,m_cell_width,m_cell_height);
-
-  m_core = new core(cv,[](core_event  evt){
+  m_core = new core([](core_event  evt){
     auto&  ctx = *evt->get_userdata<context>();
 
       if(evt.is_image_modified())
       {
         ctx.m_menu->request_redraw();
-
-          if(ctx.m_callback)
-          {
-            ctx.m_callback();
-          }
       }
 
 

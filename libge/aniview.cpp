@@ -24,8 +24,8 @@ psh(button_event  evt) noexcept
 
       auto&  pt = ctx.m_current_index;
 
-      int  w = ctx.m_cell_width ;
-      int  h = ctx.m_cell_height;
+      int  w = ctx.get_cell_width() ;
+      int  h = ctx.get_cell_height();
 
       ctx.m_aniview->m_frames.emplace_back(ctx.m_source_image,w*pt.x,h*pt.y,w,h);
       ctx.m_aniview->m_points.emplace_back(pt);
@@ -68,7 +68,7 @@ dial_callback(dial_event  evt) noexcept
 
 aniview::
 aniview(context&  ctx) noexcept:
-widget(ctx.m_cell_width,ctx.m_cell_height)
+widget(ctx.get_cell_width(),ctx.get_cell_height())
 {
   auto  d = new dial(1,4,dial_callback);
 
@@ -140,12 +140,19 @@ rebase(const gbstd::image&  img) noexcept
 
   auto&  ctx = *get_userdata<context>();
 
-  int  w = ctx.m_cell_width ;
-  int  h = ctx.m_cell_height;
+  int  img_w = img.get_width() ;
+  int  img_h = img.get_height();
+
+  int  w = ctx.get_cell_width() ;
+  int  h = ctx.get_cell_height();
 
     for(auto&  pt: m_points)
     {
-      m_frames.emplace_back(img,w*pt.x,h*pt.y,w,h);
+        if(((pt.x+w) < img_w) &&
+           ((pt.y+h) < img_h))
+        {
+          m_frames.emplace_back(img,w*pt.x,h*pt.y,w,h);
+        }
     }
 }
 

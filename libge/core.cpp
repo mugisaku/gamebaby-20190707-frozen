@@ -7,8 +7,11 @@ namespace ge{
 
 
 core::
-core() noexcept
+core(void  (*callback)(core_event  evt)) noexcept:
+m_callback(callback)
 {
+  m_bg_style.first_color  = gbstd::color(0,0,7);
+  m_bg_style.second_color = gbstd::color(2,2,5);
 }
 
 
@@ -285,12 +288,19 @@ rebase_underlay_stack(const gbstd::image&  img) noexcept
 {
   m_underlay_stack.clear();
 
+  int  img_w = img.get_width() ;
+  int  img_h = img.get_height();
+
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
     for(auto&  pt: m_underlay_points)
     {
-      m_underlay_stack.emplace_back(img,w*pt.x,h*pt.y,w,h);
+        if(((pt.x+w) < img_w) &&
+           ((pt.y+h) < img_h))
+        {
+          m_underlay_stack.emplace_back(img,w*pt.x,h*pt.y,w,h);
+        }
     }
 }
 

@@ -488,8 +488,8 @@ private:
   void  call(menu_event::kind  k) noexcept{if(m_callback){m_callback({*this,k});}}
 
 public:
-  menu() noexcept{}
-  menu(item_size  itm_sz, item_table_size  itmtbl_sz, int  ncols, int  nrows, callback  cb=nullptr) noexcept{reset(itm_sz,itmtbl_sz,ncols,nrows,cb);}
+  menu(                        callback  cb=nullptr) noexcept: m_callback(cb){}
+  menu(int  ncols, int  nrows, callback  cb=nullptr) noexcept: m_callback(cb){resize(ncols,nrows);}
 
   int  get_number_of_columns() const noexcept{return m_number_of_columns;}
   int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
@@ -497,9 +497,14 @@ public:
   const item_size&        get_item_size()       const noexcept{return m_item_size;}
   const item_table_size&  get_item_table_size() const noexcept{return m_item_table_size;}
 
+  void  process_before_reform() noexcept override;
+
+  void  revise_cursor() noexcept;
+
   void  resize(int  ncols, int  nrows) noexcept;
 
-  void  reset(item_size  itm_sz, item_table_size  itmtbl_sz, int  ncols, int  nrows, callback  cb=nullptr) noexcept;
+  void  set_item_size(item_size  itm_sz) noexcept;
+  void  set_item_table_size(item_table_size  itmtbl_sz) noexcept;
 
   const item_cursor&  get_item_cursor()  const noexcept{return m_cursor;}
 

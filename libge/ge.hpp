@@ -242,8 +242,8 @@ core: public gbstd::widget
   gbstd::image  get_temporary_image() const noexcept;
 
 public:
-  core() noexcept;
-  core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept;
+  core(                          void  (*callback)(core_event  evt)=nullptr) noexcept;
+  core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)=nullptr) noexcept;
 
   void  push_underlay(const gbstd::image&  img, gbstd::point  pt) noexcept;
   void   pop_underlay(                                          ) noexcept;
@@ -337,12 +337,6 @@ context
 {
   gbstd::image  m_source_image;
 
-  int  m_cell_width;
-  int  m_cell_height;
-
-  int  m_table_width;
-  int  m_table_height;
-
   gbstd::point  m_current_index;
   gbstd::point  m_seeking_index;
 
@@ -381,14 +375,12 @@ context
 
   std::string  m_filepath;
 
-  void  (*m_callback)()=nullptr;
-
 
   gbstd::rectangle  get_rect(gbstd::point  index) const noexcept;
 
   void  load(const std::vector<uint8_t>&  bin) noexcept;
 
-  context(int  cell_w, int  cell_h, int  table_w, int  table_h) noexcept;
+  context(gbstd::item_size  cell_size, gbstd::item_table_size  table_size) noexcept;
 
   void  build_core() noexcept;
   void  build_bgcolor_changer() noexcept;
@@ -398,6 +390,18 @@ context
   void  build_underlay() noexcept;
 
   void  update_table_offset_label() noexcept;
+
+  void  resize_cell(gbstd::item_size  cell_size) noexcept;
+  void  resize_table(gbstd::item_table_size  table_size) noexcept;
+  void  resize_image(gbstd::item_size  cell_size, gbstd::item_table_size  table_size) noexcept;
+
+  void  revise() noexcept;
+
+  int  get_cell_width()  const noexcept{return m_menu->get_item_size().width ;}
+  int  get_cell_height() const noexcept{return m_menu->get_item_size().height;}
+
+  int  get_table_width()  const noexcept{return m_menu->get_item_table_size().x_length;}
+  int  get_table_height() const noexcept{return m_menu->get_item_table_size().y_length;}
 
 };
 

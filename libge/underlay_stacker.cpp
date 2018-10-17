@@ -82,14 +82,14 @@ underlay_stacker::
 underlay_stacker(context&  ctx) noexcept
 {
   m_switching_label = new label(u"hide",colors::black);
-  m_counter_label   = new label(u" 0",colors::black);
+  m_counter_label   = new label(u" 0",colors::white);
 
 
   auto  psh_btn = new button(new label(u"push",colors::black),psh);
   auto  pop_btn = new button(new label(u"pop",colors::black),pop);
   auto  swi_btn = new button(m_switching_label,swi);
 
-  gbstd::set_userdata({psh_btn,pop_btn,swi_btn},this);
+  gbstd::set_userdata({this,psh_btn,pop_btn,swi_btn},&ctx);
 
 
   append_column_child({m_counter_label,psh_btn,pop_btn,swi_btn});

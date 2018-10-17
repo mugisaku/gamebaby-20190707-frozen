@@ -54,9 +54,9 @@ revise() noexcept
 {
   m_core->rebase_canvas();
 
-  m_core->redraw_underlay_image();
+  m_core->rebase_underlay_stack();
 
-  m_aniview->rebase(m_source_image);
+  m_aniview->rebase();
 
   m_core->request_redraw();
   m_menu->request_redraw();

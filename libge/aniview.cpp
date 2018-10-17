@@ -69,7 +69,7 @@ dial_callback(dial_event  evt) noexcept
 
 aniview::
 aniview(context&  ctx) noexcept:
-widget(ctx.get_cell_width(),ctx.get_cell_height())
+widget()
 {
   auto  d = new dial(1,4,dial_callback);
 
@@ -80,16 +80,18 @@ widget(ctx.get_cell_width(),ctx.get_cell_height())
 
   auto  op_col = make_column({psh_btn,pop_btn});
 
-  m_state_label = new label(u"--/ 0",colors::black);
+  m_state_label = new label(u"--/ 0",colors::white);
 
   m_delay_time = g_time_table[0];
   m_next_time  =               0;
 
   auto  speed_frame = new frame("speed",d);
 
-  auto  urow = make_row({m_state_label,op_col});
+  m_first_child = make_row({m_state_label,op_col});
 
-  append_column_child({urow,speed_frame});
+  append_child(m_first_child,0,0);
+
+  append_column_child(speed_frame);
 
   clear();
 }
@@ -133,6 +135,46 @@ check() noexcept
 }
 
 
+namespace{
+template<bool  FILL>
+void
+transfer(const gbstd::canvas  src_cv, gbpng::direct_color_image&  dst_img) noexcept
+{
+  int  w = src_cv.get_width() ;
+  int  h = src_cv.get_height();
+
+  auto  dst = dst_img.get_row_pointer(0);
+
+    for(int  y = 0;  y < h;  ++y){
+    for(int  x = 0;  x < w;  ++x){
+      auto  color = src_cv.get_pixel_pointer(x,y)->color;
+
+        if(color)
+        {
+          *dst++ = color.get_r255();
+          *dst++ = color.get_g255();
+          *dst++ = color.get_b255();
+          *dst++ = 0xFF;
+        }
+
+      else
+        if(FILL)
+        {
+          *dst++ = 0;
+          *dst++ = 0;
+          *dst++ = 0;
+          *dst++ = 0;
+        }
+
+      else
+        {
+          dst += 4;
+        }
+    }}
+}
+}
+
+
 void
 aniview::
 save_as_apng(const char*  filepath) const noexcept
@@ -144,6 +186,8 @@ save_as_apng(const char*  filepath) const noexcept
         try
         {
           using namespace gbpng;
+
+          auto&  ctx = *get_userdata<context>();
 
           auto  it     = m_frames.begin();
           auto  it_end = m_frames.end();
@@ -159,31 +203,8 @@ save_as_apng(const char*  filepath) const noexcept
 
             while(it != it_end)
             {
-              auto  dst = dst_img.get_row_pointer(0);
-
-                for(int  y = 0;  y < h;  ++y){
-                for(int  x = 0;  x < w;  ++x){
-                  auto  color = it->get_pixel_pointer(x,y)->color;
-
-                    if(color)
-                    {
-                      *dst++ = color.get_r255();
-                      *dst++ = color.get_g255();
-                      *dst++ = color.get_b255();
-                      *dst++ = 0xFF;
-                    }
-
-                  else
-                    {
-                      *dst++ = 0;
-                      *dst++ = 0;
-                      *dst++ = 0;
-                      *dst++ = 0;
-                    }
-                }}
-
-
-              ++it;
+//              transfer<true>(underlay,dst_img);
+              transfer<false>(  *it++,dst_img);
 
               ani.append(dst_img);
             }
@@ -215,11 +236,29 @@ save_as_apng(const char*  filepath) const noexcept
 
 void
 aniview::
-rebase(const gbstd::image&  img) noexcept
+process_before_reform() noexcept
+{
+  auto&  ctx = *get_userdata<context>();
+
+  int  w = ctx.get_cell_width() ;
+  int  h = ctx.get_cell_height();
+
+  set_content_width( w);
+  set_content_height(h);
+
+  m_first_child->set_offset(0,h);
+}
+
+
+void
+aniview::
+rebase() noexcept
 {
   m_frames.clear();
 
   auto&  ctx = *get_userdata<context>();
+
+  const gbstd::image&  img = ctx.m_source_image;
 
   int  img_w = img.get_width() ;
   int  img_h = img.get_height();
@@ -262,11 +301,25 @@ render(const canvas&  cv) noexcept
 {
   auto&  ctx = *get_userdata<context>();
 
-  ctx.m_core->render_underlay(1,cv);
-
     if(m_index < m_frames.size())
     {
-      cv.draw_canvas(m_frames[m_index],0,0);
+      auto&  frm = m_frames[m_index];
+
+        if(ctx.m_core->test_whether_show_background())
+        {
+          canvas  cocv(cv,0,0,frm.get_width(),frm.get_height());
+
+          ctx.m_core->render_background(2,cocv);
+        }
+
+
+        if(ctx.m_core->test_whether_show_underlay())
+        {
+          ctx.m_core->render_underlay(1,cv);
+        }
+
+
+      cv.draw_canvas(frm,0,0);
     }
 }
 

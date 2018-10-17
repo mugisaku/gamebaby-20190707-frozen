@@ -41,7 +41,6 @@ rebase_canvas() noexcept
                                               h*ctx.m_current_index.y,
                                               w,h);
 
-
   reset();
 }
 
@@ -262,19 +261,10 @@ push_underlay() noexcept
 
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
+  int  x = w*pt.x;
+  int  y = h*pt.y;
 
-  int  x_base = w*pt.x;
-  int  y_base = h*pt.y;
-
-    for(int  y = 0;  y < h;  ++y){
-    for(int  x = 0;  x < w;  ++x){
-      auto&  color = img.get_pixel_pointer(x_base+x,y_base+y)->color;
-
-         if(color)
-         {
-           m_underlay_image.get_pixel_pointer(x,y)->color = color;
-         }
-    }}
+  m_underlay_stack.emplace_back(img,x,y,w,h);
 }
 
 
@@ -282,9 +272,8 @@ void
 core::
 pop_underlay() noexcept
 {
+  m_underlay_stack.pop_back();
   m_underlay_points.pop_back();
-
-  redraw_underlay_image();
 }
 
 
@@ -292,43 +281,33 @@ void
 core::
 clear_underlay_stack() noexcept
 {
+  m_underlay_stack.clear();
   m_underlay_points.clear();
-
-  m_underlay_image.fill(gbstd::color());
 }
 
 
 void
 core::
-redraw_underlay_image() noexcept
+rebase_underlay_stack() noexcept
 {
   auto&  ctx = *get_userdata<context>();
 
   auto&  img = ctx.m_source_image;
 
+  int  img_w = img.get_width() ;
+  int  img_h = img.get_height();
+
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
-  m_underlay_image.resize(w,h);
+  m_underlay_stack.clear();
 
-  m_underlay_image.fill(gbstd::color());
-
-    if(m_underlay_points.size())
+    for(auto&  pt: m_underlay_points)
     {
-      int  img_w = img.get_width() ;
-      int  img_h = img.get_height();
-
-      gbstd::canvas  dst_cv(m_underlay_image);
-
-        for(auto&  pt: m_underlay_points)
+        if(((pt.x+w) < img_w) &&
+           ((pt.y+h) < img_h))
         {
-            if(((pt.x+w) < img_w) &&
-               ((pt.y+h) < img_h))
-            {
-              gbstd::canvas  cv(img,w*pt.x,h*pt.y,w,h);
-
-              dst_cv.draw_canvas(cv,0,0);
-            }
+          m_underlay_stack.emplace_back(img,w*pt.x,h*pt.y,w,h);
         }
     }
 }
@@ -411,18 +390,18 @@ void
 core::
 render_underlay(int  pixel_size, const gbstd::canvas&  cv) const noexcept
 {
-    if(m_underlay_points.size())
-    {
-      int  w = cv.get_width() ;
-      int  h = cv.get_height();
+  int  w = m_canvas.get_width() ;
+  int  h = m_canvas.get_height();
 
+    for(auto&  underlay_cv: m_underlay_stack)
+    {
         for(int  y = 0;  y < h;  ++y){
         for(int  x = 0;  x < w;  ++x){
-          auto&  pix = *m_underlay_image.get_pixel_pointer(x,y);
+          auto&  pix = *underlay_cv.get_pixel_pointer(x,y);
 
             if(pix.color)
             {
-              cv.fill_rectangle(pix.color,m_pixel_size*x,m_pixel_size*y,m_pixel_size,m_pixel_size);
+              cv.fill_rectangle(pix.color,pixel_size*x,pixel_size*y,pixel_size,pixel_size);
             }
         }}
     }

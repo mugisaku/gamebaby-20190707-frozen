@@ -73,6 +73,8 @@ aniview: public gbstd::widget
 
   gbstd::label*  m_state_label;
 
+  gbstd::widget*  m_first_child;
+
   std::vector<gbstd::canvas>  m_frames;
   std::vector<gbstd::point>   m_points;
 
@@ -85,8 +87,9 @@ public:
 
   void  clear() noexcept;
   void  check() noexcept;
+  void  rebase() noexcept;
 
-  void  rebase(const gbstd::image&  img) noexcept;
+  void  process_before_reform() noexcept override;
 
   void  save_as_apng(const char*  filename) const noexcept;
 
@@ -205,7 +208,7 @@ core: public gbstd::widget
   };
 
 
-  int  m_state=3;
+  int  m_state=7;
 
   enum class mode{
     draw_dot,
@@ -229,9 +232,7 @@ core: public gbstd::widget
 
   gbstd::image  m_clipped_image;
 
-  gbstd::image    m_underlay_image;
-  gbstd::canvas  m_underlay_canvas;
-
+  std::vector<gbstd::canvas>  m_underlay_stack;
   std::vector<gbstd::point>  m_underlay_points;
 
   int  m_pointing_count=0;
@@ -260,7 +261,7 @@ public:
   int  get_number_of_underlays() const noexcept{return m_underlay_points.size();}
 
   void   clear_underlay_stack() noexcept;
-  void  redraw_underlay_image() noexcept;
+  void  rebase_underlay_stack() noexcept;
 
   const gbstd::canvas&     get_canvas() const noexcept{return m_canvas;}
   void                  rebase_canvas()       noexcept;

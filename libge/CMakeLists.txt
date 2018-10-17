@@ -9,7 +9,6 @@ set(SOURCES
   core.cpp
   core__do_on_mouse_act.cpp
   core__draw.cpp
-  core__make_apng_stream.cpp
   core__operate.cpp
   core__create_sub_widget.cpp
   context.cpp

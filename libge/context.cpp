@@ -52,13 +52,9 @@ void
 context::
 revise() noexcept
 {
-  gbstd::canvas  cv(m_source_image,get_cell_width() *m_current_index.x,
-                                   get_cell_height()*m_current_index.y,
-                                   get_cell_width(),get_cell_height());
+  m_core->rebase_canvas();
 
-  m_core->set_canvas(cv);
-
-  m_core->rebase_underlay_stack(m_source_image);
+  m_core->redraw_underlay_image();
 
   m_aniview->rebase(m_source_image);
 
@@ -154,18 +150,7 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
 
       if(evt.is_release())
       {
-//          if(ctx.m_animation.m_points.size())
-          {
-//            auto  bin = ctx.m_core->make_apng_stream(ctx.m_animation.m_points,ctx.m_animation.m_delay_ms);
-
-//            constexpr const char*  filepath = "noName.apng";
-
-#ifdef __EMSCRIPTEN__
-//            download(bin.data(),bin.size(),filepath);
-#else
-//            write_to_file(bin.data(),bin.size(),filepath);
-#endif
-          }
+        ctx.m_aniview->save_as_apng("noName.apng");
       }
   });
 

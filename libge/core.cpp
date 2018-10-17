@@ -15,22 +15,11 @@ m_callback(callback)
 }
 
 
-core::
-core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)) noexcept:
-m_callback(callback)
-{
-  m_bg_style.first_color  = gbstd::color(0,0,7);
-  m_bg_style.second_color = gbstd::color(2,2,5);
-
-  set_canvas(cv);
-}
-
-
 
 
 void
 core::
-set_canvas(const gbstd::canvas&  cv) noexcept
+rebase_canvas() noexcept
 {
     if(m_canvas)
     {
@@ -43,11 +32,17 @@ set_canvas(const gbstd::canvas&  cv) noexcept
     }
 
 
-  m_canvas = cv;
+  auto&  ctx = *get_userdata<context>();
+
+  int  w = ctx.get_cell_width() ;
+  int  h = ctx.get_cell_height();
+
+  m_canvas = gbstd::canvas(ctx.m_source_image,w*ctx.m_current_index.x,
+                                              h*ctx.m_current_index.y,
+                                              w,h);
+
 
   reset();
-
-  request_redraw();
 }
 
 
@@ -57,30 +52,22 @@ set_pixel_size(int  n) noexcept
 {
   m_pixel_size = n;
 
-  reset();
+  request_reform();
 }
+
+
 
 
 void
 core::
-set_grid() noexcept
+process_before_reform() noexcept
 {
-  m_grid = true;
+  int  w = m_canvas.get_width();
+  int  h = m_canvas.get_height();
 
-  request_redraw();
+  set_content_width( m_pixel_size*w);
+  set_content_height(m_pixel_size*h);
 }
-
-
-void
-core::
-unset_grid() noexcept
-{
-  m_grid = false;
-
-  request_redraw();
-}
-
-
 
 
 void
@@ -92,10 +79,7 @@ reset() noexcept
 
   m_operation_rect = gbstd::rectangle(0,0,w,h);
 
-  set_content_width( m_pixel_size*w);
-  set_content_height(m_pixel_size*h);
-
-  request_reform();
+  request_redraw();
 }
 
 
@@ -266,10 +250,31 @@ set_background_style(background_style  bgst) noexcept
 
 void
 core::
-push_underlay(const gbstd::image&  img, gbstd::point  pt) noexcept
+push_underlay() noexcept
 {
-  m_underlay_stack.emplace_back(img,pt.x,pt.y,m_canvas.get_width(),m_canvas.get_height());
+  auto&  ctx = *get_userdata<context>();
+
+  auto&  pt = ctx.m_current_index;
+
+  auto&  img = ctx.m_source_image;
+
   m_underlay_points.emplace_back(pt);
+
+  int  w = m_canvas.get_width() ;
+  int  h = m_canvas.get_height();
+
+  int  x_base = w*pt.x;
+  int  y_base = h*pt.y;
+
+    for(int  y = 0;  y < h;  ++y){
+    for(int  x = 0;  x < w;  ++x){
+      auto&  color = img.get_pixel_pointer(x_base+x,y_base+y)->color;
+
+         if(color)
+         {
+           m_underlay_image.get_pixel_pointer(x,y)->color = color;
+         }
+    }}
 }
 
 
@@ -277,31 +282,97 @@ void
 core::
 pop_underlay() noexcept
 {
-  m_underlay_stack.pop_back();
   m_underlay_points.pop_back();
+
+  redraw_underlay_image();
 }
 
 
 void
 core::
-rebase_underlay_stack(const gbstd::image&  img) noexcept
+clear_underlay_stack() noexcept
 {
-  m_underlay_stack.clear();
+  m_underlay_points.clear();
 
-  int  img_w = img.get_width() ;
-  int  img_h = img.get_height();
+  m_underlay_image.fill(gbstd::color());
+}
+
+
+void
+core::
+redraw_underlay_image() noexcept
+{
+  auto&  ctx = *get_userdata<context>();
+
+  auto&  img = ctx.m_source_image;
 
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
-    for(auto&  pt: m_underlay_points)
+  m_underlay_image.resize(w,h);
+
+  m_underlay_image.fill(gbstd::color());
+
+    if(m_underlay_points.size())
     {
-        if(((pt.x+w) < img_w) &&
-           ((pt.y+h) < img_h))
+      int  img_w = img.get_width() ;
+      int  img_h = img.get_height();
+
+      gbstd::canvas  dst_cv(m_underlay_image);
+
+        for(auto&  pt: m_underlay_points)
         {
-          m_underlay_stack.emplace_back(img,w*pt.x,h*pt.y,w,h);
+            if(((pt.x+w) < img_w) &&
+               ((pt.y+h) < img_h))
+            {
+              gbstd::canvas  cv(img,w*pt.x,h*pt.y,w,h);
+
+              dst_cv.draw_canvas(cv,0,0);
+            }
         }
     }
+}
+
+
+
+
+void
+core::
+show_background() noexcept
+{
+  m_state |= flags::show_background;
+
+  request_redraw();
+}
+
+
+void
+core::
+hide_background() noexcept
+{
+  m_state |= flags::show_background;
+
+  request_redraw();
+}
+
+
+void
+core::
+show_grid() noexcept
+{
+  m_state &= ~flags::show_grid;
+
+  request_redraw();
+}
+
+
+void
+core::
+hide_grid() noexcept
+{
+  m_state &= ~flags::show_grid;
+
+  request_redraw();
 }
 
 
@@ -309,7 +380,7 @@ void
 core::
 show_underlay() noexcept
 {
-  m_whether_show_underlay = true;
+  m_state |= flags::show_underlay;
 
   request_redraw();
 }
@@ -319,7 +390,7 @@ void
 core::
 hide_underlay() noexcept
 {
-  m_whether_show_underlay = false;
+  m_state &= ~flags::show_underlay;
 
   request_redraw();
 }
@@ -340,14 +411,14 @@ void
 core::
 render_underlay(int  pixel_size, const gbstd::canvas&  cv) const noexcept
 {
-  int  w = cv.get_width() ;
-  int  h = cv.get_height();
-
-    for(auto&  ulcv: m_underlay_stack)
+    if(m_underlay_points.size())
     {
+      int  w = cv.get_width() ;
+      int  h = cv.get_height();
+
         for(int  y = 0;  y < h;  ++y){
         for(int  x = 0;  x < w;  ++x){
-          auto&  pix = *ulcv.get_pixel_pointer(x,y);
+          auto&  pix = *m_underlay_image.get_pixel_pointer(x,y);
 
             if(pix.color)
             {
@@ -365,11 +436,15 @@ render(const gbstd::canvas&  cv) noexcept
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
-  render_background(m_pixel_size,cv);
-
-    if(m_whether_show_underlay)
+    if(test_whether_show_background())
     {
-      render_underlay(  m_pixel_size,cv);
+      render_background(m_pixel_size,cv);
+    }
+
+
+    if(test_whether_show_underlay())
+    {
+      render_underlay(m_pixel_size,cv);
     }
 
 
@@ -384,7 +459,7 @@ render(const gbstd::canvas&  cv) noexcept
     }}
 
 
-    if(m_grid)
+    if(test_whether_show_grid())
     {
         for(int  y = 0;  y < h;  ++y)
         {
@@ -406,15 +481,14 @@ render(const gbstd::canvas&  cv) noexcept
 
       cv.draw_hline(gbstd::colors::white,0,m_pixel_size*(h/2)  ,get_content_width() );
       cv.draw_vline(gbstd::colors::white,  m_pixel_size*(w/2),0,get_content_height());
+
+      cv.draw_double_rectangle(gbstd::colors::white,gbstd::colors::black,
+        m_pixel_size*m_operation_rect.x,
+        m_pixel_size*m_operation_rect.y,
+        m_pixel_size*m_operation_rect.w,
+        m_pixel_size*m_operation_rect.h
+      );
     }
-
-
-  cv.draw_double_rectangle(gbstd::colors::white,gbstd::colors::black,
-    m_pixel_size*m_operation_rect.x,
-    m_pixel_size*m_operation_rect.y,
-    m_pixel_size*m_operation_rect.w,
-    m_pixel_size*m_operation_rect.h
-  );
 }
 
 

@@ -98,9 +98,8 @@ main(int  argc, char**  argv)
 {
   canvas  cv(g_image,0,0,g_icon_size,g_icon_size);
 
-  g_core = new ge::core(cv,nullptr);
+  g_core = new ge::core(nullptr);
 
-  g_core->set_grid();
   g_core->set_pixel_size(12);
 
 

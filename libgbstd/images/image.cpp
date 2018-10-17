@@ -108,9 +108,18 @@ resize(int  w, int  h) noexcept
 
     if(number_of_pixels > (m_width*m_height))
     {
-      delete[] m_pixels                              ;
-               m_pixels = new pixel[number_of_pixels];
+      auto  old_pixels = m_pixels                              ;
+                         m_pixels = new pixel[number_of_pixels];
+
+        for(int  y = 0;  y < m_height;  ++y){
+        for(int  x = 0;  x < m_width ;  ++x){
+          m_pixels[(w*y)+x] = old_pixels[(m_width*y)+x];
+        }}
+
+
+      delete[] old_pixels;
     }
+
 
   m_width  = w;
   m_height = h;

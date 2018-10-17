@@ -58,10 +58,7 @@ process(menu_event  evt) noexcept
       int  w = sz.width;
       int  h = sz.height;
 
-      canvas  cv(ctx.m_source_image,w*pt.x,h*pt.y,w,h);
-
-      ctx.m_core->set_canvas(cv);
-
+      ctx.m_core->rebase_canvas();
 
       ctx.m_menu->request_redraw();
     }

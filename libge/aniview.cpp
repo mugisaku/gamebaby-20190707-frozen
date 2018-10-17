@@ -1,4 +1,5 @@
 #include"libge/ge.hpp"
+#include"libgbpng/png.hpp"
 
 
 
@@ -128,6 +129,86 @@ check() noexcept
 
           request_redraw();
         }
+    }
+}
+
+
+void
+aniview::
+save_as_apng(const char*  filepath) const noexcept
+{
+    if(m_frames.size())
+    {
+      std::vector<uint8_t>  buf;
+
+        try
+        {
+          using namespace gbpng;
+
+          auto  it     = m_frames.begin();
+          auto  it_end = m_frames.end();
+
+          const int  w = it->get_width() ;
+          const int  h = it->get_height();
+
+          image_header  ihdr(w,h,pixel_format::rgba);
+
+          animation_builder  ani(ihdr,m_delay_time);
+
+          direct_color_image  dst_img(w,h);
+
+            while(it != it_end)
+            {
+              auto  dst = dst_img.get_row_pointer(0);
+
+                for(int  y = 0;  y < h;  ++y){
+                for(int  x = 0;  x < w;  ++x){
+                  auto  color = it->get_pixel_pointer(x,y)->color;
+
+                    if(color)
+                    {
+                      *dst++ = color.get_r255();
+                      *dst++ = color.get_g255();
+                      *dst++ = color.get_b255();
+                      *dst++ = 0xFF;
+                    }
+
+                  else
+                    {
+                      *dst++ = 0;
+                      *dst++ = 0;
+                      *dst++ = 0;
+                      *dst++ = 0;
+                    }
+                }}
+
+
+              ++it;
+
+              ani.append(dst_img);
+            }
+
+
+          auto  ls = ani.build(0);
+
+          buf.resize(ls.calculate_stream_size());
+
+          ls.write_png_to_memory(buf.data());
+        }
+
+
+        catch(std::exception&  e)
+        {
+          printf("error: %s\n",e.what());
+        }
+
+
+
+#ifdef __EMSCRIPTEN__
+      download(buf.data(),buf.size(),filepath);
+#else
+      write_to_file(buf.data(),buf.size(),filepath);
+#endif
     }
 }
 

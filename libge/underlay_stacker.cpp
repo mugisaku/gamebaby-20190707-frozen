@@ -19,10 +19,9 @@ psh(button_event  evt) noexcept
     {
       auto&  ctx = *evt->get_userdata<context>();
 
-      ctx.m_core->push_underlay(ctx.m_source_image,ctx.m_current_index);
+      ctx.m_core->push_underlay();
 
       ctx.m_underlay_stacker->update_counter_label();
-
 
       ctx.m_core->request_redraw();
     }
@@ -42,7 +41,6 @@ pop(button_event  evt) noexcept
           ctx.m_core->pop_underlay();
 
           ctx.m_underlay_stacker->update_counter_label();
-
 
           ctx.m_core->request_redraw();
         }

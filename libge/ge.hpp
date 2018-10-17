@@ -88,6 +88,8 @@ public:
 
   void  rebase(const gbstd::image&  img) noexcept;
 
+  void  save_as_apng(const char*  filename) const noexcept;
+
   void  update_state_label() noexcept;
 
   void  render(const gbstd::canvas&  cv) noexcept override;
@@ -196,7 +198,14 @@ core: public gbstd::widget
 
   int  m_pixel_size=1;
 
-  bool  m_grid=false;
+  struct flags{
+    static constexpr int  show_background = 1;
+    static constexpr int  show_grid       = 2;
+    static constexpr int  show_underlay   = 4;
+  };
+
+
+  int  m_state=3;
 
   enum class mode{
     draw_dot,
@@ -220,8 +229,10 @@ core: public gbstd::widget
 
   gbstd::image  m_clipped_image;
 
-  std::vector<gbstd::canvas>  m_underlay_stack;
-  std::vector<gbstd::point>   m_underlay_points;
+  gbstd::image    m_underlay_image;
+  gbstd::canvas  m_underlay_canvas;
+
+  std::vector<gbstd::point>  m_underlay_points;
 
   int  m_pointing_count=0;
 
@@ -242,18 +253,17 @@ core: public gbstd::widget
   gbstd::image  get_temporary_image() const noexcept;
 
 public:
-  core(                          void  (*callback)(core_event  evt)=nullptr) noexcept;
-  core(const gbstd::canvas&  cv, void  (*callback)(core_event  evt)=nullptr) noexcept;
+  core(void  (*callback)(core_event  evt)=nullptr) noexcept;
 
-  void  push_underlay(const gbstd::image&  img, gbstd::point  pt) noexcept;
-  void   pop_underlay(                                          ) noexcept;
-  int  get_number_of_underlays() const noexcept{return m_underlay_stack.size();}
+  void  push_underlay() noexcept;
+  void   pop_underlay() noexcept;
+  int  get_number_of_underlays() const noexcept{return m_underlay_points.size();}
 
-  void   clear_underlay_stack() noexcept{m_underlay_stack.clear();}
-  void  rebase_underlay_stack(const gbstd::image&  img) noexcept;
+  void   clear_underlay_stack() noexcept;
+  void  redraw_underlay_image() noexcept;
 
-  const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas;}
-  void                  set_canvas(const gbstd::canvas&  cv)       noexcept;
+  const gbstd::canvas&     get_canvas() const noexcept{return m_canvas;}
+  void                  rebase_canvas()       noexcept;
 
   int   get_pixel_size(      ) const noexcept{return m_pixel_size;}
   void  set_pixel_size(int  n)       noexcept;
@@ -270,14 +280,18 @@ public:
 
   drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
 
+
+  void      show_background() noexcept;
+  void      hide_background() noexcept;
+  void      show_grid() noexcept;
+  void      hide_grid() noexcept;
   void  show_underlay() noexcept;
   void  hide_underlay() noexcept;
 
-  bool  test_whether_show_underlay() const noexcept{return m_whether_show_underlay;}
+  bool  test_whether_show_background() const noexcept{return m_state&flags::show_background;}
+  bool  test_whether_show_grid()       const noexcept{return m_state&flags::show_grid;}
+  bool  test_whether_show_underlay()   const noexcept{return m_state&flags::show_underlay;}
 
-
-  void    set_grid() noexcept;
-  void  unset_grid() noexcept;
 
   void  change_mode_to_draw_dot()       noexcept{m_mode = mode::draw_dot;}
   void  change_mode_to_draw_line()      noexcept{m_mode = mode::draw_line;}
@@ -322,12 +336,12 @@ public:
 
   void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
 
+  void  process_before_reform() noexcept override;
+
   void  render(const gbstd::canvas&  cv) noexcept override;
 
   void  render_underlay(  int  pixel_size, const gbstd::canvas&  cv) const noexcept;
   void  render_background(int  pixel_size, const gbstd::canvas&  cv) const noexcept;
-
-  std::vector<uint8_t>  make_apng_stream(const std::vector<gbstd::point>&  pts, uint32_t  delay) const noexcept;
 
 };
 

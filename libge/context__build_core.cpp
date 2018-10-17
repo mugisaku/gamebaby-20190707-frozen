@@ -49,7 +49,6 @@ build_core() noexcept
   });
 
 
-  m_core->set_grid();
   m_core->set_pixel_size(8);
   m_core->set_userdata(this);
 

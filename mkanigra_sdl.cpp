@@ -96,9 +96,21 @@ main(int  argc, char**  argv)
                   "  *pushは下敷きの最上段に現在のセルを乗せる\n"
                   "  *popは下敷きの最上段から、ひとつ取り除く\n"
                   "  *show/hideは下敷きの有効/無効を切り替える\n"
+                  "◇save as png\n"
+                  "  *セルテーブルを一枚のPNG形式で出力する\n"
+                  "  *背景色と下敷きは反映されない\n"
+                  "◇save as apng\n"
+                  "  *アニメーションの内容をAPNG形式で出力する\n"
+                  "  *背景色と下敷き（有効なら）が反映される\n"
                   "</pre>"
   );
+
+
+  show_github_link();
+  show_twitter_link();
+
 #endif
+
 
   g_ge_context = new ge::context(gbstd::item_size{g_cell_size,g_cell_size},
                                  gbstd::item_table_size{6,2});

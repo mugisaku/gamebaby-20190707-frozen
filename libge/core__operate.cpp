@@ -6,6 +6,24 @@
 namespace ge{
 
 
+namespace{
+void
+transform(int&  a_w, int  b_x, int  b_w) noexcept
+{
+    if((b_x+a_w) >= b_w)
+    {
+      a_w = b_w-b_x;
+    }
+}
+void
+transform(gbstd::rectangle&  a, const gbstd::rectangle&  b) noexcept
+{
+  transform(a.w,b.x,b.w);
+  transform(a.h,b.y,b.h);
+}
+}
+
+
 void
 core::
 paste(gbstd::point  pt, bool  layer) noexcept
@@ -16,13 +34,17 @@ paste(gbstd::point  pt, bool  layer) noexcept
   gbstd::rectangle  src_rect = m_clipped_image.get_rectangle();
   gbstd::rectangle  dst_rect(pt,m_canvas.get_width(),m_canvas.get_height());
 
-  auto  rect = src_rect&dst_rect;
-
+  transform(src_rect,dst_rect);
+/*
+rect.print();
+printf("\n");
+fflush(stdout);
+*/
   gbstd::canvas  cv(m_clipped_image);
 
-    for(int  y = 0;  y < rect.h;  y += 1){
-    for(int  x = 0;  x < rect.w;  x += 1){
-      auto  pix = *cv.get_pixel_pointer(rect.x+x,rect.y+y);
+    for(int  y = 0;  y < src_rect.h;  ++y){
+    for(int  x = 0;  x < src_rect.w;  ++x){
+      auto  pix = *cv.get_pixel_pointer(src_rect.x+x,src_rect.y+y);
 
         if(!layer || pix.color)
         {

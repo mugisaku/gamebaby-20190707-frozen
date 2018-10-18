@@ -202,13 +202,12 @@ core: public gbstd::widget
   int  m_pixel_size=1;
 
   struct flags{
-    static constexpr int  show_background = 1;
-    static constexpr int  show_grid       = 2;
-    static constexpr int  show_underlay   = 4;
+    static constexpr int  show_grid       = 1;
+    static constexpr int  show_underlay   = 2;
   };
 
 
-  int  m_state=7;
+  int  m_state=3;
 
   enum class mode{
     draw_dot,
@@ -226,7 +225,6 @@ core: public gbstd::widget
   drawing_recorder  m_recorder;
 
   bool  m_drawing_is_fixed=true;
-  bool  m_whether_show_underlay=true;
 
   gbstd::color  m_drawing_color=gbstd::color(0,0,0);
 
@@ -282,14 +280,11 @@ public:
   drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
 
 
-  void      show_background() noexcept;
-  void      hide_background() noexcept;
   void      show_grid() noexcept;
   void      hide_grid() noexcept;
   void  show_underlay() noexcept;
   void  hide_underlay() noexcept;
 
-  bool  test_whether_show_background() const noexcept{return m_state&flags::show_background;}
   bool  test_whether_show_grid()       const noexcept{return m_state&flags::show_grid;}
   bool  test_whether_show_underlay()   const noexcept{return m_state&flags::show_underlay;}
 

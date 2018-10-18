@@ -317,26 +317,6 @@ rebase_underlay_stack() noexcept
 
 void
 core::
-show_background() noexcept
-{
-  m_state |= flags::show_background;
-
-  request_redraw();
-}
-
-
-void
-core::
-hide_background() noexcept
-{
-  m_state |= flags::show_background;
-
-  request_redraw();
-}
-
-
-void
-core::
 show_grid() noexcept
 {
   m_state &= ~flags::show_grid;
@@ -415,11 +395,7 @@ render(const gbstd::canvas&  cv) noexcept
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
-    if(test_whether_show_background())
-    {
-      render_background(m_pixel_size,cv);
-    }
-
+  render_background(m_pixel_size,cv);
 
     if(test_whether_show_underlay())
     {

@@ -73,20 +73,29 @@ load(const std::vector<uint8_t>&  bin) noexcept
 
     if(img.get_width())
     {
-      int  w = std::max(img.get_width() ,get_cell_width() *get_table_width() );
-      int  h = std::max(img.get_height(),get_cell_height()*get_table_height());
+      int  cell_w = get_cell_width();
+      int  cell_h = get_cell_height();
 
-      w = (w+(get_cell_width() -1))/get_cell_width() *get_cell_width() ;
-      h = (h+(get_cell_height()-1))/get_cell_height()*get_cell_height();
+      int  w = std::max(img.get_width() ,cell_w*get_table_width() );
+      int  h = std::max(img.get_height(),cell_h*get_table_height());
 
-      img.resize(w,h);
+      w = (w+(cell_w-1))/cell_w*cell_w;
+      h = (h+(cell_h-1))/cell_h*cell_h;
 
       m_current_index = point();
 
       m_core->clear_underlay_stack();
       m_aniview->clear();
 
-      m_source_image = std::move(img);
+      resize_table(item_table_size{w/cell_w,h/cell_h});
+
+      m_source_image.fill(color());
+
+        for(int  y = 0;  y < h;  ++y){
+        for(int  x = 0;  x < w;  ++x){
+          m_source_image.get_pixel_pointer(x,y)->color = img.get_pixel_pointer(x,y)->color;
+        }}
+
 
       revise();
     }

@@ -49,7 +49,7 @@ point
   point&  operator/=(point  rhs) noexcept;
   point&  operator%=(point  rhs) noexcept;
 
-  void  print() const noexcept{printf("{x:%d,y:%d}",x,y);}
+  void  print() const noexcept{printf("{x:%3d,y:%3d}",x,y);}
 
 };
 
@@ -131,6 +131,8 @@ rectangle
            *this = (*this)&rhs;
     return *this              ;
   }
+
+  void  print() const noexcept{printf("{x:%3d,y:%3d,w:%3d,h:%3d}",x,y,w,h);}
 
 };
 

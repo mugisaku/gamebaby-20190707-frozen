@@ -136,7 +136,6 @@ check() noexcept
 
 
 namespace{
-template<bool  FILL>
 void
 transfer(const gbstd::canvas  src_cv, gbpng::direct_color_image&  dst_img) noexcept
 {
@@ -158,17 +157,11 @@ transfer(const gbstd::canvas  src_cv, gbpng::direct_color_image&  dst_img) noexc
         }
 
       else
-        if(FILL)
         {
           *dst++ = 0;
           *dst++ = 0;
           *dst++ = 0;
           *dst++ = 0;
-        }
-
-      else
-        {
-          dst += 4;
         }
     }}
 }
@@ -201,10 +194,25 @@ save_as_apng(const char*  filepath) const noexcept
 
           direct_color_image  dst_img(w,h);
 
+          gbstd::image  tmp_img(w,h);
+
+          gbstd::canvas  tmp_cv(tmp_img);
+
+          bool  show_underlay = ctx.m_core->test_whether_show_underlay();
+
             while(it != it_end)
             {
-//              transfer<true>(underlay,dst_img);
-              transfer<false>(  *it++,dst_img);
+              ctx.m_core->render_background(2,tmp_cv);
+
+                if(show_underlay)
+                {
+                  ctx.m_core->render_underlay(1,tmp_cv);
+                }
+
+
+              tmp_cv.draw_canvas(*it++,0,0);
+
+              transfer(tmp_cv,dst_img);
 
               ani.append(dst_img);
             }
@@ -305,13 +313,9 @@ render(const canvas&  cv) noexcept
     {
       auto&  frm = m_frames[m_index];
 
-        if(ctx.m_core->test_whether_show_background())
-        {
-          canvas  cocv(cv,0,0,frm.get_width(),frm.get_height());
+      canvas  cocv(cv,0,0,frm.get_width(),frm.get_height());
 
-          ctx.m_core->render_background(2,cocv);
-        }
-
+      ctx.m_core->render_background(2,cocv);
 
         if(ctx.m_core->test_whether_show_underlay())
         {

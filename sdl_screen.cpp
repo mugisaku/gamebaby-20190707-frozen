@@ -99,7 +99,10 @@ init(int  w, int  h, double  scale) noexcept
 
   SDL_Init(SDL_INIT_VIDEO);
 
-  g_window = SDL_CreateWindow("GAME BABY - " __DATE__,0,0,g_dst_rect.w,g_dst_rect.h,0);
+  g_window = SDL_CreateWindow("GAME BABY - " __DATE__,SDL_WINDOWPOS_CENTERED,
+                                                      SDL_WINDOWPOS_CENTERED,
+                                                      g_dst_rect.w,
+                                                      g_dst_rect.h,0);
 
     if(!g_window)
     {
@@ -111,6 +114,15 @@ init(int  w, int  h, double  scale) noexcept
   g_texture  = SDL_CreateTexture(g_renderer,SDL_PIXELFORMAT_ARGB1555,SDL_TEXTUREACCESS_STREAMING,w,h);
 
   g_image.resize(w,h);
+}
+
+
+void
+init(int  x, int  y, int  w, int  h, double  scale) noexcept
+{
+  init(w,h,scale);
+
+  SDL_SetWindowPosition(g_window,x,y);
 }
 
 

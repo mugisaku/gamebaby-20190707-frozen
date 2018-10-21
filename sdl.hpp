@@ -14,7 +14,8 @@ void  update_screen(const gbstd::canvas&  cv) noexcept;
 
 void  quit() noexcept;
 
-void  init(int  w, int  h, double  scale=1) noexcept;
+void  init(                int  w, int  h, double  scale=1) noexcept;
+void  init(int  x, int  y, int  w, int  h, double  scale=1) noexcept;
 
 void  resize_screen(int  w, int  h) noexcept;
 

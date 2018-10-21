@@ -1,7 +1,13 @@
-フォントデータ、画像データ等、は下記アドレスに置いてあります
+画像等のバイナリデータは下記アドレスに置いてあります
 https://drive.google.com/open?id=0B_7bNzvT8p7UdzVpN3ZUUjBLaVE
 
-利用は自由です
+
+
+
+ネット上にある無償の情報によってプログラミングを習得した身ですので、
+その成果もまた無償で公開します
+
+
 
 
 ソースコードはC++11以降で書かれています
@@ -19,6 +25,7 @@ mainプログラムがSDL2を使用する以外は、
 
 
 以下を入力して、ビルドします(-DEMSC=onを付けた場合、emscriptenを使い、javascript版ができる)
+mkdir -p  builddir
 cd builddir
 cmake .. [-DEMSC=on]
 make

@@ -416,10 +416,13 @@ render(const gbstd::canvas&  cv) noexcept
 
     if(test_whether_show_grid())
     {
+      int  x_sz = w/4;
+      int  y_sz = h/4;
+
         for(int  y = 0;  y < h;  ++y)
         {
-          auto  color = (y%8)? gbstd::colors::gray
-                             : gbstd::colors::light_gray;
+          auto  color = (y%y_sz)? gbstd::colors::gray
+                                : gbstd::colors::light_gray;
 
           cv.draw_hline(color,0,m_pixel_size*y,get_content_width());
         }
@@ -427,8 +430,8 @@ render(const gbstd::canvas&  cv) noexcept
 
         for(int  x = 0;  x < w;  ++x)
         {
-          auto  color = (x%8)? gbstd::colors::gray
-                             : gbstd::colors::light_gray;
+          auto  color = (x%x_sz)? gbstd::colors::gray
+                                : gbstd::colors::light_gray;
 
           cv.draw_vline(color,m_pixel_size*x,0,get_content_height());
         }
@@ -436,14 +439,16 @@ render(const gbstd::canvas&  cv) noexcept
 
       cv.draw_hline(gbstd::colors::white,0,m_pixel_size*(h/2)  ,get_content_width() );
       cv.draw_vline(gbstd::colors::white,  m_pixel_size*(w/2),0,get_content_height());
-
-      cv.draw_double_rectangle(gbstd::colors::white,gbstd::colors::black,
-        m_pixel_size*m_operation_rect.x,
-        m_pixel_size*m_operation_rect.y,
-        m_pixel_size*m_operation_rect.w,
-        m_pixel_size*m_operation_rect.h
-      );
     }
+
+
+
+    cv.draw_double_rectangle(gbstd::colors::white,gbstd::colors::black,
+      m_pixel_size*m_operation_rect.x,
+      m_pixel_size*m_operation_rect.y,
+      m_pixel_size*m_operation_rect.w,
+      m_pixel_size*m_operation_rect.h
+    );
 }
 
 

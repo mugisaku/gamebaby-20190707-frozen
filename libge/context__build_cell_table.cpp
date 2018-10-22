@@ -60,6 +60,7 @@ process(menu_event  evt) noexcept
 
       ctx.m_core->rebase_canvas();
 
+      ctx.m_seamless_pattern_view->request_redraw();
       ctx.m_menu->request_redraw();
     }
 

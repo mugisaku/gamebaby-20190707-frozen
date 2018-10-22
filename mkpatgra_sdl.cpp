@@ -21,7 +21,7 @@ window
 g_window;
 
 
-constexpr int  g_cell_size = 48;
+constexpr int  g_cell_size = 24;
 
 
 ge::context*
@@ -73,7 +73,7 @@ int
 main(int  argc, char**  argv)
 {
 #ifdef EMSCRIPTEN
-  set_caption("mkanigra - " __DATE__);
+  set_caption("mkpatgra - " __DATE__);
   set_description("<pre>"
                   "*マウスの左ボタンで、任意色を置き、\n"
                   " 右ボタンで透明色を置く\n"
@@ -129,10 +129,10 @@ main(int  argc, char**  argv)
   auto  right       = make_column({right_upper,last_w});
 
 
-  auto  left = make_column({g_ge_context->m_core_frame,
+  auto  left = make_column({g_ge_context->m_core_frame,g_ge_context->m_seamless_pattern_view_frame,
     g_ge_context->m_png_save_button,
     g_ge_context->m_apng_save_button,
-    g_ge_context->m_txt_save_button
+    g_ge_context->m_txt_save_button,
   });
 
 

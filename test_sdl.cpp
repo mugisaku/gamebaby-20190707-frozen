@@ -23,6 +23,17 @@ canvas
 g_screen_canvas;
 
 
+const uint8_t
+g_binary[] =
+{
+//#include"noName.txt"
+};
+
+
+image
+g_graphic_image(g_binary);
+
+
 constexpr int  g_plane_size = 24;
 
 
@@ -275,6 +286,18 @@ space
 
   node&  get_node(int  x, int  y) noexcept{return m_map[(m_x_length*y)+x];}
 
+  void  update() noexcept
+  {
+    int  h = m_y_length+m_z_length;
+
+      for(int  y = 0;  y <          h;  ++y){
+      for(int  x = 0;  x < m_x_length;  ++x){
+        auto&  nd = get_node(x,y);
+
+        nd.seek();
+      }}
+  }
+
   void  render(const canvas&  cv) noexcept
   {
     int  h = m_y_length+m_z_length;
@@ -380,6 +403,8 @@ process_input() noexcept
 void
 update_screen() noexcept
 {
+  g_space.update();
+
   g_space.render(g_screen_canvas);
 
     if(g_last_box)
@@ -446,9 +471,7 @@ main(int  argc, char**  argv)
 
   g_screen_canvas = sdl::make_screen_canvas();
 
-  g_screen_canvas.fill(color());
-
-  sdl::update_screen(g_screen_canvas);
+  update_screen();
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);

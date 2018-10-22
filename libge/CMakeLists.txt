@@ -4,6 +4,7 @@ set(SOURCES
   color_maker.cpp
   color_holder.cpp
   aniview.cpp
+  seamless_pattern_view.cpp
   drawing_recorder.cpp
   underlay_stacker.cpp
   core.cpp

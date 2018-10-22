@@ -21,6 +21,7 @@ build_core() noexcept
       if(evt.is_image_modified())
       {
         ctx.m_menu->request_redraw();
+        ctx.m_seamless_pattern_view->request_redraw();
       }
 
 

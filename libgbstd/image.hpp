@@ -73,6 +73,7 @@ public:
   image() noexcept{}
   image(const image&   rhs) noexcept{assign(rhs);}
   image(      image&&  rhs) noexcept{assign(std::move(rhs));}
+  image(const uint8_t*  ptr) noexcept{read_png_stream(ptr);}
   image(int  w, int  h, std::initializer_list<int>  ls) noexcept;
   image(int  w, int  h, std::initializer_list<color>  ls={}) noexcept;
  ~image(){resize(0,0);}
@@ -87,6 +88,7 @@ public:
 
   void  resize(int  w, int  h) noexcept;
 
+  std::vector<uint8_t>  make_txt_stream(                   ) const noexcept;
   std::vector<uint8_t>  make_png_stream(                   ) const noexcept;
   void                  read_png_stream(const uint8_t*  ptr)       noexcept;
 

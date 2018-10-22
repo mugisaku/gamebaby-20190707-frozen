@@ -73,6 +73,9 @@ process_key_up(const SDL_KeyboardEvent&  evt) noexcept
   case(SDLK_x    ):
       gbstd::g_input.unset_n();
       break;
+  case(SDLK_s):
+      screenshot();
+      break;
     }
 }
 

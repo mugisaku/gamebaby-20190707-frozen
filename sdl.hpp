@@ -19,6 +19,8 @@ void  init(int  x, int  y, int  w, int  h, double  scale=1) noexcept;
 
 void  resize_screen(int  w, int  h) noexcept;
 
+void  screenshot() noexcept;
+
 gbstd::canvas  make_screen_canvas() noexcept;
 
 void  update_control() noexcept;

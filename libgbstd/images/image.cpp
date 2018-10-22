@@ -140,6 +140,31 @@ fill(color  c) const noexcept
 }
 
 
+std::vector<uint8_t>
+image::
+make_txt_stream() const noexcept
+{
+  auto  pngs = make_png_stream();
+
+  std::vector<uint8_t>  buf;
+
+  char  s[8];
+
+    for(auto  c: pngs)
+    {
+      int  n = snprintf(s,sizeof(s),"%d,",c);
+
+        for(int  i = 0;  i < n;  ++i)
+        {
+          buf.emplace_back(s[i]);
+        }
+    }
+
+
+  return std::move(buf);
+}
+
+
 }
 
 

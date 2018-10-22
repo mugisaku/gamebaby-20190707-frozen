@@ -1,4 +1,5 @@
 #include"sdl.hpp"
+#include"libgbstd/file_op.hpp"
 
 
 
@@ -141,6 +142,17 @@ resize_screen(int  w, int  h) noexcept
       SDL_DestroyTexture(g_texture);
                          g_texture  = SDL_CreateTexture(g_renderer,SDL_PIXELFORMAT_ARGB1555,SDL_TEXTUREACCESS_STREAMING,w,h);
     }
+}
+
+
+void
+screenshot() noexcept
+{
+#ifndef __EMSCRIPTEN__
+  auto  png = g_image.make_png_stream();
+
+  gbstd::write_to_file(png.data(),png.size(),"__screenshot.png");
+#endif
 }
 
 

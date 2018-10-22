@@ -124,6 +124,9 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
   m_aniview       = new aniview(*this);
   m_aniview_frame = new frame("animation",m_aniview);
 
+  m_seamless_pattern_view       = new seamless_pattern_view(*this);
+  m_seamless_pattern_view_frame = new frame("pattern",m_seamless_pattern_view);
+
   m_underlay_stacker       = new underlay_stacker(*this);
   m_underlay_stacker_frame = new frame("underlay",m_underlay_stacker);
 
@@ -165,6 +168,28 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
 
 
   m_apng_save_button->set_userdata(this);
+
+
+
+  m_txt_save_button = new button(new label(u"save as C code",colors::black),[](button_event  evt){
+    auto&  ctx = *evt->get_userdata<context>();
+
+      if(evt.is_release())
+      {
+        auto  txt = ctx.m_source_image.make_txt_stream();
+
+        constexpr const char*  filepath = "noName.txt";
+
+#ifdef __EMSCRIPTEN__
+        download(txt.data(),txt.size(),filepath);
+#else
+        write_to_file(txt.data(),txt.size(),filepath);
+#endif
+      }
+  });
+
+
+  m_txt_save_button->set_userdata(this);
 }
 
 

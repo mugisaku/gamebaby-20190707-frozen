@@ -101,6 +101,20 @@ public:
 
 
 class
+seamless_pattern_view: public gbstd::widget
+{
+
+public:
+  seamless_pattern_view(context&  ctx) noexcept;
+
+  void  process_before_reform() noexcept override;
+
+  void  render(const gbstd::canvas&  cv) noexcept override;
+
+};
+
+
+class
 underlay_stacker: public gbstd::widget
 {
   gbstd::label*    m_counter_label;
@@ -371,7 +385,11 @@ context
   gbstd::label*  m_cursor_label;
   gbstd::label*  m_table_offset_label;
 
+  gbstd::widget*  m_seamless_pattern_view;
+  gbstd::frame*   m_seamless_pattern_view_frame;
+
   gbstd::button*   m_png_save_button;
+  gbstd::button*   m_txt_save_button;
   gbstd::button*  m_apng_save_button;
 
   gbstd::menu*  m_menu;

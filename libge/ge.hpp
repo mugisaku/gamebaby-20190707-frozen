@@ -27,8 +27,8 @@ color_maker: public gbstd::widget
 public:
   color_maker(void  (*callback)(color_maker&,gbstd::color)) noexcept;
 
-  void          set_color(gbstd::color  color)       noexcept;
-  gbstd::color  get_color(                   ) const noexcept{return m_color;}
+  void                 set_color(gbstd::color  color)       noexcept;
+  const gbstd::color&  get_color(                   ) const noexcept{return m_color;}
 
   void  update_color() noexcept;
 
@@ -58,6 +58,33 @@ public:
   void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
 
 };
+
+
+class core_paint;
+
+
+class
+color_handler
+{
+  color_holder*  m_holder;
+  color_maker*    m_maker;
+
+  core_paint*  m_paint;
+
+  static void  holder_callback(color_holder&  holder, gbstd::color  color) noexcept;
+  static void   maker_callback(color_maker&    maker, gbstd::color  color) noexcept;
+
+public:
+  color_handler(core_paint&  pai) noexcept;
+
+  const gbstd::color&  get_color() const noexcept{return m_maker->get_color();}
+
+  gbstd::widget*  get_holder() const noexcept{return m_holder;}
+  gbstd::widget*   get_maker() const noexcept{return  m_maker;}
+
+};
+
+
 
 
 class context;
@@ -357,8 +384,21 @@ core_display
 
   background_style  m_bg_style;
 
+  gbstd::widget*  m_container;
+
+  const gbstd::color*  m_color;
+
+  std::vector<gbstd::widget*>  m_widget_list;
+
+  static void   first_callback(gbstd::button_event  evt) noexcept;
+  static void  second_callback(gbstd::button_event  evt) noexcept;
+
 public:
   core_display() noexcept;
+
+  void  reset(const gbstd::color&  color, std::initializer_list<gbstd::widget*>  ls) noexcept;
+
+  gbstd::widget*  get_widget() const noexcept{return m_container;}
 
   void  push_underlay(gbstd::image&  img, gbstd::point  pt, int  w, int  h) noexcept;
   void   pop_underlay() noexcept;
@@ -462,8 +502,7 @@ context
 
   gbstd::frame*   m_cell_table_frame;
 
-  color_maker*   m_color_maker;
-  color_holder*  m_color_holder;
+  color_handler*  m_color_handler;
 
   gbstd::frame*  m_color_maker_frame;
   gbstd::frame*  m_color_holder_frame;
@@ -471,7 +510,7 @@ context
   gbstd::frame*  m_tool_widget_frame;
   gbstd::frame*  m_operation_widget_frame;
 
-  gbstd::widget*  m_bg_change_buttons;
+  gbstd::widget*  m_bg_changer;
 
   gbstd::label*  m_cursor_label;
   gbstd::label*  m_table_offset_label;
@@ -502,8 +541,6 @@ context
   context(gbstd::item_size  cell_size, gbstd::item_table_size  table_size) noexcept;
 
   void  build_core() noexcept;
-  void  build_bgcolor_changer() noexcept;
-  void  build_color_handler() noexcept;
   void  build_cell_table() noexcept;
   void  build_animation() noexcept;
   void  build_underlay() noexcept;
@@ -539,8 +576,7 @@ context2
 
   gbstd::frame*   m_core_frame;
 
-  color_maker*   m_color_maker;
-  color_holder*  m_color_holder;
+  color_handler*  m_color_handler;
 
   gbstd::frame*  m_color_maker_frame;
   gbstd::frame*  m_color_holder_frame;
@@ -553,9 +589,6 @@ context2
   gbstd::label*  m_cursor_label;
 
   context2() noexcept;
-
-  void  build_bgcolor_changer() noexcept;
-  void  build_color_handler() noexcept;
 
 };
 

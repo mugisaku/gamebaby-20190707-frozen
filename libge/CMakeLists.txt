@@ -3,6 +3,7 @@
 set(SOURCES
   color_maker.cpp
   color_holder.cpp
+  color_handler.cpp
   aniview.cpp
   seamless_pattern_view.cpp
   arrange_view.cpp

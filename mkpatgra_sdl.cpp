@@ -119,7 +119,7 @@ main(int  argc, char**  argv)
                                  gbstd::item_table_size{6,2});
 
 
-  auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_change_buttons,g_ge_context->m_aniview_frame});
+  auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_changer,g_ge_context->m_aniview_frame});
 
   auto  to_col = make_column({g_ge_context->m_tool_widget_frame,g_ge_context->m_operation_widget_frame});
 

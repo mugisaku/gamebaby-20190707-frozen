@@ -6,6 +6,45 @@
 namespace ge{
 
 
+using namespace gbstd;
+
+
+void
+core_display::
+first_callback(gbstd::button_event  evt) noexcept
+{
+    if(evt.is_release())
+    {
+      auto&  dsp = *evt->get_userdata<core_display>();
+
+      dsp.m_bg_style.first_color = *dsp.m_color;
+
+        for(auto  ptr: dsp.m_widget_list)
+        {
+          ptr->request_redraw();
+        }
+    }
+}
+
+
+void
+core_display::
+second_callback(gbstd::button_event  evt) noexcept
+{
+    if(evt.is_release())
+    {
+      auto&  dsp = *evt->get_userdata<core_display>();
+
+      dsp.m_bg_style.second_color = *dsp.m_color;
+
+        for(auto  ptr: dsp.m_widget_list)
+        {
+          ptr->request_redraw();
+        }
+    }
+}
+
+
 
 
 core_display::
@@ -13,6 +52,26 @@ core_display() noexcept
 {
   m_bg_style.first_color  = gbstd::color(0,0,7);
   m_bg_style.second_color = gbstd::color(2,2,5);
+
+  auto  ch1bg_btn = new button(new label(u"Change bg1 color",colors::black), first_callback);
+  auto  ch2bg_btn = new button(new label(u"Change bg2 color",colors::black),second_callback);
+
+  ch1bg_btn->set_userdata(this);
+  ch2bg_btn->set_userdata(this);
+
+  m_container = make_column({ch1bg_btn,ch2bg_btn});
+}
+
+
+
+
+void
+core_display::
+reset(const gbstd::color&  color, std::initializer_list<gbstd::widget*>  ls) noexcept
+{
+  m_color = &color;
+
+  m_widget_list = ls;
 }
 
 

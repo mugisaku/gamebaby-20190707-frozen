@@ -123,9 +123,17 @@ context::
 context(item_size  cell_size, item_table_size  table_size) noexcept
 {
   build_core();
-  build_color_handler();
-  build_bgcolor_changer();
   build_cell_table();
+
+
+  m_color_handler = new color_handler(m_paint);
+
+  m_color_maker_frame  = new frame("color",m_color_handler->get_maker());
+  m_color_holder_frame = new frame("palette",m_color_handler->get_holder());
+
+  m_display.reset(m_color_handler->get_color(),{m_core,m_menu});
+
+  m_bg_changer = m_display.get_widget();
 
   m_aniview       = new aniview(*this);
   m_aniview_frame = new frame("animation",m_aniview);
@@ -196,100 +204,6 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
 
 
   m_txt_save_button->set_userdata(this);
-}
-
-
-
-
-void
-context::
-build_color_handler() noexcept
-{
-  auto  color_list = {
-    colors::black,
-    colors::dark_gray,
-    colors::gray,
-    colors::light_gray,
-    colors::white,
-    colors::red,
-    colors::green,
-    colors::blue,
-    colors::yellow,
-    colors::black,
-    colors::black,
-    colors::black,
-    colors::black,
-    colors::black,
-    colors::black,
-    colors::black,
-  };
-
-
-  m_color_holder = new color_holder(color_list,[](color_holder&  holder, gbstd::color  color){
-    auto&  ctx = *holder.get_userdata<context>();
-    
-    ctx.m_color_maker->set_color(color);
-  });
-
-
-  m_color_maker = new color_maker([](color_maker&  maker, gbstd::color  color){
-    auto&  ctx = *maker.get_userdata<context>();
-
-    ctx.m_color_holder->set_color(color);
-
-    ctx.m_core->get_paint().set_drawing_color(color);
-  });
-
-
-  m_color_maker->set_userdata(this);
-  m_color_holder->set_userdata(this);
-
-  m_color_maker_frame  = new frame("color",m_color_maker );
-  m_color_holder_frame = new frame("palette",m_color_holder);
-}
-
-
-void
-context::
-build_bgcolor_changer() noexcept
-{
-  auto  ch1bg_btn = new button(new label(u"Change bg1 color",colors::black),[](button_event  evt){
-    auto&  ctx = *evt->get_userdata<context>();
-
-      if(evt.is_release())
-      {
-        auto  bgst = ctx.m_core->get_display().get_background_style();
-
-        bgst.first_color = ctx.m_color_maker->get_color();
-
-        ctx.m_core->get_display().set_background_style(bgst);
-
-        ctx.m_core->request_redraw();
-        ctx.m_menu->request_redraw();
-      }
-  });
-
-  auto  ch2bg_btn = new button(new label(u"Change bg2 color",colors::black),[](button_event  evt){
-    auto&  ctx = *evt->get_userdata<context>();
-
-      if(evt.is_release())
-      {
-        auto  bgst = ctx.m_core->get_display().get_background_style();
-
-        bgst.second_color = ctx.m_color_maker->get_color();
-
-        ctx.m_core->get_display().set_background_style(bgst);
-
-        ctx.m_core->request_redraw();
-        ctx.m_menu->request_redraw();
-      }
-  });
-
-
-  ch1bg_btn->set_userdata(this);
-  ch2bg_btn->set_userdata(this);
-
-  m_bg_change_buttons = make_column({ch1bg_btn,ch2bg_btn});
 }
 
 

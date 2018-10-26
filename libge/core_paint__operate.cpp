@@ -26,13 +26,13 @@ transform(gbstd::rectangle&  a, const gbstd::rectangle&  b) noexcept
 
 void
 core_paint::
-paste(const gbstd::canvas&  cv, bool  layer) noexcept
+paste(bool  layer) noexcept
 {
   try_to_push_nonsolid_record();
 
 
   gbstd::rectangle  src_rect = m_clipped_image.get_rectangle();
-  gbstd::rectangle  dst_rect(m_drawing_point,cv.get_width(),cv.get_height());
+  gbstd::rectangle  dst_rect(m_drawing_point,m_canvas.get_width(),m_canvas.get_height());
 
   transform(src_rect,dst_rect);
 
@@ -44,7 +44,7 @@ paste(const gbstd::canvas&  cv, bool  layer) noexcept
 
         if(!layer || pix.color)
         {
-          modify_dot(cv,pix.color,{dst_rect.x+x,dst_rect.y+y});
+          modify_dot(pix.color,{dst_rect.x+x,dst_rect.y+y});
         }
     }}
 
@@ -57,9 +57,9 @@ paste(const gbstd::canvas&  cv, bool  layer) noexcept
 
 void
 core_paint::
-revolve(const gbstd::canvas&  cv) noexcept
+revolve() noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   const int  w = std::min(m_operation_rect.w,m_operation_rect.h);
 
@@ -69,7 +69,7 @@ revolve(const gbstd::canvas&  cv) noexcept
     for(int  xx = 0;  xx < w;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
 
-      modify_dot(cv,pix,{m_operation_rect.x+w-1-yy,m_operation_rect.y+xx});
+      modify_dot(pix,{m_operation_rect.x+w-1-yy,m_operation_rect.y+xx});
     }}
 
 
@@ -79,9 +79,9 @@ revolve(const gbstd::canvas&  cv) noexcept
 
 void
 core_paint::
-reverse_horizontally(const gbstd::canvas&  cv) noexcept
+reverse_horizontally() noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   try_to_push_nonsolid_record();
 
@@ -89,7 +89,7 @@ reverse_horizontally(const gbstd::canvas&  cv) noexcept
     for(int  xx = 0;  xx < m_operation_rect.w;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
 
-      modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y+m_operation_rect.h-1-yy});
+      modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y+m_operation_rect.h-1-yy});
     }}
 
 
@@ -99,9 +99,9 @@ reverse_horizontally(const gbstd::canvas&  cv) noexcept
 
 void
 core_paint::
-reverse_vertically(const gbstd::canvas&  cv) noexcept
+reverse_vertically() noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   try_to_push_nonsolid_record();
 
@@ -109,7 +109,7 @@ reverse_vertically(const gbstd::canvas&  cv) noexcept
     for(int  xx = 0;  xx < m_operation_rect.w;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
 
-      modify_dot(cv,pix,{m_operation_rect.x+m_operation_rect.w-1-xx,m_operation_rect.y+yy});
+      modify_dot(pix,{m_operation_rect.x+m_operation_rect.w-1-xx,m_operation_rect.y+yy});
     }}
 
 
@@ -119,15 +119,15 @@ reverse_vertically(const gbstd::canvas&  cv) noexcept
 
 void
 core_paint::
-mirror_vertically(const gbstd::canvas&  cv) noexcept
+mirror_vertically() noexcept
 {
   try_to_push_nonsolid_record();
 
     for(int  yy = 0;  yy < m_operation_rect.h  ;  ++yy){
     for(int  xx = 0;  xx < m_operation_rect.w/2;  ++xx){
-      auto  pix = *cv.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
+      auto  pix = *m_canvas.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
 
-      modify_dot(cv,pix,{m_operation_rect.x+m_operation_rect.w-1-xx,m_operation_rect.y+yy});
+      modify_dot(pix,{m_operation_rect.x+m_operation_rect.w-1-xx,m_operation_rect.y+yy});
     }}
 
 
@@ -139,9 +139,9 @@ mirror_vertically(const gbstd::canvas&  cv) noexcept
 
 void
 core_paint::
-shift_up(const gbstd::canvas&  cv, bool  rotate) noexcept
+shift_up(bool  rotate) noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   try_to_push_nonsolid_record();
 
@@ -149,7 +149,7 @@ shift_up(const gbstd::canvas&  cv, bool  rotate) noexcept
     for(int  xx = 0;  xx < m_operation_rect.w  ;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy+1);
 
-      modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
+      modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
     }}
 
 
@@ -159,7 +159,7 @@ shift_up(const gbstd::canvas&  cv, bool  rotate) noexcept
         {
           auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y);
 
-          modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y+m_operation_rect.h-1});
+          modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y+m_operation_rect.h-1});
         }
     }
 
@@ -170,9 +170,9 @@ shift_up(const gbstd::canvas&  cv, bool  rotate) noexcept
 
 void
 core_paint::
-shift_left(const gbstd::canvas&  cv, bool  rotate) noexcept
+shift_left(bool  rotate) noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   try_to_push_nonsolid_record();
 
@@ -180,7 +180,7 @@ shift_left(const gbstd::canvas&  cv, bool  rotate) noexcept
     for(int  xx = 0;  xx < m_operation_rect.w-1;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx+1,m_operation_rect.y+yy);
 
-      modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
+      modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
     }}
 
 
@@ -190,7 +190,7 @@ shift_left(const gbstd::canvas&  cv, bool  rotate) noexcept
         {
           auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x,m_operation_rect.y+yy);
 
-          modify_dot(cv,pix,{m_operation_rect.x+m_operation_rect.w-1,m_operation_rect.y+yy});
+          modify_dot(pix,{m_operation_rect.x+m_operation_rect.w-1,m_operation_rect.y+yy});
         }
     }
 
@@ -201,9 +201,9 @@ shift_left(const gbstd::canvas&  cv, bool  rotate) noexcept
 
 void
 core_paint::
-shift_right(const gbstd::canvas&  cv, bool  rotate) noexcept
+shift_right(bool  rotate) noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   try_to_push_nonsolid_record();
 
@@ -211,7 +211,7 @@ shift_right(const gbstd::canvas&  cv, bool  rotate) noexcept
     for(int  xx = 1;  xx < m_operation_rect.w;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx-1,m_operation_rect.y+yy);
 
-      modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
+      modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
     }}
 
 
@@ -221,7 +221,7 @@ shift_right(const gbstd::canvas&  cv, bool  rotate) noexcept
         {
           auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+m_operation_rect.w-1,m_operation_rect.y+yy);
 
-          modify_dot(cv,pix,{m_operation_rect.x,m_operation_rect.y+yy});
+          modify_dot(pix,{m_operation_rect.x,m_operation_rect.y+yy});
         }
     }
 
@@ -232,9 +232,9 @@ shift_right(const gbstd::canvas&  cv, bool  rotate) noexcept
 
 void
 core_paint::
-shift_down(const gbstd::canvas&  cv, bool  rotate) noexcept
+shift_down(bool  rotate) noexcept
 {
-  auto  tmp = get_temporary_image(cv);
+  auto  tmp = get_temporary_image();
 
   try_to_push_nonsolid_record();
 
@@ -242,7 +242,7 @@ shift_down(const gbstd::canvas&  cv, bool  rotate) noexcept
     for(int  xx = 0;  xx < m_operation_rect.w;  ++xx){
       auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy-1);
 
-      modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
+      modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y+yy});
     }}
 
 
@@ -252,7 +252,7 @@ shift_down(const gbstd::canvas&  cv, bool  rotate) noexcept
         {
           auto  pix = *tmp.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+m_operation_rect.h-1);
 
-          modify_dot(cv,pix,{m_operation_rect.x+xx,m_operation_rect.y});
+          modify_dot(pix,{m_operation_rect.x+xx,m_operation_rect.y});
         }
     }
 

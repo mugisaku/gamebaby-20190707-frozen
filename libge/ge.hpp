@@ -250,6 +250,8 @@ background_style
 class
 core_paint
 {
+  gbstd::canvas  m_canvas;
+
   enum class mode{
     draw_dot,
     draw_line,
@@ -280,36 +282,36 @@ core_paint
   void  try_to_push_solid_record()    noexcept;
   void  try_to_push_nonsolid_record() noexcept;
 
-  static gbstd::image  get_temporary_image(const gbstd::canvas&  cv) noexcept;
+  gbstd::image  get_temporary_image() noexcept;
 
 
-  void  modify_dot(const gbstd::canvas&  cv, gbstd::color  color, gbstd::point  pt) noexcept;
+  void  modify_dot(gbstd::color  color, gbstd::point  pt) noexcept;
 
-  void  draw_line(gbstd::color  color,                         const gbstd::canvas&  cv) noexcept;
-  void  draw_rect(gbstd::color  color, gbstd::rectangle  rect, const gbstd::canvas&  cv) noexcept;
-  void  fill_rect(gbstd::color  color, gbstd::rectangle  rect, const gbstd::canvas&  cv) noexcept;
-  void  fill_area(gbstd::color  color,                         const gbstd::canvas&  cv) noexcept;
+  void  draw_line(gbstd::color  color                        ) noexcept;
+  void  draw_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept;
+  void  fill_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept;
+  void  fill_area(gbstd::color  color                        ) noexcept;
 
 public:
   drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
 
-  void  clear(const gbstd::canvas&  cv) noexcept;
+  void  reset(const gbstd::canvas&  cv) noexcept;
 
-  void  cancel_drawing(const gbstd::canvas&  cv) noexcept;
-  void  cancel_select(const gbstd::canvas&  cv) noexcept;
+  void  cancel_drawing() noexcept;
+  void  cancel_select() noexcept;
 
-  void  revolve(             const gbstd::canvas&  cv) noexcept;
-  void  reverse_horizontally(const gbstd::canvas&  cv) noexcept;
-  void  reverse_vertically(  const gbstd::canvas&  cv) noexcept;
-  void  mirror_vertically(   const gbstd::canvas&  cv) noexcept;
-  void  shift_up(            const gbstd::canvas&  cv, bool  rotate) noexcept;
-  void  shift_left(          const gbstd::canvas&  cv, bool  rotate) noexcept;
-  void  shift_right(         const gbstd::canvas&  cv, bool  rotate) noexcept;
-  void  shift_down(          const gbstd::canvas&  cv, bool  rotate) noexcept;
+  void  revolve(             ) noexcept;
+  void  reverse_horizontally() noexcept;
+  void  reverse_vertically(  ) noexcept;
+  void  mirror_vertically(   ) noexcept;
+  void  shift_up(   bool  rotate) noexcept;
+  void  shift_left( bool  rotate) noexcept;
+  void  shift_right(bool  rotate) noexcept;
+  void  shift_down( bool  rotate) noexcept;
 
-  void  take_copy(const gbstd::canvas&  cv) noexcept;
-  void       undo(const gbstd::canvas&  cv) noexcept;
-  void      paste(const gbstd::canvas&  cv, bool  layer) noexcept;
+  void  take_copy() noexcept;
+  void       undo() noexcept;
+  void      paste(bool  layer) noexcept;
 
   void          set_drawing_point(gbstd::point  pt)       noexcept{       m_drawing_point = pt;}
   gbstd::point  get_drawing_point(                ) const noexcept{return m_drawing_point     ;}
@@ -328,7 +330,11 @@ public:
   void  change_mode_to_paste()          noexcept{m_mode = mode::paste;}
   void  change_mode_to_layer()          noexcept{m_mode = mode::layer;}
 
-  bool  operator()(const gbstd::canvas&  cv) noexcept;
+  bool  operator()() noexcept;
+
+
+  gbstd::widget*  make_operation_widget() noexcept;
+  gbstd::widget*  make_tool_widget() noexcept;
 
 };
 
@@ -401,8 +407,8 @@ public:
   core_paint&      get_paint() const noexcept{return *m_paint;}
   core_display&  get_display() const noexcept{return *m_display;}
 
-  const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas;}
-  void                  set_canvas(const gbstd::canvas&  cv)       noexcept                ;
+  const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas     ;}
+  void                  set_canvas(const gbstd::canvas&  cv)       noexcept{       m_canvas = cv;}
 
   void  reset() noexcept;
 
@@ -413,22 +419,19 @@ public:
   const gbstd::pixel&  get_pixel(int  x, int  y) const noexcept{return *m_canvas.get_pixel_pointer(x,y);}
 
 
-  void  revolve()                 noexcept{m_paint->revolve(m_canvas);}
-  void  reverse_horizontally()    noexcept{m_paint->reverse_horizontally(m_canvas);}
-  void  reverse_vertically()      noexcept{m_paint->reverse_vertically(m_canvas);}
-  void  mirror_vertically()       noexcept{m_paint->mirror_vertically(m_canvas);}
-  void  shift_up(bool  rotate)    noexcept{m_paint->shift_up(m_canvas,rotate);}
-  void  shift_left(bool  rotate)  noexcept{m_paint->shift_left(m_canvas,rotate);}
-  void  shift_right(bool  rotate) noexcept{m_paint->shift_right(m_canvas,rotate);}
-  void  shift_down(bool  rotate)  noexcept{m_paint->shift_down(m_canvas,rotate);}
+  void  revolve()                 noexcept{m_paint->revolve();}
+  void  reverse_horizontally()    noexcept{m_paint->reverse_horizontally();}
+  void  reverse_vertically()      noexcept{m_paint->reverse_vertically();}
+  void  mirror_vertically()       noexcept{m_paint->mirror_vertically();}
+  void  shift_up(bool  rotate)    noexcept{m_paint->shift_up(rotate);}
+  void  shift_left(bool  rotate)  noexcept{m_paint->shift_left(rotate);}
+  void  shift_right(bool  rotate) noexcept{m_paint->shift_right(rotate);}
+  void  shift_down(bool  rotate)  noexcept{m_paint->shift_down(rotate);}
 
-  void  take_copy() noexcept{m_paint->take_copy(m_canvas);}
-  void       undo() noexcept{m_paint->undo(m_canvas);}
-  void      paste(bool  layer) noexcept{m_paint->paste(m_canvas,layer);}
+  void  take_copy() noexcept{m_paint->take_copy();}
+  void       undo() noexcept{m_paint->undo();}
+  void      paste(bool  layer) noexcept{m_paint->paste(layer);}
 
-
-  gbstd::widget*  create_tool_widget() noexcept;
-  gbstd::widget*  create_operation_widget() noexcept;
 
   void  do_on_mouse_leave() noexcept override;
 
@@ -518,6 +521,41 @@ context
 
   int  get_table_width()  const noexcept{return m_menu->get_item_table_size().x_length;}
   int  get_table_height() const noexcept{return m_menu->get_item_table_size().y_length;}
+
+};
+
+
+
+
+struct
+context2
+{
+  gbstd::image  m_source_image;
+
+  core_display  m_display;
+  core_paint      m_paint;
+
+  core*  m_core[4];
+
+  gbstd::frame*   m_core_frame;
+
+  color_maker*   m_color_maker;
+  color_holder*  m_color_holder;
+
+  gbstd::frame*  m_color_maker_frame;
+  gbstd::frame*  m_color_holder_frame;
+
+  gbstd::frame*  m_tool_widget_frame;
+  gbstd::frame*  m_operation_widget_frame;
+
+  gbstd::widget*  m_bg_change_buttons;
+
+  gbstd::label*  m_cursor_label;
+
+  context2() noexcept;
+
+  void  build_bgcolor_changer() noexcept;
+  void  build_color_handler() noexcept;
 
 };
 

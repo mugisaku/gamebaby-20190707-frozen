@@ -10,8 +10,8 @@ using namespace gbstd;
 
 
 widget*
-core::
-create_operation_widget() noexcept
+core_paint::
+make_operation_widget() noexcept
 {
   auto  undo_btn = new button(new label(u"Undo",colors::black),[](button_event  evt){
       if(evt.is_release())
@@ -156,15 +156,13 @@ create_operation_widget() noexcept
 
 
 widget*
-core::
-create_tool_widget() noexcept
+core_paint::
+make_tool_widget() noexcept
 {
   auto  cb = [](checkbox_event  evt){
-    auto  cor = evt->get_common_userdata<core>();
+    auto&  pai = *evt->get_common_userdata<core_paint>();
 
-    auto&  pai = cor->get_paint();
-
-    pai.cancel_drawing(cor->get_canvas());
+    pai.cancel_drawing();
 
       switch(evt->get_entry_number())
       {

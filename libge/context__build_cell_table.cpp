@@ -58,7 +58,10 @@ process(menu_event  evt) noexcept
       int  w = sz.width;
       int  h = sz.height;
 
-      ctx.m_core->set_canvas({ctx.m_source_image,w*ctx.m_current_index.x,h*ctx.m_current_index.y,w,h});
+      gbstd::canvas  cv(ctx.m_source_image,w*ctx.m_current_index.x,h*ctx.m_current_index.y,w,h);
+
+      ctx.m_paint.reset(cv);
+      ctx.m_core->set_canvas(cv);
 
       ctx.m_core->request_redraw();
 

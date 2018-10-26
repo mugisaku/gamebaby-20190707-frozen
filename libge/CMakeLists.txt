@@ -14,7 +14,8 @@ set(SOURCES
   core_paint.cpp
   core_paint__draw.cpp
   core_paint__operate.cpp
-  core__create_sub_widget.cpp
+  core_paint__make_widget.cpp
+  context2.cpp
   context.cpp
   context__build_core.cpp
   context__build_cell_table.cpp

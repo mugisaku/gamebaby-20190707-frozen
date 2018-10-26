@@ -55,7 +55,10 @@ revise() noexcept
   auto  w = get_cell_width();
   auto  h = get_cell_height();
 
-  m_core->set_canvas({m_source_image,w*m_current_index.x,h*m_current_index.y,w,h});
+  gbstd::canvas  cv(m_source_image,w*m_current_index.x,h*m_current_index.y,w,h);
+
+  m_paint.reset(cv);
+  m_core->set_canvas(cv);
 
   m_core->get_display().rebase_underlay_stack(m_source_image,w,h);
 
@@ -135,8 +138,8 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
 
   resize_image(cell_size,table_size);
 
-  m_tool_widget_frame      = new frame(     "tool",m_core->create_tool_widget()     );
-  m_operation_widget_frame = new frame("operation",m_core->create_operation_widget());
+  m_tool_widget_frame      = new frame(     "tool",m_paint.make_tool_widget()     );
+  m_operation_widget_frame = new frame("operation",m_paint.make_operation_widget());
 
   m_png_save_button = new button(new label(u"save as PNG",colors::black),[](button_event  evt){
     auto&  ctx = *evt->get_userdata<context>();

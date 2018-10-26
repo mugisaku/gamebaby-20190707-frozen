@@ -11,14 +11,20 @@ using namespace gbstd;
 
 void
 core_paint::
-clear(const gbstd::canvas&  cv) noexcept
+reset(const gbstd::canvas&  cv) noexcept
 {
-  cancel_drawing(cv);
-  cancel_select(cv);
+    if(cv)
+    {
+      cancel_drawing();
+      cancel_select();
+    }
+
 
   m_drawing_is_fixed = true;
 
   m_recorder.clear();
+
+  m_canvas = cv;
 }
 
 
@@ -26,7 +32,7 @@ clear(const gbstd::canvas&  cv) noexcept
 
 void
 core_paint::
-cancel_drawing(const gbstd::canvas&  cv) noexcept
+cancel_drawing() noexcept
 {
   m_pointing_count = 0;
 
@@ -35,7 +41,7 @@ cancel_drawing(const gbstd::canvas&  cv) noexcept
         if((m_mode == mode::paste) ||
            (m_mode == mode::layer))
         {
-          m_recorder.rollback(cv);
+          m_recorder.rollback(m_canvas);
         }
 
 
@@ -46,20 +52,20 @@ cancel_drawing(const gbstd::canvas&  cv) noexcept
 
 void
 core_paint::
-cancel_select(const gbstd::canvas&  cv) noexcept
+cancel_select() noexcept
 {
   m_operation_rect.x = 0;
   m_operation_rect.y = 0;
-  m_operation_rect.w = cv.get_width() ;
-  m_operation_rect.h = cv.get_height();
+  m_operation_rect.w = m_canvas.get_width() ;
+  m_operation_rect.h = m_canvas.get_height();
 }
 
 
 void
 core_paint::
-modify_dot(const gbstd::canvas&  cv, gbstd::color  color, gbstd::point  pt) noexcept
+modify_dot(gbstd::color  color, gbstd::point  pt) noexcept
 {
-  auto&  pix = *cv.get_pixel_pointer(pt.x,pt.y);
+  auto&  pix = *m_canvas.get_pixel_pointer(pt.x,pt.y);
 
     if(pix.color != color)
     {
@@ -74,13 +80,13 @@ modify_dot(const gbstd::canvas&  cv, gbstd::color  color, gbstd::point  pt) noex
 
 void
 core_paint::
-take_copy(const canvas&  cv) noexcept
+take_copy() noexcept
 {
   m_clipped_image.resize(m_operation_rect.w,m_operation_rect.h);
 
     for(int  y = 0;  y < m_operation_rect.h;  ++y){
     for(int  x = 0;  x < m_operation_rect.w;  ++x){
-      auto  pix = *cv.get_pixel_pointer(m_operation_rect.x+x,m_operation_rect.y+y);
+      auto  pix = *m_canvas.get_pixel_pointer(m_operation_rect.x+x,m_operation_rect.y+y);
 
       *m_clipped_image.get_pixel_pointer(x,y) = pix;
     }}
@@ -89,9 +95,9 @@ take_copy(const canvas&  cv) noexcept
 
 void
 core_paint::
-undo(const canvas&  cv) noexcept
+undo() noexcept
 {
-    if(m_recorder.rollback(cv))
+    if(m_recorder.rollback(m_canvas))
     {
 //
     }
@@ -131,16 +137,16 @@ try_to_push_nonsolid_record() noexcept
 
 gbstd::image
 core_paint::
-get_temporary_image(const canvas&  cv) noexcept
+get_temporary_image() noexcept
 {
-  int  w = cv.get_width() ;
-  int  h = cv.get_height();
+  int  w = m_canvas.get_width() ;
+  int  h = m_canvas.get_height();
 
   gbstd::image  img(w,h);
 
     for(int  y = 0;  y < h;  ++y){
     for(int  x = 0;  x < w;  ++x){
-      auto  pix = *cv.get_pixel_pointer(x,y);
+      auto  pix = *m_canvas.get_pixel_pointer(x,y);
 
       *img.get_pixel_pointer(x,y) = pix;
     }}
@@ -154,7 +160,7 @@ get_temporary_image(const canvas&  cv) noexcept
 
 bool
 core_paint::
-operator()(const canvas&  cv) noexcept
+operator()() noexcept
 {
   bool  dirty_flag = false;
 
@@ -163,7 +169,7 @@ operator()(const canvas&  cv) noexcept
   case(mode::draw_dot):
         if(gbstd::g_input.test_mouse_left())
         {
-          modify_dot(cv,m_drawing_color,m_drawing_point);
+          modify_dot(m_drawing_color,m_drawing_point);
 
           dirty_flag = true;
         }
@@ -171,7 +177,7 @@ operator()(const canvas&  cv) noexcept
       else
         if(gbstd::g_input.test_mouse_right())
         {
-          modify_dot(cv,gbstd::color(),m_drawing_point);
+          modify_dot(gbstd::color(),m_drawing_point);
 
           dirty_flag = true;
         }
@@ -183,11 +189,11 @@ operator()(const canvas&  cv) noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(cv);
+                  m_recorder.rollback(m_canvas);
                 }
 
 
-              draw_line(m_drawing_color,cv);
+              draw_line(m_drawing_color);
 
               dirty_flag = true;
             }
@@ -197,11 +203,11 @@ operator()(const canvas&  cv) noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(cv);
+                  m_recorder.rollback(m_canvas);
                 }
 
 
-              draw_line(color(),cv);
+              draw_line(color());
 
               dirty_flag = true;
             }
@@ -234,11 +240,11 @@ operator()(const canvas&  cv) noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(cv);
+                  m_recorder.rollback(m_canvas);
                 }
 
 
-              draw_rect(m_drawing_color,rect,cv);
+              draw_rect(m_drawing_color,rect);
 
               dirty_flag = true;
             }
@@ -248,11 +254,11 @@ operator()(const canvas&  cv) noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(cv);
+                  m_recorder.rollback(m_canvas);
                 }
 
 
-              draw_rect(gbstd::color(),rect,cv);
+              draw_rect(gbstd::color(),rect);
 
               dirty_flag = true;
             }
@@ -285,11 +291,11 @@ operator()(const canvas&  cv) noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(cv);
+                  m_recorder.rollback(m_canvas);
                 }
 
 
-              fill_rect(m_drawing_color,rect,cv);
+              fill_rect(m_drawing_color,rect);
 
               dirty_flag = true;
             }
@@ -299,11 +305,11 @@ operator()(const canvas&  cv) noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(cv);
+                  m_recorder.rollback(m_canvas);
                 }
 
 
-              fill_rect(gbstd::color(),rect,cv);
+              fill_rect(gbstd::color(),rect);
 
               dirty_flag = true;
             }
@@ -330,7 +336,7 @@ operator()(const canvas&  cv) noexcept
   case(mode::fill_area):
         if(gbstd::g_input.test_mouse_left())
         {
-          fill_area(m_drawing_color,cv);
+          fill_area(m_drawing_color);
 
           dirty_flag = true;
         }
@@ -338,7 +344,7 @@ operator()(const canvas&  cv) noexcept
       else
         if(gbstd::g_input.test_mouse_right())
         {
-          fill_area(gbstd::color(),cv);
+          fill_area(gbstd::color());
 
           dirty_flag = true;
         }
@@ -371,7 +377,7 @@ operator()(const canvas&  cv) noexcept
           else
             if(gbstd::g_input.test_mouse_right())
             {
-              m_operation_rect = gbstd::rectangle(0,0,cv.get_width(),cv.get_height());
+              m_operation_rect = gbstd::rectangle(0,0,m_canvas.get_width(),m_canvas.get_height());
 
               dirty_flag = true;
             }
@@ -388,11 +394,11 @@ operator()(const canvas&  cv) noexcept
         {
             if(!m_drawing_is_fixed)
             {
-              m_recorder.rollback(cv);
+              m_recorder.rollback(m_canvas);
             }
 
 
-          paste(cv,false);
+          paste(false);
 
           dirty_flag = true;
         }
@@ -411,11 +417,11 @@ operator()(const canvas&  cv) noexcept
         {
             if(!m_drawing_is_fixed)
             {
-              m_recorder.rollback(cv);
+              m_recorder.rollback(m_canvas);
             }
 
 
-          paste(cv,true);
+          paste(true);
 
           dirty_flag = true;
         }

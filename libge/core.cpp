@@ -19,22 +19,6 @@ m_callback(callback)
 
 void
 core::
-set_canvas(const gbstd::canvas&  cv) noexcept
-{
-    if(m_canvas)
-    {
-      m_paint->clear(m_canvas);
-    }
-
-
-  m_canvas = cv;
-
-  m_paint->cancel_select(m_canvas);
-}
-
-
-void
-core::
 update() noexcept
 {
   request_redraw();
@@ -62,7 +46,7 @@ void
 core::
 do_on_mouse_leave() noexcept
 {
-  m_paint->cancel_drawing(m_canvas);
+  m_paint->cancel_drawing();
 }
 
 
@@ -88,7 +72,7 @@ do_on_mouse_act(gbstd::point  mouse_pos) noexcept
     }
 
 
-    if((*m_paint)(m_canvas))
+    if((*m_paint)())
     {
       update();
     }

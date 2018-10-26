@@ -7,16 +7,16 @@ namespace ge{
 
 
 void
-core::
-draw_line(gbstd::color  color, gbstd::point  a, gbstd::point  b) noexcept
+core_paint::
+draw_line(gbstd::color  color, const gbstd::canvas&  cv) noexcept
 {
-  gbstd::liner  l(a.x,a.y,b.x,b.y);
+  gbstd::liner  l(m_saved_drawing_point,m_drawing_point);
 
   try_to_push_nonsolid_record();
 
     for(;;)
     {
-      modify_dot(color,l.get_x(),l.get_y());
+      modify_dot(cv,color,{l.get_x(),l.get_y()});
 
         if(!l.get_distance())
         {
@@ -33,22 +33,22 @@ draw_line(gbstd::color  color, gbstd::point  a, gbstd::point  b) noexcept
 
 
 void
-core::
-draw_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept
+core_paint::
+draw_rect(gbstd::color  color, gbstd::rectangle  rect, const gbstd::canvas&  cv) noexcept
 {
   try_to_push_nonsolid_record();
 
     for(int  yy = 0;  yy < rect.h;  ++yy)
     {
-      modify_dot(color,rect.x         ,rect.y+yy);
-      modify_dot(color,rect.x+rect.w-1,rect.y+yy);
+      modify_dot(cv,color,{rect.x         ,rect.y+yy});
+      modify_dot(cv,color,{rect.x+rect.w-1,rect.y+yy});
     }
 
 
     for(int  xx = 0;  xx < rect.w;  ++xx)
     {
-      modify_dot(color,rect.x+xx,rect.y         );
-      modify_dot(color,rect.x+xx,rect.y+rect.h-1);
+      modify_dot(cv,color,{rect.x+xx,rect.y         });
+      modify_dot(cv,color,{rect.x+xx,rect.y+rect.h-1});
     }
 
 
@@ -57,14 +57,14 @@ draw_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept
 
 
 void
-core::
-fill_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept
+core_paint::
+fill_rect(gbstd::color  color, gbstd::rectangle  rect, const gbstd::canvas&  cv) noexcept
 {
   try_to_push_nonsolid_record();
 
     for(int  yy = 0;  yy < rect.h;  ++yy){
     for(int  xx = 0;  xx < rect.w;  ++xx){
-      modify_dot(color,rect.x+xx,rect.y+yy);
+      modify_dot(cv,color,{rect.x+xx,rect.y+yy});
     }}
 
 
@@ -73,10 +73,10 @@ fill_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept
 
 
 void
-core::
-fill_area(gbstd::color  color, gbstd::point  pt) noexcept
+core_paint::
+fill_area(gbstd::color  color, const gbstd::canvas&  cv) noexcept
 {
-  auto  target_color = m_canvas.get_pixel_pointer(pt.x,pt.y)->color;
+  auto  target_color = cv.get_pixel_pointer(m_drawing_point.x,m_drawing_point.y)->color;
 
     if(target_color == color)
     {
@@ -84,8 +84,8 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
     }
 
 
-  const int  w = m_canvas.get_width() ;
-  const int  h = m_canvas.get_height();
+  const int  w = cv.get_width() ;
+  const int  h = cv.get_height();
 
   std::vector<uint8_t>  table(w*h,0);
 
@@ -96,7 +96,7 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
 
   int  i = 0;
 
-  stack.emplace_back(pt);
+  stack.emplace_back(m_drawing_point);
 
     while(i < stack.size())
     {
@@ -108,7 +108,7 @@ fill_area(gbstd::color  color, gbstd::point  pt) noexcept
         {
           flag = 1;
 
-          auto&  pix = *m_canvas.get_pixel_pointer(pt.x,pt.y);
+          auto&  pix = *cv.get_pixel_pointer(pt.x,pt.y);
 
             if(pix.color == target_color)
             {

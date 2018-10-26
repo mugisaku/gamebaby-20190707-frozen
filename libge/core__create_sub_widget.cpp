@@ -16,7 +16,11 @@ create_operation_widget() noexcept
   auto  undo_btn = new button(new label(u"Undo",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->undo();
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.undo();
+
+        cor.update();
       }
   });
 
@@ -24,40 +28,60 @@ create_operation_widget() noexcept
   auto  copy_btn = new button(new label(u"Copy",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->take_copy();
-      }
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.take_copy();
+
+        cor.update();
+     }
   });
 
 
   auto  rou_btn = new button(new label(u"Rotate ↑",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->shift_up(true);
-      }
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.shift_up(true);
+
+        cor.update();
+     }
   });
 
 
   auto  rol_btn = new button(new label(u"Rotate ←",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->shift_left(true);
-      }
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.shift_left(true);
+
+        cor.update();
+     }
   });
 
 
   auto  ror_btn = new button(new label(u"Rotate →",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->shift_right(true);
-      }
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.shift_right(true);
+
+        cor.update();
+     }
   });
 
 
   auto  rod_btn = new button(new label(u"Rotate ↓",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->shift_down(true);
-      }
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.shift_down(true);
+
+        cor.update();
+     }
   });
 
 
@@ -66,28 +90,44 @@ create_operation_widget() noexcept
   auto  rvl_btn = new button(new label(u"Revolve →",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->revolve();
-      }
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.revolve();
+
+        cor.update();
+     }
   });
 
   auto  rvh_btn = new button(new label(u"Reverse -",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->reverse_horizontally();
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.reverse_horizontally();
+
+        cor.update();
       }
   });
 
   auto  rvv_btn = new button(new label(u"Reverse |",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->reverse_vertically();
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.reverse_vertically();
+
+        cor.update();
       }
   });
 
   auto  mir_btn = new button(new label(u"Mirror |",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core>()->mirror_vertically();
+        auto&  cor = *evt->get_userdata<core>();
+
+        cor.mirror_vertically();
+
+        cor.update();
       }
   });
 
@@ -122,18 +162,20 @@ create_tool_widget() noexcept
   auto  cb = [](checkbox_event  evt){
     auto  cor = evt->get_common_userdata<core>();
 
-    cor->cancel_drawing();
+    auto&  pai = cor->get_paint();
+
+    pai.cancel_drawing(cor->get_canvas());
 
       switch(evt->get_entry_number())
       {
-    case(0): cor->change_mode_to_draw_dot();break;
-    case(1): cor->change_mode_to_draw_line();break;
-    case(2): cor->change_mode_to_draw_rectangle();break;
-    case(3): cor->change_mode_to_fill_rectangle();break;
-    case(4): cor->change_mode_to_fill_area();break;
-    case(5): cor->change_mode_to_select();break;
-    case(6): cor->change_mode_to_paste();break;
-    case(7): cor->change_mode_to_layer();break;
+    case(0): pai.change_mode_to_draw_dot();break;
+    case(1): pai.change_mode_to_draw_line();break;
+    case(2): pai.change_mode_to_draw_rectangle();break;
+    case(3): pai.change_mode_to_fill_rectangle();break;
+    case(4): pai.change_mode_to_fill_area();break;
+    case(5): pai.change_mode_to_select();break;
+    case(6): pai.change_mode_to_paste();break;
+    case(7): pai.change_mode_to_layer();break;
       }
   };
 

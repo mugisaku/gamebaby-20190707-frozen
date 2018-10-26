@@ -129,7 +129,8 @@ main(int  argc, char**  argv)
   auto  right       = make_column({right_upper,last_w});
 
 
-  auto  left = make_column({g_ge_context->m_core_frame,g_ge_context->m_seamless_pattern_view_frame,
+  auto  left = make_column({g_ge_context->m_core_frame,
+    g_ge_context->m_seamless_pattern_view_frame,
     g_ge_context->m_png_save_button,
     g_ge_context->m_apng_save_button,
     g_ge_context->m_txt_save_button,

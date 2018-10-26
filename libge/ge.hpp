@@ -115,6 +115,45 @@ public:
 
 
 class
+arrange_view: public gbstd::widget
+{
+
+public:
+  arrange_view(context&  ctx) noexcept;
+
+  void  process_before_reform() noexcept override;
+
+  void  render(const gbstd::canvas&  cv) noexcept override;
+
+};
+
+
+class
+parts_table: public gbstd::widget
+{
+  int  m_index=0;
+
+  gbstd::image  m_image;
+
+  gbstd::canvas  m_entries[6];
+
+public:
+  parts_table(context&  ctx) noexcept;
+
+  static constexpr int  get_parts_size() noexcept{return 12;}
+
+  void  process_before_reform() noexcept override;
+
+  void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
+
+  void  render_entry(int  i, const gbstd::canvas&  cv) noexcept;
+
+  void  render(const gbstd::canvas&  cv) noexcept override;
+
+};
+
+
+class
 underlay_stacker: public gbstd::widget
 {
   gbstd::label*    m_counter_label;
@@ -209,20 +248,8 @@ background_style
 
 
 class
-core: public gbstd::widget
+core_paint
 {
-  gbstd::canvas  m_canvas;
-
-  int  m_pixel_size=1;
-
-  struct flags{
-    static constexpr int  show_grid       = 1;
-    static constexpr int  show_underlay   = 2;
-  };
-
-
-  int  m_state=3;
-
   enum class mode{
     draw_dot,
     draw_line,
@@ -235,73 +262,62 @@ core: public gbstd::widget
 
   } m_mode=mode::draw_dot;
 
+  gbstd::color  m_drawing_color=gbstd::color(0,0,0);
+
+  int  m_pointing_count=0;
+
+  gbstd::point        m_drawing_point;
+  gbstd::point  m_saved_drawing_point;
+
+  gbstd::rectangle  m_operation_rect;
+
+  gbstd::image  m_clipped_image;
 
   drawing_recorder  m_recorder;
 
   bool  m_drawing_is_fixed=true;
 
-  gbstd::color  m_drawing_color=gbstd::color(0,0,0);
-
-  gbstd::image  m_clipped_image;
-
-  std::vector<gbstd::canvas>  m_underlay_stack;
-  std::vector<gbstd::point>  m_underlay_points;
-
-  int  m_pointing_count=0;
-
-  gbstd::point  m_current_point;
-
-  gbstd::point  m_a_point;
-  gbstd::point  m_b_point;
-
-  gbstd::rectangle  m_operation_rect;
-
-  background_style  m_bg_style;
-
-  void  (*m_callback)(core_event  evt)=nullptr;
-
   void  try_to_push_solid_record()    noexcept;
   void  try_to_push_nonsolid_record() noexcept;
 
-  gbstd::image  get_temporary_image() const noexcept;
+  static gbstd::image  get_temporary_image(const gbstd::canvas&  cv) noexcept;
+
+
+  void  modify_dot(const gbstd::canvas&  cv, gbstd::color  color, gbstd::point  pt) noexcept;
+
+  void  draw_line(gbstd::color  color,                         const gbstd::canvas&  cv) noexcept;
+  void  draw_rect(gbstd::color  color, gbstd::rectangle  rect, const gbstd::canvas&  cv) noexcept;
+  void  fill_rect(gbstd::color  color, gbstd::rectangle  rect, const gbstd::canvas&  cv) noexcept;
+  void  fill_area(gbstd::color  color,                         const gbstd::canvas&  cv) noexcept;
 
 public:
-  core(void  (*callback)(core_event  evt)=nullptr) noexcept;
+  drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
 
-  void  push_underlay() noexcept;
-  void   pop_underlay() noexcept;
-  int  get_number_of_underlays() const noexcept{return m_underlay_points.size();}
+  void  clear(const gbstd::canvas&  cv) noexcept;
 
-  void   clear_underlay_stack() noexcept;
-  void  rebase_underlay_stack() noexcept;
+  void  cancel_drawing(const gbstd::canvas&  cv) noexcept;
+  void  cancel_select(const gbstd::canvas&  cv) noexcept;
 
-  const gbstd::canvas&     get_canvas() const noexcept{return m_canvas;}
-  void                  rebase_canvas()       noexcept;
+  void  revolve(             const gbstd::canvas&  cv) noexcept;
+  void  reverse_horizontally(const gbstd::canvas&  cv) noexcept;
+  void  reverse_vertically(  const gbstd::canvas&  cv) noexcept;
+  void  mirror_vertically(   const gbstd::canvas&  cv) noexcept;
+  void  shift_up(            const gbstd::canvas&  cv, bool  rotate) noexcept;
+  void  shift_left(          const gbstd::canvas&  cv, bool  rotate) noexcept;
+  void  shift_right(         const gbstd::canvas&  cv, bool  rotate) noexcept;
+  void  shift_down(          const gbstd::canvas&  cv, bool  rotate) noexcept;
 
-  int   get_pixel_size(      ) const noexcept{return m_pixel_size;}
-  void  set_pixel_size(int  n)       noexcept;
+  void  take_copy(const gbstd::canvas&  cv) noexcept;
+  void       undo(const gbstd::canvas&  cv) noexcept;
+  void      paste(const gbstd::canvas&  cv, bool  layer) noexcept;
 
-  void  reset() noexcept;
-
-  const gbstd::point&  get_current_point() const noexcept{return m_current_point;}
+  void          set_drawing_point(gbstd::point  pt)       noexcept{       m_drawing_point = pt;}
+  gbstd::point  get_drawing_point(                ) const noexcept{return m_drawing_point     ;}
 
   void          set_drawing_color(gbstd::color  color)       noexcept{       m_drawing_color = color;}
   gbstd::color  get_drawing_color(                   ) const noexcept{return m_drawing_color        ;}
 
-  void                     set_background_style(background_style  bgst)       noexcept;
-  const background_style&  get_background_style(                      ) const noexcept{return m_bg_style;}
-
-  drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
-
-
-  void      show_grid() noexcept;
-  void      hide_grid() noexcept;
-  void  show_underlay() noexcept;
-  void  hide_underlay() noexcept;
-
-  bool  test_whether_show_grid()       const noexcept{return m_state&flags::show_grid;}
-  bool  test_whether_show_underlay()   const noexcept{return m_state&flags::show_underlay;}
-
+  gbstd::rectangle  get_operation_rectangle() const noexcept{return m_operation_rect;}
 
   void  change_mode_to_draw_dot()       noexcept{m_mode = mode::draw_dot;}
   void  change_mode_to_draw_line()      noexcept{m_mode = mode::draw_line;}
@@ -312,35 +328,107 @@ public:
   void  change_mode_to_paste()          noexcept{m_mode = mode::paste;}
   void  change_mode_to_layer()          noexcept{m_mode = mode::layer;}
 
+  bool  operator()(const gbstd::canvas&  cv) noexcept;
+
+};
+
+
+class
+core_display
+{
+  int  m_pixel_size=1;
+
+  struct flags{
+    static constexpr int  show_grid       = 1;
+    static constexpr int  show_underlay   = 2;
+  };
+
+
+  int  m_state=3;
+
+  std::vector<gbstd::canvas>  m_underlay_stack;
+  std::vector<gbstd::point>  m_underlay_points;
+
+  background_style  m_bg_style;
+
+public:
+  core_display() noexcept;
+
+  void  push_underlay(gbstd::image&  img, gbstd::point  pt, int  w, int  h) noexcept;
+  void   pop_underlay() noexcept;
+  int  get_number_of_underlays() const noexcept{return m_underlay_points.size();}
+
+  void   clear_underlay_stack() noexcept;
+  void  rebase_underlay_stack(gbstd::image&  img, int  w, int  h) noexcept;
+
+  int   get_pixel_size(      ) const noexcept{return m_pixel_size    ;}
+  void  set_pixel_size(int  n)       noexcept{       m_pixel_size = n;}
+
+  void                     set_background_style(background_style  bgst)       noexcept{       m_bg_style = bgst;}
+  const background_style&  get_background_style(                      ) const noexcept{return m_bg_style       ;}
+
+  void      show_grid() noexcept{m_state |=  flags::show_grid;}
+  void      hide_grid() noexcept{m_state &= ~flags::show_grid;}
+  void  show_underlay() noexcept{m_state |=  flags::show_underlay;}
+  void  hide_underlay() noexcept{m_state &= ~flags::show_underlay;}
+
+  bool  test_whether_show_grid()     const noexcept{return m_state&flags::show_grid;}
+  bool  test_whether_show_underlay() const noexcept{return m_state&flags::show_underlay;}
+
+  void  render_rect(gbstd::rectangle  rect, const gbstd::canvas&  cv, int  pixel_size=0) const noexcept;
+
+  void  render_grid(      const gbstd::canvas&  cv, int  pixel_size=0) const noexcept;
+  void  render_underlay(  const gbstd::canvas&  cv, int  pixel_size=0) const noexcept;
+  void  render_background(const gbstd::canvas&  cv, int  pixel_size=0) const noexcept;
+  void  render_canvas(const gbstd::canvas&  src_cv, const gbstd::canvas&  dst_cv, int  pixel_size=0) const noexcept;
+
+};
+
+
+class
+core: public gbstd::widget
+{
+  gbstd::canvas  m_canvas;
+
+  core_paint*      m_paint=nullptr;
+  core_display*  m_display=nullptr;
+
+  void  (*m_callback)(core_event  evt)=nullptr;
+
+public:
+  core(core_paint&  pai, core_display&  dsp, void  (*callback)(core_event  evt)=nullptr) noexcept;
+
+  core_paint&      get_paint() const noexcept{return *m_paint;}
+  core_display&  get_display() const noexcept{return *m_display;}
+
+  const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas;}
+  void                  set_canvas(const gbstd::canvas&  cv)       noexcept                ;
+
+  void  reset() noexcept;
+
+  void  update() noexcept;
+
   void  set_image(const gbstd::image&  img, int  w, int  h) noexcept;
 
   const gbstd::pixel&  get_pixel(int  x, int  y) const noexcept{return *m_canvas.get_pixel_pointer(x,y);}
 
-  void  modify_dot(gbstd::color  new_color, int  x, int  y) noexcept;
 
-  void  revolve() noexcept;
-  void  reverse_horizontally() noexcept;
-  void  reverse_vertically() noexcept;
-  void  mirror_vertically() noexcept;
-  void  shift_up(bool  rotate) noexcept;
-  void  shift_left(bool  rotate) noexcept;
-  void  shift_right(bool  rotate) noexcept;
-  void  shift_down(bool  rotate) noexcept;
+  void  revolve()                 noexcept{m_paint->revolve(m_canvas);}
+  void  reverse_horizontally()    noexcept{m_paint->reverse_horizontally(m_canvas);}
+  void  reverse_vertically()      noexcept{m_paint->reverse_vertically(m_canvas);}
+  void  mirror_vertically()       noexcept{m_paint->mirror_vertically(m_canvas);}
+  void  shift_up(bool  rotate)    noexcept{m_paint->shift_up(m_canvas,rotate);}
+  void  shift_left(bool  rotate)  noexcept{m_paint->shift_left(m_canvas,rotate);}
+  void  shift_right(bool  rotate) noexcept{m_paint->shift_right(m_canvas,rotate);}
+  void  shift_down(bool  rotate)  noexcept{m_paint->shift_down(m_canvas,rotate);}
 
-  void  draw_line(gbstd::color  color, gbstd::point  a, gbstd::point  b) noexcept;
-  void  draw_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept;
-  void  fill_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept;
-  void  fill_area(gbstd::color  color, gbstd::point  pt) noexcept;
+  void  take_copy() noexcept{m_paint->take_copy(m_canvas);}
+  void       undo() noexcept{m_paint->undo(m_canvas);}
+  void      paste(bool  layer) noexcept{m_paint->paste(m_canvas,layer);}
+
 
   gbstd::widget*  create_tool_widget() noexcept;
   gbstd::widget*  create_operation_widget() noexcept;
-
-  void  cancel_drawing() noexcept;
-  void  cancel_select() noexcept;
-
-  void  take_copy() noexcept;
-  void  paste(gbstd::point  pt, bool  layer) noexcept;
-  void  undo() noexcept;
 
   void  do_on_mouse_leave() noexcept override;
 
@@ -349,9 +437,6 @@ public:
   void  process_before_reform() noexcept override;
 
   void  render(const gbstd::canvas&  cv) noexcept override;
-
-  void  render_underlay(  int  pixel_size, const gbstd::canvas&  cv) const noexcept;
-  void  render_background(int  pixel_size, const gbstd::canvas&  cv) const noexcept;
 
 };
 
@@ -364,6 +449,9 @@ context
   gbstd::point  m_current_index;
   gbstd::point  m_seeking_index;
 
+
+  core_display  m_display;
+  core_paint      m_paint;
 
   core*  m_core;
 

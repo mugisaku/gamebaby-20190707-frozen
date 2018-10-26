@@ -7,11 +7,11 @@ namespace ge{
 
 
 core::
-core(void  (*callback)(core_event  evt)) noexcept:
+core(core_paint&  pai, core_display&  dsp, void  (*callback)(core_event  evt)) noexcept:
+m_paint(&pai),
+m_display(&dsp),
 m_callback(callback)
 {
-  m_bg_style.first_color  = gbstd::color(0,0,7);
-  m_bg_style.second_color = gbstd::color(2,2,5);
 }
 
 
@@ -19,42 +19,31 @@ m_callback(callback)
 
 void
 core::
-rebase_canvas() noexcept
+set_canvas(const gbstd::canvas&  cv) noexcept
 {
     if(m_canvas)
     {
-      cancel_select();
-      cancel_drawing();
-
-      m_drawing_is_fixed = true;
-
-      m_recorder.clear();
+      m_paint->clear(m_canvas);
     }
 
 
-  auto&  ctx = *get_userdata<context>();
+  m_canvas = cv;
 
-  int  w = ctx.get_cell_width() ;
-  int  h = ctx.get_cell_height();
-
-  m_canvas = gbstd::canvas(ctx.m_source_image,w*ctx.m_current_index.x,
-                                              h*ctx.m_current_index.y,
-                                              w,h);
-
-  reset();
+  m_paint->cancel_select(m_canvas);
 }
 
 
 void
 core::
-set_pixel_size(int  n) noexcept
+update() noexcept
 {
-  m_pixel_size = n;
+  request_redraw();
 
-  request_reform();
+    if(m_callback)
+    {
+      m_callback({*this,core_event::kind::image_modified});
+    }
 }
-
-
 
 
 void
@@ -64,114 +53,8 @@ process_before_reform() noexcept
   int  w = m_canvas.get_width();
   int  h = m_canvas.get_height();
 
-  set_content_width( m_pixel_size*w);
-  set_content_height(m_pixel_size*h);
-}
-
-
-void
-core::
-reset() noexcept
-{
-  int  w = m_canvas.get_width();
-  int  h = m_canvas.get_height();
-
-  m_operation_rect = gbstd::rectangle(0,0,w,h);
-
-  request_redraw();
-}
-
-
-void
-core::
-modify_dot(gbstd::color  new_color, int  x, int  y) noexcept
-{
-  auto&  pix = *m_canvas.get_pixel_pointer(x,y);
-
-    if(pix.color != new_color)
-    {
-      m_recorder.put(pix.color,x,y);
-
-      pix.color = new_color;
-
-
-      request_redraw();
-    }
-}
-
-
-
-
-void
-core::
-cancel_drawing() noexcept
-{
-  m_pointing_count = 0;
-
-    if(!m_drawing_is_fixed)
-    {
-        if((m_mode == mode::paste) ||
-           (m_mode == mode::layer))
-        {
-          m_recorder.rollback(m_canvas);
-        }
-
-
-      m_drawing_is_fixed = true;
-
-      request_redraw();
-    }
-}
-
-
-
-
-void
-core::
-try_to_push_solid_record() noexcept
-{
-    if(m_recorder.push(true))
-    {
-      m_drawing_is_fixed = false;
-
-      request_redraw();
-
-        if(m_callback)
-        {
-          m_callback({*this,core_event::kind::image_modified});
-        }
-    }
-}
-
-
-void
-core::
-try_to_push_nonsolid_record() noexcept
-{
-    if(m_drawing_is_fixed)
-    {
-      m_recorder.push(false);
-    }
-
-  else
-    {
-      m_drawing_is_fixed = true;
-    }
-}
-
-
-
-
-void
-core::
-cancel_select() noexcept
-{
-  m_operation_rect.x = 0;
-  m_operation_rect.y = 0;
-  m_operation_rect.w = m_canvas.get_width();
-  m_operation_rect.h = m_canvas.get_height();
-
-  request_redraw();
+  set_content_width( m_display->get_pixel_size()*w);
+  set_content_height(m_display->get_pixel_size()*h);
 }
 
 
@@ -179,211 +62,35 @@ void
 core::
 do_on_mouse_leave() noexcept
 {
-  cancel_drawing();
+  m_paint->cancel_drawing(m_canvas);
 }
+
+
 
 
 void
 core::
-take_copy() noexcept
+do_on_mouse_act(gbstd::point  mouse_pos) noexcept
 {
-  m_clipped_image.resize(m_operation_rect.w,m_operation_rect.h);
+  int  x = mouse_pos.x/m_display->get_pixel_size();
+  int  y = mouse_pos.y/m_display->get_pixel_size();
 
-    for(int  y = 0;  y < m_operation_rect.h;  ++y){
-    for(int  x = 0;  x < m_operation_rect.w;  ++x){
-      auto  pix = *m_canvas.get_pixel_pointer(m_operation_rect.x+x,m_operation_rect.y+y);
+  gbstd::point  pt(x,y);
 
-      *m_clipped_image.get_pixel_pointer(x,y) = pix;
-    }}
-}
-
-
-void
-core::
-undo() noexcept
-{
-    if(m_recorder.rollback(m_canvas))
+    if(pt != m_paint->get_drawing_point())
     {
-      request_redraw();
+      m_paint->set_drawing_point(pt);
 
         if(m_callback)
         {
-          m_callback({*this,core_event::kind::image_modified});
+          m_callback({*this,core_event::kind::painting_cursor_moved});
         }
     }
-}
 
 
-gbstd::image
-core::
-get_temporary_image() const noexcept
-{
-  int  w = m_canvas.get_width() ;
-  int  h = m_canvas.get_height();
-
-  gbstd::image  img(w,h);
-
-    for(int  y = 0;  y < h;  ++y){
-    for(int  x = 0;  x < w;  ++x){
-      auto  pix = *m_canvas.get_pixel_pointer(x,y);
-
-      *img.get_pixel_pointer(x,y) = pix;
-    }}
-
-
-  return std::move(img);
-}
-
-
-void
-core::
-set_background_style(background_style  bgst) noexcept
-{
-  m_bg_style = bgst;
-
-  request_redraw();
-}
-
-
-
-
-void
-core::
-push_underlay() noexcept
-{
-  auto&  ctx = *get_userdata<context>();
-
-  auto&  pt = ctx.m_current_index;
-
-  auto&  img = ctx.m_source_image;
-
-  m_underlay_points.emplace_back(pt);
-
-  int  w = m_canvas.get_width() ;
-  int  h = m_canvas.get_height();
-  int  x = w*pt.x;
-  int  y = h*pt.y;
-
-  m_underlay_stack.emplace_back(img,x,y,w,h);
-}
-
-
-void
-core::
-pop_underlay() noexcept
-{
-  m_underlay_stack.pop_back();
-  m_underlay_points.pop_back();
-}
-
-
-void
-core::
-clear_underlay_stack() noexcept
-{
-  m_underlay_stack.clear();
-  m_underlay_points.clear();
-}
-
-
-void
-core::
-rebase_underlay_stack() noexcept
-{
-  auto&  ctx = *get_userdata<context>();
-
-  auto&  img = ctx.m_source_image;
-
-  int  img_w = img.get_width() ;
-  int  img_h = img.get_height();
-
-  int  w = m_canvas.get_width() ;
-  int  h = m_canvas.get_height();
-
-  m_underlay_stack.clear();
-
-    for(auto&  pt: m_underlay_points)
+    if((*m_paint)(m_canvas))
     {
-        if(((pt.x+w) < img_w) &&
-           ((pt.y+h) < img_h))
-        {
-          m_underlay_stack.emplace_back(img,w*pt.x,h*pt.y,w,h);
-        }
-    }
-}
-
-
-
-
-void
-core::
-show_grid() noexcept
-{
-  m_state &= ~flags::show_grid;
-
-  request_redraw();
-}
-
-
-void
-core::
-hide_grid() noexcept
-{
-  m_state &= ~flags::show_grid;
-
-  request_redraw();
-}
-
-
-void
-core::
-show_underlay() noexcept
-{
-  m_state |= flags::show_underlay;
-
-  request_redraw();
-}
-
-
-void
-core::
-hide_underlay() noexcept
-{
-  m_state &= ~flags::show_underlay;
-
-  request_redraw();
-}
-
-
-void
-core::
-render_background(int  pixel_size, const gbstd::canvas&  cv) const noexcept
-{
-  int  w = cv.get_width() ;
-  int  h = cv.get_height();
-
-  cv.draw_stripe_rectangle(m_bg_style.first_color,m_bg_style.second_color,pixel_size/2,0,0,w,h);
-}
-
-
-void
-core::
-render_underlay(int  pixel_size, const gbstd::canvas&  cv) const noexcept
-{
-  int  w = m_canvas.get_width() ;
-  int  h = m_canvas.get_height();
-
-    for(auto&  underlay_cv: m_underlay_stack)
-    {
-        for(int  y = 0;  y < h;  ++y){
-        for(int  x = 0;  x < w;  ++x){
-          auto&  pix = *underlay_cv.get_pixel_pointer(x,y);
-
-            if(pix.color)
-            {
-              cv.fill_rectangle(pix.color,pixel_size*x,pixel_size*y,pixel_size,pixel_size);
-            }
-        }}
+      update();
     }
 }
 
@@ -395,60 +102,28 @@ render(const gbstd::canvas&  cv) noexcept
   int  w = m_canvas.get_width() ;
   int  h = m_canvas.get_height();
 
-  render_background(m_pixel_size,cv);
+  m_display->render_background(cv);
 
-    if(test_whether_show_underlay())
+    if(m_display->test_whether_show_underlay())
     {
-      render_underlay(m_pixel_size,cv);
+      m_display->render_underlay(cv);
     }
 
 
-    for(int  y = 0;  y < h;  ++y){
-    for(int  x = 0;  x < w;  ++x){
-      auto&  pix = *m_canvas.get_pixel_pointer(x,y);
+  m_display->render_canvas(m_canvas,cv);
 
-        if(pix.color)
-        {
-          cv.fill_rectangle(pix.color,m_pixel_size*x,m_pixel_size*y,m_pixel_size,m_pixel_size);
-        }
-    }}
-
-
-    if(test_whether_show_grid())
+    if(m_display->test_whether_show_grid())
     {
-      int  x_sz = w/4;
-      int  y_sz = h/4;
-
-        for(int  y = 0;  y < h;  ++y)
-        {
-          auto  color = (y%y_sz)? gbstd::colors::gray
-                                : gbstd::colors::light_gray;
-
-          cv.draw_hline(color,0,m_pixel_size*y,get_content_width());
-        }
-
-
-        for(int  x = 0;  x < w;  ++x)
-        {
-          auto  color = (x%x_sz)? gbstd::colors::gray
-                                : gbstd::colors::light_gray;
-
-          cv.draw_vline(color,m_pixel_size*x,0,get_content_height());
-        }
-
-
-      cv.draw_hline(gbstd::colors::white,0,m_pixel_size*(h/2)  ,get_content_width() );
-      cv.draw_vline(gbstd::colors::white,  m_pixel_size*(w/2),0,get_content_height());
+       m_display->render_grid(cv);
     }
 
 
+  auto  rect = m_paint->get_operation_rectangle();
 
-    cv.draw_double_rectangle(gbstd::colors::white,gbstd::colors::black,
-      m_pixel_size*m_operation_rect.x,
-      m_pixel_size*m_operation_rect.y,
-      m_pixel_size*m_operation_rect.w,
-      m_pixel_size*m_operation_rect.h
-    );
+    if(rect.w && rect.h)
+    {
+      m_display->render_rect(rect,cv);
+    }
 }
 
 

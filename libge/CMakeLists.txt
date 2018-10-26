@@ -5,12 +5,15 @@ set(SOURCES
   color_holder.cpp
   aniview.cpp
   seamless_pattern_view.cpp
+  arrange_view.cpp
+  parts_table.cpp
   drawing_recorder.cpp
   underlay_stacker.cpp
   core.cpp
-  core__do_on_mouse_act.cpp
-  core__draw.cpp
-  core__operate.cpp
+  core_display.cpp
+  core_paint.cpp
+  core_paint__draw.cpp
+  core_paint__operate.cpp
   core__create_sub_widget.cpp
   context.cpp
   context__build_core.cpp

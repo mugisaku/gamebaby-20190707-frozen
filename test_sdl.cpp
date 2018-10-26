@@ -26,7 +26,7 @@ g_screen_canvas;
 const uint8_t
 g_binary[] =
 {
-//#include"noName.txt"
+#include"noName.txt"
 };
 
 
@@ -143,10 +143,9 @@ render(const canvas&  cv) const noexcept
 
     if(m_kind == kind::top)
     {
-      auto  color = box.m_focus? colors::red
-                   :      gbstd::color(0,z+1,z+1);
+      canvas  bgcv(g_graphic_image,g_plane_size*0,g_plane_size*0,g_plane_size,g_plane_size);
 
-      cv.fill_rectangle(color,0,0,g_plane_size,g_plane_size);
+      cv.draw_canvas(bgcv,0,0);
 
         if(!is_valid(box.m_left_box )){cv.draw_vline(colors::black,             0,0,g_plane_size);}
         if(!is_valid(box.m_right_box)){cv.draw_vline(colors::black,g_plane_size-1,0,g_plane_size);}
@@ -156,19 +155,19 @@ render(const canvas&  cv) const noexcept
 
   else
     {
-      auto  color = box.m_focus? colors::red
-                   :      gbstd::color(7,z,z);
+      canvas  bgcv(g_graphic_image,g_plane_size*1,g_plane_size*0,g_plane_size,g_plane_size);
 
-      cv.fill_rectangle(color,0,0,g_plane_size,g_plane_size);
-
-        if(!is_valid(box.m_left_box )){cv.draw_vline(colors::black,             0,0,g_plane_size);}
-        if(!is_valid(box.m_right_box)){cv.draw_vline(colors::black,g_plane_size-1,0,g_plane_size);}
+        if(!is_valid(box.m_left_box )){bgcv = canvas(g_graphic_image,g_plane_size*0,g_plane_size*1,g_plane_size,g_plane_size);}
+        if(!is_valid(box.m_right_box)){bgcv = canvas(g_graphic_image,g_plane_size*2,g_plane_size*1,g_plane_size,g_plane_size);}
 
         if(is_valid(box.m_down_box             ) &&
            is_valid(box.m_down_box->m_front_box))
         {
-          cv.draw_hline(colors::black,0,g_plane_size-1,g_plane_size);
+          bgcv = canvas(g_graphic_image,g_plane_size*1,g_plane_size*1,g_plane_size,g_plane_size);
         }
+
+
+      cv.draw_canvas(bgcv,0,0);
     }
 }
 

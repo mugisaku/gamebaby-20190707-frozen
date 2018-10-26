@@ -15,7 +15,7 @@ mainプログラムがSDL2を使用する以外は、
 標準C++ライブラリ,zlibのみで動くように作られています
 
 常に開発中であり、安定版はありません
-取り分け、CMakeLists.txtは汚いです
+取り分け、CMakeLists.txtは乱れます
 
 ある程度、分量が肥大してきたら、
 リポジトリ名をgamebaby-dumped-YYYYMMDDという形式の名前に変更し、

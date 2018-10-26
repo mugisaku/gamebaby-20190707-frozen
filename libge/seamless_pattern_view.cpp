@@ -42,7 +42,7 @@ render(const canvas&  cv) noexcept
 {
   auto&  ctx = *get_userdata<context>();
 
-  ctx.m_core->render_background(2,cv);
+  ctx.m_core->get_display().render_background(cv,2);
 
 
   auto  cocv = ctx.m_core->get_canvas();

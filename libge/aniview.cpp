@@ -198,15 +198,15 @@ save_as_apng(const char*  filepath) const noexcept
 
           gbstd::canvas  tmp_cv(tmp_img);
 
-          bool  show_underlay = ctx.m_core->test_whether_show_underlay();
+          bool  show_underlay = ctx.m_core->get_display().test_whether_show_underlay();
 
             while(it != it_end)
             {
-              ctx.m_core->render_background(2,tmp_cv);
+              ctx.m_core->get_display().render_background(tmp_cv,2);
 
                 if(show_underlay)
                 {
-                  ctx.m_core->render_underlay(1,tmp_cv);
+                  ctx.m_core->get_display().render_underlay(tmp_cv,1);
                 }
 
 
@@ -315,11 +315,11 @@ render(const canvas&  cv) noexcept
 
       canvas  cocv(cv,0,0,frm.get_width(),frm.get_height());
 
-      ctx.m_core->render_background(2,cocv);
+      ctx.m_core->get_display().render_background(cocv,2);
 
-        if(ctx.m_core->test_whether_show_underlay())
+        if(ctx.m_core->get_display().test_whether_show_underlay())
         {
-          ctx.m_core->render_underlay(1,cv);
+          ctx.m_core->get_display().render_underlay(cv,1);
         }
 
 

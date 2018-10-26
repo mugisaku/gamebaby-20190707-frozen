@@ -20,7 +20,7 @@ public:
   {
     auto&  ctx = *get_userdata<context>();
 
-    ctx.m_core->render_background(2,cv);
+    ctx.m_core->get_display().render_background(cv,2);
   }
 
   void  render_item(point  item_index, const canvas&  cv) noexcept override
@@ -58,7 +58,9 @@ process(menu_event  evt) noexcept
       int  w = sz.width;
       int  h = sz.height;
 
-      ctx.m_core->rebase_canvas();
+      ctx.m_core->set_canvas({ctx.m_source_image,w*ctx.m_current_index.x,h*ctx.m_current_index.y,w,h});
+
+      ctx.m_core->request_redraw();
 
       ctx.m_seamless_pattern_view->request_redraw();
       ctx.m_menu->request_redraw();

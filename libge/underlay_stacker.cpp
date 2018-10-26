@@ -19,7 +19,7 @@ psh(button_event  evt) noexcept
     {
       auto&  ctx = *evt->get_userdata<context>();
 
-      ctx.m_core->push_underlay();
+      ctx.m_display.push_underlay(ctx.m_source_image,ctx.m_current_index,ctx.get_cell_width(),ctx.get_cell_height());
 
       ctx.m_underlay_stacker->update_counter_label();
 
@@ -36,9 +36,9 @@ pop(button_event  evt) noexcept
     {
       auto&  ctx = *evt->get_userdata<context>();
 
-        if(ctx.m_core->get_number_of_underlays())
+        if(ctx.m_core->get_display().get_number_of_underlays())
         {
-          ctx.m_core->pop_underlay();
+          ctx.m_core->get_display().pop_underlay();
 
           ctx.m_underlay_stacker->update_counter_label();
 
@@ -56,16 +56,16 @@ swi(button_event  evt) noexcept
     {
       auto&  ctx = *evt->get_userdata<context>();
 
-        if(ctx.m_core->test_whether_show_underlay())
+        if(ctx.m_core->get_display().test_whether_show_underlay())
         {
-          ctx.m_core->hide_underlay();
+          ctx.m_core->get_display().hide_underlay();
 
           ctx.m_underlay_stacker->m_switching_label->modify_text(u"show");
         }
 
       else
         {
-          ctx.m_core->show_underlay();
+          ctx.m_core->get_display().show_underlay();
 
           ctx.m_underlay_stacker->m_switching_label->modify_text(u"hide");
         }
@@ -106,7 +106,7 @@ update_counter_label() noexcept
 
   string_form  sf;
 
-  m_counter_label->set_text(sf("%2d",ctx.m_core->get_number_of_underlays()));
+  m_counter_label->set_text(sf("%2d",ctx.m_core->get_display().get_number_of_underlays()));
 }
 
 

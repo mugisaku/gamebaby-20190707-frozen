@@ -34,8 +34,8 @@ resize_image(item_size  cell_size, item_table_size  table_size) noexcept
   auto&  w = cell_size.width ;
   auto&  h = cell_size.height;
 
-  w = (w+7)/8*8;
-  h = (h+7)/8*8;
+//  w = (w+7)/8*8;
+//  h = (h+7)/8*8;
 
   m_source_image.resize(w*table_size.x_length,h*table_size.y_length);
 
@@ -52,9 +52,12 @@ void
 context::
 revise() noexcept
 {
-  m_core->rebase_canvas();
+  auto  w = get_cell_width();
+  auto  h = get_cell_height();
 
-  m_core->rebase_underlay_stack();
+  m_core->set_canvas({m_source_image,w*m_current_index.x,h*m_current_index.y,w,h});
+
+  m_core->get_display().rebase_underlay_stack(m_source_image,w,h);
 
   m_aniview->rebase();
 
@@ -84,7 +87,7 @@ load(const std::vector<uint8_t>&  bin) noexcept
 
       m_current_index = point();
 
-      m_core->clear_underlay_stack();
+      m_core->get_display().clear_underlay_stack();
       m_aniview->clear();
 
       resize_table(item_table_size{w/cell_w,h/cell_h});
@@ -231,7 +234,7 @@ build_color_handler() noexcept
 
     ctx.m_color_holder->set_color(color);
 
-    ctx.m_core->set_drawing_color(color);
+    ctx.m_core->get_paint().set_drawing_color(color);
   });
 
 
@@ -252,11 +255,11 @@ build_bgcolor_changer() noexcept
 
       if(evt.is_release())
       {
-        auto  bgst = ctx.m_core->get_background_style();
+        auto  bgst = ctx.m_core->get_display().get_background_style();
 
         bgst.first_color = ctx.m_color_maker->get_color();
 
-        ctx.m_core->set_background_style(bgst);
+        ctx.m_core->get_display().set_background_style(bgst);
 
         ctx.m_core->request_redraw();
         ctx.m_menu->request_redraw();
@@ -268,11 +271,11 @@ build_bgcolor_changer() noexcept
 
       if(evt.is_release())
       {
-        auto  bgst = ctx.m_core->get_background_style();
+        auto  bgst = ctx.m_core->get_display().get_background_style();
 
         bgst.second_color = ctx.m_color_maker->get_color();
 
-        ctx.m_core->set_background_style(bgst);
+        ctx.m_core->get_display().set_background_style(bgst);
 
         ctx.m_core->request_redraw();
         ctx.m_menu->request_redraw();

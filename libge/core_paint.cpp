@@ -16,7 +16,6 @@ reset(const gbstd::canvas&  cv) noexcept
     if(cv)
     {
       cancel_drawing();
-      cancel_select();
     }
 
 
@@ -25,6 +24,11 @@ reset(const gbstd::canvas&  cv) noexcept
   m_recorder.clear();
 
   m_canvas = cv;
+
+  m_operation_rect.x = 0;
+  m_operation_rect.y = 0;
+  m_operation_rect.w = m_canvas.get_width() ;
+  m_operation_rect.h = m_canvas.get_height();
 }
 
 
@@ -56,8 +60,8 @@ cancel_select() noexcept
 {
   m_operation_rect.x = 0;
   m_operation_rect.y = 0;
-  m_operation_rect.w = m_canvas.get_width() ;
-  m_operation_rect.h = m_canvas.get_height();
+  m_operation_rect.w = 0;
+  m_operation_rect.h = 0;
 }
 
 
@@ -97,10 +101,7 @@ void
 core_paint::
 undo() noexcept
 {
-    if(m_recorder.rollback(m_canvas))
-    {
-//
-    }
+  m_recorder.rollback(m_canvas);
 }
 
 
@@ -130,9 +131,21 @@ try_to_push_nonsolid_record() noexcept
     {
       m_drawing_is_fixed = true;
     }
+
+
+  feedback();
 }
 
 
+void
+core_paint::
+feedback() const noexcept
+{
+    for(auto  ptr: m_affected_widget_list)
+    {
+      ptr->request_redraw();
+    }
+}
 
 
 gbstd::image
@@ -158,12 +171,10 @@ get_temporary_image() noexcept
 
 
 
-bool
+void
 core_paint::
 operator()() noexcept
 {
-  bool  dirty_flag = false;
-
     switch(m_mode)
     {
   case(mode::draw_dot):
@@ -171,7 +182,7 @@ operator()() noexcept
         {
           modify_dot(m_drawing_color,m_drawing_point);
 
-          dirty_flag = true;
+          feedback();
         }
 
       else
@@ -179,7 +190,7 @@ operator()() noexcept
         {
           modify_dot(gbstd::color(),m_drawing_point);
 
-          dirty_flag = true;
+          feedback();
         }
       break;
   case(mode::draw_line):
@@ -194,8 +205,6 @@ operator()() noexcept
 
 
               draw_line(m_drawing_color);
-
-              dirty_flag = true;
             }
 
           else
@@ -208,8 +217,6 @@ operator()() noexcept
 
 
               draw_line(color());
-
-              dirty_flag = true;
             }
 
           else
@@ -245,8 +252,6 @@ operator()() noexcept
 
 
               draw_rect(m_drawing_color,rect);
-
-              dirty_flag = true;
             }
 
           else
@@ -259,8 +264,6 @@ operator()() noexcept
 
 
               draw_rect(gbstd::color(),rect);
-
-              dirty_flag = true;
             }
 
           else
@@ -296,8 +299,6 @@ operator()() noexcept
 
 
               fill_rect(m_drawing_color,rect);
-
-              dirty_flag = true;
             }
 
           else
@@ -310,8 +311,6 @@ operator()() noexcept
 
 
               fill_rect(gbstd::color(),rect);
-
-              dirty_flag = true;
             }
 
           else
@@ -337,16 +336,12 @@ operator()() noexcept
         if(gbstd::g_input.test_mouse_left())
         {
           fill_area(m_drawing_color);
-
-          dirty_flag = true;
         }
 
       else
         if(gbstd::g_input.test_mouse_right())
         {
           fill_area(gbstd::color());
-
-          dirty_flag = true;
         }
       break;
   case(mode::select):
@@ -356,7 +351,7 @@ operator()() noexcept
             {
               m_operation_rect = gbstd::rectangle(m_saved_drawing_point,m_drawing_point);
 
-              dirty_flag = true;
+              feedback();
             }
 
           else
@@ -378,8 +373,6 @@ operator()() noexcept
             if(gbstd::g_input.test_mouse_right())
             {
               m_operation_rect = gbstd::rectangle(0,0,m_canvas.get_width(),m_canvas.get_height());
-
-              dirty_flag = true;
             }
         }
       break;
@@ -399,8 +392,6 @@ operator()() noexcept
 
 
           paste(false);
-
-          dirty_flag = true;
         }
 
 
@@ -422,17 +413,12 @@ operator()() noexcept
 
 
           paste(true);
-
-          dirty_flag = true;
         }
 
 
       m_saved_drawing_point = m_drawing_point;
       break;
     }
-
-
-  return dirty_flag;
 }
 
 

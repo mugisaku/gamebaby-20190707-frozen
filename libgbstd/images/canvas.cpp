@@ -8,6 +8,19 @@ namespace gbstd{
 
 
 
+bool
+canvas::
+operator==(const canvas&  rhs) const noexcept
+{
+  return((m_pointer     == rhs.m_pointer    ) &&
+         (m_width       == rhs.m_width      ) &&
+         (m_height      == rhs.m_height     ) &&
+         (m_image_width == rhs.m_image_width));
+}
+
+
+
+
 canvas&
 canvas::
 assign(const image&  img) noexcept

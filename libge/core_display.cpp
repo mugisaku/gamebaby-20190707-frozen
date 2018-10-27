@@ -19,7 +19,7 @@ first_callback(gbstd::button_event  evt) noexcept
 
       dsp.m_bg_style.first_color = *dsp.m_color;
 
-        for(auto  ptr: dsp.m_widget_list)
+        for(auto  ptr: dsp.m_affected_widget_list)
         {
           ptr->request_redraw();
         }
@@ -37,7 +37,7 @@ second_callback(gbstd::button_event  evt) noexcept
 
       dsp.m_bg_style.second_color = *dsp.m_color;
 
-        for(auto  ptr: dsp.m_widget_list)
+        for(auto  ptr: dsp.m_affected_widget_list)
         {
           ptr->request_redraw();
         }
@@ -71,7 +71,7 @@ reset(const gbstd::color&  color, std::initializer_list<gbstd::widget*>  ls) noe
 {
   m_color = &color;
 
-  m_widget_list = ls;
+  m_affected_widget_list = ls;
 }
 
 

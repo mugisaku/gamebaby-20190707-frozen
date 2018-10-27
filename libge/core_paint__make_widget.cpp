@@ -19,8 +19,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.undo();
-
-        cor.update();
       }
   });
 
@@ -31,8 +29,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.take_copy();
-
-        cor.update();
      }
   });
 
@@ -43,8 +39,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.shift_up(true);
-
-        cor.update();
      }
   });
 
@@ -55,8 +49,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.shift_left(true);
-
-        cor.update();
      }
   });
 
@@ -67,8 +59,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.shift_right(true);
-
-        cor.update();
      }
   });
 
@@ -79,8 +69,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.shift_down(true);
-
-        cor.update();
      }
   });
 
@@ -93,8 +81,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.revolve();
-
-        cor.update();
      }
   });
 
@@ -104,8 +90,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.reverse_horizontally();
-
-        cor.update();
       }
   });
 
@@ -115,8 +99,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.reverse_vertically();
-
-        cor.update();
       }
   });
 
@@ -126,8 +108,6 @@ make_operation_widget() noexcept
         auto&  cor = *evt->get_userdata<core>();
 
         cor.mirror_vertically();
-
-        cor.update();
       }
   });
 

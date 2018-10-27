@@ -306,6 +306,8 @@ core_paint
 
   bool  m_drawing_is_fixed=true;
 
+  std::vector<gbstd::widget*>  m_affected_widget_list;
+
   void  try_to_push_solid_record()    noexcept;
   void  try_to_push_nonsolid_record() noexcept;
 
@@ -319,8 +321,12 @@ core_paint
   void  fill_rect(gbstd::color  color, gbstd::rectangle  rect) noexcept;
   void  fill_area(gbstd::color  color                        ) noexcept;
 
+  void  feedback() const noexcept;
+
 public:
   drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
+
+  void  set_affected_widget_list(std::initializer_list<gbstd::widget*>  ls) noexcept{m_affected_widget_list = ls;}
 
   void  reset(const gbstd::canvas&  cv) noexcept;
 
@@ -357,7 +363,7 @@ public:
   void  change_mode_to_paste()          noexcept{m_mode = mode::paste;}
   void  change_mode_to_layer()          noexcept{m_mode = mode::layer;}
 
-  bool  operator()() noexcept;
+  void  operator()() noexcept;
 
 
   gbstd::widget*  make_operation_widget() noexcept;
@@ -388,7 +394,7 @@ core_display
 
   const gbstd::color*  m_color;
 
-  std::vector<gbstd::widget*>  m_widget_list;
+  std::vector<gbstd::widget*>  m_affected_widget_list;
 
   static void   first_callback(gbstd::button_event  evt) noexcept;
   static void  second_callback(gbstd::button_event  evt) noexcept;
@@ -452,8 +458,6 @@ public:
 
   void  reset() noexcept;
 
-  void  update() noexcept;
-
   void  set_image(const gbstd::image&  img, int  w, int  h) noexcept;
 
   const gbstd::pixel&  get_pixel(int  x, int  y) const noexcept{return *m_canvas.get_pixel_pointer(x,y);}
@@ -473,6 +477,7 @@ public:
   void      paste(bool  layer) noexcept{m_paint->paste(layer);}
 
 
+  void  do_on_mouse_enter() noexcept override;
   void  do_on_mouse_leave() noexcept override;
 
   void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
@@ -572,7 +577,7 @@ context2
   core_display  m_display;
   core_paint      m_paint;
 
-  core*  m_core[4];
+  core*  m_cores[4];
 
   gbstd::frame*   m_core_frame;
 
@@ -584,7 +589,7 @@ context2
   gbstd::frame*  m_tool_widget_frame;
   gbstd::frame*  m_operation_widget_frame;
 
-  gbstd::widget*  m_bg_change_buttons;
+  gbstd::widget*  m_bg_changer;
 
   gbstd::label*  m_cursor_label;
 

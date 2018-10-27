@@ -45,13 +45,6 @@ build_core() noexcept
 
         ctx.m_cursor_label->modify_text(sf());
       }
-
-    else
-      if(evt.is_image_modified())
-      {
-        ctx.m_menu->request_redraw();
-        ctx.m_seamless_pattern_view->request_redraw();
-      }
   });
 
 

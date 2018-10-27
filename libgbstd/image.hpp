@@ -151,6 +151,8 @@ public:
 
   operator bool() const noexcept{return m_pointer;}
 
+  bool  operator==(const canvas&  rhs) const noexcept;
+
   canvas&  assign(const image&  img                                ) noexcept;
   canvas&  assign(const image&  img, int  x, int  y, int  w, int  h) noexcept;
   canvas&  assign(const image&  img, const rectangle&  rect) noexcept{return assign(img,rect.x,rect.y,rect.w,rect.h);}

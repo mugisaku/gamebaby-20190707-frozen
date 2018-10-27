@@ -19,19 +19,6 @@ m_callback(callback)
 
 void
 core::
-update() noexcept
-{
-  request_redraw();
-
-    if(m_callback)
-    {
-      m_callback({*this,core_event::kind::image_modified});
-    }
-}
-
-
-void
-core::
 process_before_reform() noexcept
 {
   int  w = m_canvas.get_width();
@@ -44,9 +31,21 @@ process_before_reform() noexcept
 
 void
 core::
+do_on_mouse_enter() noexcept
+{
+  m_paint->reset(m_canvas);
+
+  request_redraw();
+}
+
+
+void
+core::
 do_on_mouse_leave() noexcept
 {
   m_paint->cancel_drawing();
+
+  request_redraw();
 }
 
 
@@ -72,10 +71,7 @@ do_on_mouse_act(gbstd::point  mouse_pos) noexcept
     }
 
 
-    if((*m_paint)())
-    {
-      update();
-    }
+  (*m_paint)();
 }
 
 

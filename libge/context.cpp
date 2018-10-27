@@ -131,15 +131,19 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
   m_color_maker_frame  = new frame("color",m_color_handler->get_maker());
   m_color_holder_frame = new frame("palette",m_color_handler->get_holder());
 
-  m_display.reset(m_color_handler->get_color(),{m_core,m_menu});
+  m_seamless_pattern_view       = new seamless_pattern_view(*this);
+  m_seamless_pattern_view_frame = new frame("pattern",m_seamless_pattern_view);
+
+
+  std::initializer_list<gbstd::widget*>  ls = {m_core,m_menu,m_seamless_pattern_view};
+
+  m_paint.set_affected_widget_list(ls);
+  m_display.reset(m_color_handler->get_color(),ls);
 
   m_bg_changer = m_display.get_widget();
 
   m_aniview       = new aniview(*this);
   m_aniview_frame = new frame("animation",m_aniview);
-
-  m_seamless_pattern_view       = new seamless_pattern_view(*this);
-  m_seamless_pattern_view_frame = new frame("pattern",m_seamless_pattern_view);
 
   m_underlay_stacker       = new underlay_stacker(*this);
   m_underlay_stacker_frame = new frame("underlay",m_underlay_stacker);

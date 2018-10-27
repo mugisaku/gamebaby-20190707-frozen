@@ -8,8 +8,8 @@ namespace ge{
 
 core::
 core(core_paint&  pai, core_display&  dsp, void  (*callback)(core_event  evt)) noexcept:
+core_view(dsp),
 m_paint(&pai),
-m_display(&dsp),
 m_callback(callback)
 {
 }
@@ -19,21 +19,11 @@ m_callback(callback)
 
 void
 core::
-process_before_reform() noexcept
-{
-  int  w = m_canvas.get_width();
-  int  h = m_canvas.get_height();
-
-  set_content_width( m_display->get_pixel_size()*w);
-  set_content_height(m_display->get_pixel_size()*h);
-}
-
-
-void
-core::
 do_on_mouse_enter() noexcept
 {
   m_paint->reset(m_canvas);
+
+  m_focus = true;
 
   request_redraw();
 }
@@ -44,6 +34,8 @@ core::
 do_on_mouse_leave() noexcept
 {
   m_paint->cancel_drawing();
+
+  m_focus = false;
 
   request_redraw();
 }
@@ -92,17 +84,20 @@ render(const gbstd::canvas&  cv) noexcept
 
   m_display->render_canvas(m_canvas,cv);
 
-    if(m_display->test_whether_show_grid())
+    if(m_focus)
     {
-       m_display->render_grid(cv);
-    }
+        if(m_display->test_whether_show_grid())
+        {
+           m_display->render_grid(cv);
+        }
 
 
-  auto  rect = m_paint->get_operation_rectangle();
+      auto  rect = m_paint->get_operation_rectangle();
 
-    if(rect.w && rect.h)
-    {
-      m_display->render_rect(rect,cv);
+        if(rect.w && rect.h)
+        {
+          m_display->render_rect(rect,cv);
+        }
     }
 }
 

@@ -26,7 +26,7 @@ build_core() noexcept
 
         auto  pt = evt->get_paint().get_drawing_point();
 
-        auto  color = evt->get_pixel(pt.x,pt.y).color;
+        auto  color = evt->get_paint().get_current_pixel().color;
 
           if(color)
           {

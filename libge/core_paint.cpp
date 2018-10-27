@@ -21,14 +21,17 @@ reset(const gbstd::canvas&  cv) noexcept
 
   m_drawing_is_fixed = true;
 
-  m_recorder.clear();
+    if(cv != m_canvas)
+    {
+      m_recorder.clear();
 
-  m_canvas = cv;
+      m_canvas = cv;
 
-  m_operation_rect.x = 0;
-  m_operation_rect.y = 0;
-  m_operation_rect.w = m_canvas.get_width() ;
-  m_operation_rect.h = m_canvas.get_height();
+      m_operation_rect.x = 0;
+      m_operation_rect.y = 0;
+      m_operation_rect.w = m_canvas.get_width() ;
+      m_operation_rect.h = m_canvas.get_height();
+    }
 }
 
 
@@ -46,6 +49,8 @@ cancel_drawing() noexcept
            (m_mode == mode::layer))
         {
           m_recorder.rollback(m_canvas);
+
+          feedback();
         }
 
 
@@ -102,6 +107,8 @@ core_paint::
 undo() noexcept
 {
   m_recorder.rollback(m_canvas);
+
+  feedback();
 }
 
 

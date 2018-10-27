@@ -352,6 +352,8 @@ public:
   void          set_drawing_color(gbstd::color  color)       noexcept{       m_drawing_color = color;}
   gbstd::color  get_drawing_color(                   ) const noexcept{return m_drawing_color        ;}
 
+  const gbstd::pixel&  get_current_pixel() const noexcept{return *m_canvas.get_pixel_pointer(m_drawing_point.x,m_drawing_point.y);}
+
   gbstd::rectangle  get_operation_rectangle() const noexcept{return m_operation_rect;}
 
   void  change_mode_to_draw_dot()       noexcept{m_mode = mode::draw_dot;}
@@ -438,29 +440,41 @@ public:
 
 
 class
-core: public gbstd::widget
+core_view: public gbstd::widget
 {
+protected:
   gbstd::canvas  m_canvas;
 
-  core_paint*      m_paint=nullptr;
   core_display*  m_display=nullptr;
 
-  void  (*m_callback)(core_event  evt)=nullptr;
-
 public:
-  core(core_paint&  pai, core_display&  dsp, void  (*callback)(core_event  evt)=nullptr) noexcept;
+  core_view(core_display&  dsp) noexcept;
 
-  core_paint&      get_paint() const noexcept{return *m_paint;}
   core_display&  get_display() const noexcept{return *m_display;}
 
   const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas     ;}
   void                  set_canvas(const gbstd::canvas&  cv)       noexcept{       m_canvas = cv;}
 
-  void  reset() noexcept;
+  void  process_before_reform() noexcept override;
 
-  void  set_image(const gbstd::image&  img, int  w, int  h) noexcept;
+  void  render(const gbstd::canvas&  cv) noexcept override;
 
-  const gbstd::pixel&  get_pixel(int  x, int  y) const noexcept{return *m_canvas.get_pixel_pointer(x,y);}
+};
+
+
+class
+core: public core_view
+{
+  core_paint*  m_paint=nullptr;
+
+  void  (*m_callback)(core_event  evt)=nullptr;
+
+  bool  m_focus=false;
+
+public:
+  core(core_paint&  pai, core_display&  dsp, void  (*callback)(core_event  evt)=nullptr) noexcept;
+
+  core_paint&  get_paint() const noexcept{return *m_paint;}
 
 
   void  revolve()                 noexcept{m_paint->revolve();}
@@ -481,8 +495,6 @@ public:
   void  do_on_mouse_leave() noexcept override;
 
   void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
-
-  void  process_before_reform() noexcept override;
 
   void  render(const gbstd::canvas&  cv) noexcept override;
 
@@ -577,7 +589,7 @@ context2
   core_display  m_display;
   core_paint      m_paint;
 
-  core*  m_cores[4];
+  core_view*  m_cores[4];
 
   gbstd::frame*   m_core_frame;
 

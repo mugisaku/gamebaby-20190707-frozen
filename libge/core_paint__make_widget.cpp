@@ -16,9 +16,7 @@ make_operation_widget() noexcept
   auto  undo_btn = new button(new label(u"Undo",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.undo();
+        evt->get_userdata<core_paint>()->undo();
       }
   });
 
@@ -26,9 +24,7 @@ make_operation_widget() noexcept
   auto  copy_btn = new button(new label(u"Copy",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.take_copy();
+        evt->get_userdata<core_paint>()->take_copy();
      }
   });
 
@@ -36,9 +32,7 @@ make_operation_widget() noexcept
   auto  rou_btn = new button(new label(u"Rotate ↑",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.shift_up(true);
+        evt->get_userdata<core_paint>()->shift_up(true);
      }
   });
 
@@ -46,9 +40,7 @@ make_operation_widget() noexcept
   auto  rol_btn = new button(new label(u"Rotate ←",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.shift_left(true);
+        evt->get_userdata<core_paint>()->shift_left(true);
      }
   });
 
@@ -56,9 +48,7 @@ make_operation_widget() noexcept
   auto  ror_btn = new button(new label(u"Rotate →",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.shift_right(true);
+        evt->get_userdata<core_paint>()->shift_right(true);
      }
   });
 
@@ -66,9 +56,7 @@ make_operation_widget() noexcept
   auto  rod_btn = new button(new label(u"Rotate ↓",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.shift_down(true);
+        evt->get_userdata<core_paint>()->shift_down(true);
      }
   });
 
@@ -78,36 +66,28 @@ make_operation_widget() noexcept
   auto  rvl_btn = new button(new label(u"Revolve →",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.revolve();
+        evt->get_userdata<core_paint>()->revolve();
      }
   });
 
   auto  rvh_btn = new button(new label(u"Reverse -",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.reverse_horizontally();
+        evt->get_userdata<core_paint>()->reverse_horizontally();
       }
   });
 
   auto  rvv_btn = new button(new label(u"Reverse |",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.reverse_vertically();
+        evt->get_userdata<core_paint>()->reverse_vertically();
       }
   });
 
   auto  mir_btn = new button(new label(u"Mirror |",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        auto&  cor = *evt->get_userdata<core>();
-
-        cor.mirror_vertically();
+        evt->get_userdata<core_paint>()->mirror_vertically();
       }
   });
 

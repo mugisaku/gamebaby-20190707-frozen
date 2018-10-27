@@ -162,26 +162,28 @@ render_grid(const gbstd::canvas&  cv, int  pixel_size) const noexcept
   int  ww = w/pixel_size;
   int  hh = h/pixel_size;
 
-  int  x_sz = ww/4;
-  int  y_sz = hh/4;
-
-    for(int  y = 0;  y < hh;  ++y)
+    for(int  x = 0;  x < ww;  ++x)
     {
-      auto  color = (y%y_sz)? gbstd::colors::gray
-                            : gbstd::colors::light_gray;
-
-      cv.draw_hline(color,0,pixel_size*y,w);
+      cv.draw_vline(gbstd::colors::gray,pixel_size*x,0,h);
     }
 
+
+  ww /= 8;
+  hh /= 8;
 
     for(int  x = 0;  x < ww;  ++x)
     {
-      auto  color = (x%x_sz)? gbstd::colors::gray
-                            : gbstd::colors::light_gray;
-
-      cv.draw_vline(color,pixel_size*x,0,h);
+      cv.draw_vline(gbstd::colors::light_gray,pixel_size*8*x,0,h);
     }
 
+
+    for(int  y = 0;  y < hh;  ++y)
+    {
+      cv.draw_hline(gbstd::colors::light_gray,0,pixel_size*8*y,w);
+    }
+
+
+  
 
   cv.draw_hline(gbstd::colors::white,0,(h/2)  ,w);
   cv.draw_vline(gbstd::colors::white,  (w/2),0,h);

@@ -11,6 +11,7 @@ set(SOURCES
   drawing_recorder.cpp
   underlay_stacker.cpp
   core.cpp
+  core_view.cpp
   core_display.cpp
   core_paint.cpp
   core_paint__draw.cpp

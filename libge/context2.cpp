@@ -138,8 +138,8 @@ process_before_reform() noexcept
 {
   auto&  ctx = *get_userdata<context>();
 
-  set_content_width( g_cell_size*2*6);
-  set_content_height(g_cell_size*2*6);
+  set_content_width( g_cell_size*2*5);
+  set_content_height(g_cell_size*2*5);
 }
 
 
@@ -150,10 +150,10 @@ render_product(point  pt, int  flags, const gbstd::canvas&  cv) noexcept
   int  x = g_cell_size*2*pt.x;
   int  y = g_cell_size*2*pt.y;
 
-  cv.draw_canvas(m_a_base,512,x            ,y            );
-  cv.draw_canvas(m_b_base,512,x+g_cell_size,y            );
-  cv.draw_canvas(m_b_base,512,x            ,y+g_cell_size);
-  cv.draw_canvas(m_a_base,512,x+g_cell_size,y+g_cell_size);
+  cv.draw_canvas(m_a_base,x            ,y            );
+  cv.draw_canvas(m_b_base,x+g_cell_size,y            );
+  cv.draw_canvas(m_b_base,x            ,y+g_cell_size);
+  cv.draw_canvas(m_a_base,x+g_cell_size,y+g_cell_size);
 
     if(flags&left)
     {
@@ -203,6 +203,17 @@ render(const canvas&  cv) noexcept
   render_product({0,2},bottom|left,cv);
   render_product({1,2},bottom,cv);
   render_product({2,2},bottom|right,cv);
+
+  render_product({3,0},bottom|top,cv);
+  render_product({4,0},left|right,cv);
+
+  render_product({3,1},bottom|top|left,cv);
+  render_product({4,1},bottom|top|right,cv);
+
+  render_product({3,2},bottom|left|right,cv);
+  render_product({4,2},top|left|right,cv);
+
+  render_product({0,3},top|bottom|left|right,cv);
 }
 
 
@@ -257,6 +268,63 @@ context2() noexcept
   m_display.reset(m_color_handler->get_color(),ls);
 
   m_bg_changer = m_display.get_widget();
+
+
+  m_parts_save_button = new button(new label(u"save parts as PNG",colors::black),[](button_event  evt){
+    auto&  ctx = *evt->get_userdata<context2>();
+
+      if(evt.is_release())
+      {
+        auto  bin = ctx.m_source_image.make_png_stream();
+
+        constexpr const char*  filepath = "noName.png";
+
+#ifdef __EMSCRIPTEN__
+        download(bin.data(),bin.size(),filepath);
+#else
+        write_to_file(bin.data(),bin.size(),filepath);
+#endif
+      }
+  });
+
+
+  m_result_save_button = new button(new label(u"save result as PNG",colors::black),[](button_event  evt){
+    auto&  ctx = *evt->get_userdata<context2>();
+
+      if(evt.is_release())
+      {
+        auto  bin = ctx.m_source_image.make_png_stream();
+
+        constexpr const char*  filepath = "noName.png";
+
+#ifdef __EMSCRIPTEN__
+        download(bin.data(),bin.size(),filepath);
+#else
+        write_to_file(bin.data(),bin.size(),filepath);
+#endif
+      }
+  });
+
+
+  m_txt_save_button = new button(new label(u"save result as TXT",colors::black),[](button_event  evt){
+    auto&  ctx = *evt->get_userdata<context2>();
+
+      if(evt.is_release())
+      {
+        auto  txt = ctx.m_source_image.make_txt_stream();
+
+        constexpr const char*  filepath = "noName.txt";
+
+#ifdef __EMSCRIPTEN__
+        download(txt.data(),txt.size(),filepath);
+#else
+        write_to_file(txt.data(),txt.size(),filepath);
+#endif
+      }
+  });
+
+
+  set_userdata({m_parts_save_button,m_result_save_button},this);
 }
 
 

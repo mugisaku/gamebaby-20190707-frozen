@@ -117,6 +117,10 @@ context2
 
   gbstd::widget*  m_bg_changer;
 
+  gbstd::widget*   m_parts_save_button;
+  gbstd::widget*  m_result_save_button;
+  gbstd::widget*  m_txt_save_button;
+
   gbstd::label*  m_cursor_label;
 
   context2() noexcept;

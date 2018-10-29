@@ -116,7 +116,7 @@ main(int  argc, char**  argv)
   g_ge_context = new ge::context2;
 
 
-  auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_changer});
+  auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_changer,g_ge_context->m_menu_frame});
 
   auto  to_col = make_column({g_ge_context->m_tool_widget_frame,g_ge_context->m_operation_widget_frame});
 
@@ -124,11 +124,10 @@ main(int  argc, char**  argv)
 
 
   auto  left = make_column({g_ge_context->m_core_frame,
-                            g_ge_context->m_menu_frame,
                             g_ge_context->m_preview_frame,
-                            
-//    g_ge_context->m_png_save_button,
-//    g_ge_context->m_txt_save_button,
+    g_ge_context->m_parts_save_button,
+    g_ge_context->m_result_save_button,
+    g_ge_context->m_txt_save_button,
   });
 
 

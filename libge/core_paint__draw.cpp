@@ -76,7 +76,9 @@ void
 core_paint::
 fill_area(gbstd::color  color) noexcept
 {
-  auto  target_color = m_canvas.get_pixel_pointer(m_drawing_point.x,m_drawing_point.y)->color;
+  auto&  cv = m_core->get_canvas();
+
+  auto  target_color = cv.get_pixel_pointer(m_drawing_point.x,m_drawing_point.y)->color;
 
     if(target_color == color)
     {
@@ -84,8 +86,8 @@ fill_area(gbstd::color  color) noexcept
     }
 
 
-  const int  w = m_canvas.get_width() ;
-  const int  h = m_canvas.get_height();
+  const int  w = cv.get_width() ;
+  const int  h = cv.get_height();
 
   std::vector<uint8_t>  table(w*h,0);
 
@@ -108,11 +110,11 @@ fill_area(gbstd::color  color) noexcept
         {
           flag = 1;
 
-          auto&  pix = *m_canvas.get_pixel_pointer(pt.x,pt.y);
+          auto&  pix = *cv.get_pixel_pointer(pt.x,pt.y);
 
             if(pix.color == target_color)
             {
-              m_recorder.put(pix.color,pt.x,
+              m_core->get_recorder().put(pix.color,pt.x,
                                        pt.y);
 
               pix.color = color;

@@ -19,9 +19,30 @@ m_callback(callback)
 
 void
 core::
+set_canvas(const gbstd::canvas&  cv) noexcept
+{
+  m_canvas = cv;
+
+  m_recorder.clear();
+}
+
+
+void
+core::
+request_redraw_all() noexcept
+{
+    for(auto  ptr: m_affected_widget_list)
+    {
+      ptr->request_redraw();
+    }
+}
+
+
+void
+core::
 do_on_mouse_enter() noexcept
 {
-  m_paint->reset(m_canvas);
+  m_paint->reset(*this);
 
   m_focus = true;
 
@@ -41,6 +62,16 @@ do_on_mouse_leave() noexcept
 }
 
 
+
+
+void
+core::
+undo() noexcept
+{
+  m_recorder.rollback(m_canvas);
+
+  request_redraw_all();
+}
 
 
 void

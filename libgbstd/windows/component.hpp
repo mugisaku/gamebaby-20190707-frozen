@@ -451,7 +451,7 @@ public:
 
 
 struct
-item_table_size
+table_size
 {
   int  x_length;
   int  y_length;
@@ -471,8 +471,8 @@ item_size
 class
 menu: public widget
 {
-  item_table_size  m_item_table_size;
-  item_size        m_item_size;
+  table_size  m_table_size;
+  item_size    m_item_size;
 
   int  m_number_of_columns=0;
   int  m_number_of_rows=0;
@@ -494,8 +494,8 @@ public:
   int  get_number_of_columns() const noexcept{return m_number_of_columns;}
   int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
 
-  const item_size&        get_item_size()       const noexcept{return m_item_size;}
-  const item_table_size&  get_item_table_size() const noexcept{return m_item_table_size;}
+  const item_size&    get_item_size() const noexcept{return m_item_size;}
+  const table_size&  get_table_size() const noexcept{return m_table_size;}
 
   void  process_before_reform() noexcept override;
 
@@ -504,7 +504,7 @@ public:
   void  resize(int  ncols, int  nrows) noexcept;
 
   void  set_item_size(item_size  itm_sz) noexcept;
-  void  set_item_table_size(item_table_size  itmtbl_sz) noexcept;
+  void  set_table_size(table_size  tbl_sz) noexcept;
 
   const item_cursor&  get_item_cursor()  const noexcept{return m_cursor;}
 

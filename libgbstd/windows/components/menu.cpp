@@ -35,9 +35,9 @@ set_item_size(item_size  itm_sz) noexcept
 
 void
 menu::
-set_item_table_size(item_table_size  itmtbl_sz) noexcept
+set_table_size(table_size  tbl_sz) noexcept
 {
-  m_item_table_size = itmtbl_sz;
+  m_table_size = tbl_sz;
 
   revise_cursor();
 }
@@ -71,9 +71,9 @@ move_base(int  x, int  y) noexcept
     }
 
   else
-    if((x_res+m_number_of_columns) >= m_item_table_size.x_length)
+    if((x_res+m_number_of_columns) >= m_table_size.x_length)
     {
-      x_res = (m_item_table_size.x_length-m_number_of_columns);
+      x_res = (m_table_size.x_length-m_number_of_columns);
     }
 
 
@@ -83,9 +83,9 @@ move_base(int  x, int  y) noexcept
     }
 
   else
-    if((y_res+m_number_of_rows) >= m_item_table_size.y_length)
+    if((y_res+m_number_of_rows) >= m_table_size.y_length)
     {
-      y_res = (m_item_table_size.y_length-m_number_of_rows);
+      y_res = (m_table_size.y_length-m_number_of_rows);
     }
 
 

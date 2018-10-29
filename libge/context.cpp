@@ -1,4 +1,4 @@
-#include"libge/ge.hpp"
+#include"libge/ge_context.hpp"
 
 
 
@@ -15,13 +15,13 @@ void
 context::
 resize_cell(gbstd::item_size  cell_size) noexcept
 {
-  resize_image(cell_size,m_menu->get_item_table_size());
+  resize_image(cell_size,m_menu->get_table_size());
 }
 
 
 void
 context::
-resize_table(gbstd::item_table_size  table_size) noexcept
+resize_table(gbstd::table_size  table_size) noexcept
 {
   resize_image(m_menu->get_item_size(),table_size);
 }
@@ -29,7 +29,7 @@ resize_table(gbstd::item_table_size  table_size) noexcept
 
 void
 context::
-resize_image(item_size  cell_size, item_table_size  table_size) noexcept
+resize_image(item_size  cell_size, table_size  table_size) noexcept
 {
   auto&  w = cell_size.width ;
   auto&  h = cell_size.height;
@@ -40,7 +40,7 @@ resize_image(item_size  cell_size, item_table_size  table_size) noexcept
   m_source_image.resize(w*table_size.x_length,h*table_size.y_length);
 
   m_menu->set_item_size({w,h});
-  m_menu->set_item_table_size(table_size);
+  m_menu->set_table_size(table_size);
   m_menu->resize(5,2);
 
 
@@ -57,7 +57,7 @@ revise() noexcept
 
   gbstd::canvas  cv(m_source_image,w*m_current_index.x,h*m_current_index.y,w,h);
 
-  m_paint.reset(cv);
+  m_paint.reset(*m_core);
   m_core->set_canvas(cv);
 
   m_core->get_display().rebase_underlay_stack(m_source_image,w,h);
@@ -93,7 +93,7 @@ load(const std::vector<uint8_t>&  bin) noexcept
       m_core->get_display().clear_underlay_stack();
       m_aniview->clear();
 
-      resize_table(item_table_size{w/cell_w,h/cell_h});
+      resize_table(table_size{w/cell_w,h/cell_h});
 
       m_source_image.fill(color());
 
@@ -120,7 +120,7 @@ get_rect(point  index) const noexcept
 
 
 context::
-context(item_size  cell_size, item_table_size  table_size) noexcept
+context(item_size  cell_size, table_size  table_size) noexcept
 {
   build_core();
   build_cell_table();
@@ -137,7 +137,7 @@ context(item_size  cell_size, item_table_size  table_size) noexcept
 
   std::initializer_list<gbstd::widget*>  ls = {m_core,m_menu,m_seamless_pattern_view};
 
-  m_paint.set_affected_widget_list(ls);
+  m_core->set_affected_widget_list(ls);
   m_display.reset(m_color_handler->get_color(),ls);
 
   m_bg_changer = m_display.get_widget();

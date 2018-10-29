@@ -1,4 +1,4 @@
-#include"libge/ge.hpp"
+#include"libge/ge_context.hpp"
 #include"sdl.hpp"
 
 
@@ -21,10 +21,10 @@ window
 g_window;
 
 
-constexpr int  g_cell_size = 24;
+constexpr int  g_cell_size = 12;
 
 
-ge::context*
+ge::context2*
 g_ge_context;
 
 
@@ -37,13 +37,11 @@ main_loop() noexcept
 
     if(f.size())
     {
-      g_ge_context->load(f);
+//      g_ge_context->load(f);
 
       f.clear();
     }
 
-
-  g_ge_context->m_aniview->check();
 
   g_window.do_total_reform_if_necessary();
 
@@ -73,7 +71,7 @@ int
 main(int  argc, char**  argv)
 {
 #ifdef EMSCRIPTEN
-  set_caption("mkpatgra - " __DATE__);
+  set_caption("mkbggra - " __DATE__);
   set_description("<pre>"
                   "*マウスの左ボタンで、任意色を置き、\n"
                   " 右ボタンで透明色を置く\n"
@@ -115,25 +113,22 @@ main(int  argc, char**  argv)
 #endif
 
 
-  g_ge_context = new ge::context(gbstd::item_size{g_cell_size,g_cell_size},
-                                 gbstd::item_table_size{6,2});
+  g_ge_context = new ge::context2;
 
 
-  auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_changer,g_ge_context->m_aniview_frame});
+  auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_changer});
 
   auto  to_col = make_column({g_ge_context->m_tool_widget_frame,g_ge_context->m_operation_widget_frame});
 
-  auto  last_w = make_row({g_ge_context->m_cell_table_frame,g_ge_context->m_underlay_stacker_frame});
-
-  auto  right_upper = make_row({g_ge_context->m_color_holder_frame,coloring_widget,to_col});
-  auto  right       = make_column({right_upper,last_w});
+  auto  right = make_row({g_ge_context->m_color_holder_frame,coloring_widget,to_col});
 
 
   auto  left = make_column({g_ge_context->m_core_frame,
-    g_ge_context->m_seamless_pattern_view_frame,
-    g_ge_context->m_png_save_button,
-    g_ge_context->m_apng_save_button,
-    g_ge_context->m_txt_save_button,
+                            g_ge_context->m_menu_frame,
+                            g_ge_context->m_preview_frame,
+                            
+//    g_ge_context->m_png_save_button,
+//    g_ge_context->m_txt_save_button,
   });
 
 

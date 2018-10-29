@@ -1,4 +1,4 @@
-#include"libge/ge.hpp"
+#include"libge/ge_context.hpp"
 #include"sdl.hpp"
 
 
@@ -116,7 +116,7 @@ main(int  argc, char**  argv)
 
 
   g_ge_context = new ge::context(gbstd::item_size{g_cell_size,g_cell_size},
-                                 gbstd::item_table_size{6,2});
+                                 gbstd::table_size{6,2});
 
 
   auto  coloring_widget = make_column({g_ge_context->m_color_maker_frame,g_ge_context->m_bg_changer,g_ge_context->m_aniview_frame});

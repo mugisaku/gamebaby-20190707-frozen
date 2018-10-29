@@ -31,8 +31,10 @@ paste(bool  layer) noexcept
   try_to_push_nonsolid_record();
 
 
+  auto&  cv = m_core->get_canvas();
+
   gbstd::rectangle  src_rect = m_clipped_image.get_rectangle();
-  gbstd::rectangle  dst_rect(m_drawing_point,m_canvas.get_width(),m_canvas.get_height());
+  gbstd::rectangle  dst_rect(m_drawing_point,cv.get_width(),cv.get_height());
 
   transform(src_rect,dst_rect);
 
@@ -121,11 +123,13 @@ void
 core_paint::
 mirror_vertically() noexcept
 {
+  auto&  cv = m_core->get_canvas();
+
   try_to_push_nonsolid_record();
 
     for(int  yy = 0;  yy < m_operation_rect.h  ;  ++yy){
     for(int  xx = 0;  xx < m_operation_rect.w/2;  ++xx){
-      auto  pix = *m_canvas.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
+      auto  pix = *cv.get_pixel_pointer(m_operation_rect.x+xx,m_operation_rect.y+yy);
 
       modify_dot(pix,{m_operation_rect.x+m_operation_rect.w-1-xx,m_operation_rect.y+yy});
     }}

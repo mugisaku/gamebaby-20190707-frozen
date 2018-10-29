@@ -1,4 +1,4 @@
-#include"libge/ge.hpp"
+#include"libge/ge_context.hpp"
 
 
 
@@ -60,13 +60,9 @@ process(menu_event  evt) noexcept
 
       gbstd::canvas  cv(ctx.m_source_image,w*ctx.m_current_index.x,h*ctx.m_current_index.y,w,h);
 
-      ctx.m_paint.reset(cv);
       ctx.m_core->set_canvas(cv);
 
-      ctx.m_core->request_redraw();
-
-      ctx.m_seamless_pattern_view->request_redraw();
-      ctx.m_menu->request_redraw();
+      ctx.m_core->request_redraw_all();
     }
 
   else
@@ -118,7 +114,7 @@ build_cell_table() noexcept
 
       if(evt.is_release())
       {
-        item_table_size  sz{ctx.get_table_width(),ctx.get_table_height()+ctx.m_menu->get_number_of_rows()};
+        table_size  sz{ctx.get_table_width(),ctx.get_table_height()+ctx.m_menu->get_number_of_rows()};
 
         ctx.resize_table(sz);
 
@@ -145,7 +141,7 @@ update_table_offset_label() noexcept
   string_form  sf;
 
   int  num = m_menu->get_item_cursor().get_base().y/m_menu->get_number_of_rows();
-  int  den = m_menu->get_item_table_size().y_length/m_menu->get_number_of_rows();
+  int  den = m_menu->get_table_size().y_length/m_menu->get_number_of_rows();
 
   m_table_offset_label->set_text(sf("%2d/%2d",num+1,den));
 }

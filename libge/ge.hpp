@@ -142,45 +142,6 @@ public:
 
 
 class
-arrange_view: public gbstd::widget
-{
-
-public:
-  arrange_view(context&  ctx) noexcept;
-
-  void  process_before_reform() noexcept override;
-
-  void  render(const gbstd::canvas&  cv) noexcept override;
-
-};
-
-
-class
-parts_table: public gbstd::widget
-{
-  int  m_index=0;
-
-  gbstd::image  m_image;
-
-  gbstd::canvas  m_entries[6];
-
-public:
-  parts_table(context&  ctx) noexcept;
-
-  static constexpr int  get_parts_size() noexcept{return 12;}
-
-  void  process_before_reform() noexcept override;
-
-  void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
-
-  void  render_entry(int  i, const gbstd::canvas&  cv) noexcept;
-
-  void  render(const gbstd::canvas&  cv) noexcept override;
-
-};
-
-
-class
 underlay_stacker: public gbstd::widget
 {
   gbstd::label*    m_counter_label;
@@ -277,7 +238,7 @@ background_style
 class
 core_paint
 {
-  gbstd::canvas  m_canvas;
+  core*  m_core=nullptr;
 
   enum class mode{
     draw_dot,
@@ -302,11 +263,7 @@ core_paint
 
   gbstd::image  m_clipped_image;
 
-  drawing_recorder  m_recorder;
-
   bool  m_drawing_is_fixed=true;
-
-  std::vector<gbstd::widget*>  m_affected_widget_list;
 
   void  try_to_push_solid_record()    noexcept;
   void  try_to_push_nonsolid_record() noexcept;
@@ -324,11 +281,7 @@ core_paint
   void  feedback() const noexcept;
 
 public:
-  drawing_recorder&  get_drawing_recorder() noexcept{return m_recorder;}
-
-  void  set_affected_widget_list(std::initializer_list<gbstd::widget*>  ls) noexcept{m_affected_widget_list = ls;}
-
-  void  reset(const gbstd::canvas&  cv) noexcept;
+  void  reset(core&  cor) noexcept;
 
   void  cancel_drawing() noexcept;
   void  cancel_select() noexcept;
@@ -343,7 +296,6 @@ public:
   void  shift_down( bool  rotate) noexcept;
 
   void  take_copy() noexcept;
-  void       undo() noexcept;
   void      paste(bool  layer) noexcept;
 
   void          set_drawing_point(gbstd::point  pt)       noexcept{       m_drawing_point = pt;}
@@ -352,7 +304,7 @@ public:
   void          set_drawing_color(gbstd::color  color)       noexcept{       m_drawing_color = color;}
   gbstd::color  get_drawing_color(                   ) const noexcept{return m_drawing_color        ;}
 
-  const gbstd::pixel&  get_current_pixel() const noexcept{return *m_canvas.get_pixel_pointer(m_drawing_point.x,m_drawing_point.y);}
+  const gbstd::pixel&  get_current_pixel() const noexcept;
 
   gbstd::rectangle  get_operation_rectangle() const noexcept{return m_operation_rect;}
 
@@ -453,7 +405,7 @@ public:
   core_display&  get_display() const noexcept{return *m_display;}
 
   const gbstd::canvas&  get_canvas(                        ) const noexcept{return m_canvas     ;}
-  void                  set_canvas(const gbstd::canvas&  cv)       noexcept{       m_canvas = cv;}
+  virtual void          set_canvas(const gbstd::canvas&  cv)       noexcept{       m_canvas = cv;}
 
   void  process_before_reform() noexcept override;
 
@@ -467,6 +419,10 @@ core: public core_view
 {
   core_paint*  m_paint=nullptr;
 
+  drawing_recorder  m_recorder;
+
+  std::vector<gbstd::widget*>  m_affected_widget_list;
+
   void  (*m_callback)(core_event  evt)=nullptr;
 
   bool  m_focus=false;
@@ -474,8 +430,15 @@ core: public core_view
 public:
   core(core_paint&  pai, core_display&  dsp, void  (*callback)(core_event  evt)=nullptr) noexcept;
 
+  void  set_affected_widget_list(std::initializer_list<gbstd::widget*>  ls) noexcept{m_affected_widget_list = ls;}
+
+  void  request_redraw_all() noexcept;
+
+  drawing_recorder&  get_recorder() noexcept{return m_recorder;}
+
   core_paint&  get_paint() const noexcept{return *m_paint;}
 
+  void  set_canvas(const gbstd::canvas&  cv) noexcept override;
 
   void  revolve()                 noexcept{m_paint->revolve();}
   void  reverse_horizontally()    noexcept{m_paint->reverse_horizontally();}
@@ -487,7 +450,7 @@ public:
   void  shift_down(bool  rotate)  noexcept{m_paint->shift_down(rotate);}
 
   void  take_copy() noexcept{m_paint->take_copy();}
-  void       undo() noexcept{m_paint->undo();}
+  void       undo() noexcept;
   void      paste(bool  layer) noexcept{m_paint->paste(layer);}
 
 
@@ -497,115 +460,6 @@ public:
   void  do_on_mouse_act(gbstd::point  mouse_pos) noexcept override;
 
   void  render(const gbstd::canvas&  cv) noexcept override;
-
-};
-
-
-struct
-context
-{
-  gbstd::image  m_source_image;
-
-  gbstd::point  m_current_index;
-  gbstd::point  m_seeking_index;
-
-
-  core_display  m_display;
-  core_paint      m_paint;
-
-  core*  m_core;
-
-  gbstd::frame*   m_core_frame;
-
-  gbstd::frame*   m_cell_table_frame;
-
-  color_handler*  m_color_handler;
-
-  gbstd::frame*  m_color_maker_frame;
-  gbstd::frame*  m_color_holder_frame;
-
-  gbstd::frame*  m_tool_widget_frame;
-  gbstd::frame*  m_operation_widget_frame;
-
-  gbstd::widget*  m_bg_changer;
-
-  gbstd::label*  m_cursor_label;
-  gbstd::label*  m_table_offset_label;
-
-  gbstd::widget*  m_seamless_pattern_view;
-  gbstd::frame*   m_seamless_pattern_view_frame;
-
-  gbstd::button*   m_png_save_button;
-  gbstd::button*   m_txt_save_button;
-  gbstd::button*  m_apng_save_button;
-
-  gbstd::menu*  m_menu;
-
-
-  aniview*  m_aniview=nullptr;
-  gbstd::frame*  m_aniview_frame;
-
-  underlay_stacker*  m_underlay_stacker=nullptr;
-  gbstd::frame*      m_underlay_stacker_frame;
-
-  std::string  m_filepath;
-
-
-  gbstd::rectangle  get_rect(gbstd::point  index) const noexcept;
-
-  void  load(const std::vector<uint8_t>&  bin) noexcept;
-
-  context(gbstd::item_size  cell_size, gbstd::item_table_size  table_size) noexcept;
-
-  void  build_core() noexcept;
-  void  build_cell_table() noexcept;
-  void  build_animation() noexcept;
-  void  build_underlay() noexcept;
-
-  void  update_table_offset_label() noexcept;
-
-  void  resize_cell(gbstd::item_size  cell_size) noexcept;
-  void  resize_table(gbstd::item_table_size  table_size) noexcept;
-  void  resize_image(gbstd::item_size  cell_size, gbstd::item_table_size  table_size) noexcept;
-
-  void  revise() noexcept;
-
-  int  get_cell_width()  const noexcept{return m_menu->get_item_size().width ;}
-  int  get_cell_height() const noexcept{return m_menu->get_item_size().height;}
-
-  int  get_table_width()  const noexcept{return m_menu->get_item_table_size().x_length;}
-  int  get_table_height() const noexcept{return m_menu->get_item_table_size().y_length;}
-
-};
-
-
-
-
-struct
-context2
-{
-  gbstd::image  m_source_image;
-
-  core_display  m_display;
-  core_paint      m_paint;
-
-  core_view*  m_cores[4];
-
-  gbstd::frame*   m_core_frame;
-
-  color_handler*  m_color_handler;
-
-  gbstd::frame*  m_color_maker_frame;
-  gbstd::frame*  m_color_holder_frame;
-
-  gbstd::frame*  m_tool_widget_frame;
-  gbstd::frame*  m_operation_widget_frame;
-
-  gbstd::widget*  m_bg_changer;
-
-  gbstd::label*  m_cursor_label;
-
-  context2() noexcept;
 
 };
 

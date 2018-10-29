@@ -239,6 +239,9 @@ public:
   void  draw_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  draw_canvas(const canvas&  cv, point  pt) const noexcept{draw_canvas(cv,pt.x,pt.y);}
 
+  void  draw_canvas(const canvas&  cv, int  permill, int  x, int  y) const noexcept;
+  void  draw_canvas(const canvas&  cv, int  permill, point  pt) const noexcept{draw_canvas(cv,permill,pt.x,pt.y);}
+
   void  copy_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  copy_canvas(const canvas&  cv, point  pt) const noexcept{copy_canvas(cv,pt.x,pt.y);}
 

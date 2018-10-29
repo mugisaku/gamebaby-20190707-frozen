@@ -11,9 +11,9 @@ using namespace gbstd;
 
 void
 core_paint::
-reset(const gbstd::canvas&  cv) noexcept
+reset(core&  cor) noexcept
 {
-    if(cv)
+    if(m_core)
     {
       cancel_drawing();
     }
@@ -21,17 +21,12 @@ reset(const gbstd::canvas&  cv) noexcept
 
   m_drawing_is_fixed = true;
 
-    if(cv != m_canvas)
-    {
-      m_recorder.clear();
+  m_core = &cor;
 
-      m_canvas = cv;
-
-      m_operation_rect.x = 0;
-      m_operation_rect.y = 0;
-      m_operation_rect.w = m_canvas.get_width() ;
-      m_operation_rect.h = m_canvas.get_height();
-    }
+  m_operation_rect.x = 0;
+  m_operation_rect.y = 0;
+  m_operation_rect.w = cor.get_canvas().get_width() ;
+  m_operation_rect.h = cor.get_canvas().get_height();
 }
 
 
@@ -48,7 +43,7 @@ cancel_drawing() noexcept
         if((m_mode == mode::paste) ||
            (m_mode == mode::layer))
         {
-          m_recorder.rollback(m_canvas);
+          m_core->undo();
 
           feedback();
         }
@@ -74,11 +69,11 @@ void
 core_paint::
 modify_dot(gbstd::color  color, gbstd::point  pt) noexcept
 {
-  auto&  pix = *m_canvas.get_pixel_pointer(pt.x,pt.y);
+  auto&  pix = *m_core->get_canvas().get_pixel_pointer(pt.x,pt.y);
 
     if(pix.color != color)
     {
-      m_recorder.put(pix.color,pt.x,pt.y);
+      m_core->get_recorder().put(pix.color,pt.x,pt.y);
 
       pix.color = color;
     }
@@ -95,20 +90,10 @@ take_copy() noexcept
 
     for(int  y = 0;  y < m_operation_rect.h;  ++y){
     for(int  x = 0;  x < m_operation_rect.w;  ++x){
-      auto  pix = *m_canvas.get_pixel_pointer(m_operation_rect.x+x,m_operation_rect.y+y);
+      auto  pix = *m_core->get_canvas().get_pixel_pointer(m_operation_rect.x+x,m_operation_rect.y+y);
 
       *m_clipped_image.get_pixel_pointer(x,y) = pix;
     }}
-}
-
-
-void
-core_paint::
-undo() noexcept
-{
-  m_recorder.rollback(m_canvas);
-
-  feedback();
 }
 
 
@@ -118,7 +103,7 @@ void
 core_paint::
 try_to_push_solid_record() noexcept
 {
-    if(m_recorder.push(true))
+    if(m_core->get_recorder().push(true))
     {
       m_drawing_is_fixed = false;
     }
@@ -131,7 +116,7 @@ try_to_push_nonsolid_record() noexcept
 {
     if(m_drawing_is_fixed)
     {
-      m_recorder.push(false);
+      m_core->get_recorder().push(false);
     }
 
   else
@@ -148,10 +133,15 @@ void
 core_paint::
 feedback() const noexcept
 {
-    for(auto  ptr: m_affected_widget_list)
-    {
-      ptr->request_redraw();
-    }
+  m_core->request_redraw_all();
+}
+
+
+const gbstd::pixel&
+core_paint::
+get_current_pixel() const noexcept
+{
+  return *m_core->get_canvas().get_pixel_pointer(m_drawing_point.x,m_drawing_point.y);
 }
 
 
@@ -159,14 +149,16 @@ gbstd::image
 core_paint::
 get_temporary_image() noexcept
 {
-  int  w = m_canvas.get_width() ;
-  int  h = m_canvas.get_height();
+  auto&  cv = m_core->get_canvas();
+
+  int  w = cv.get_width() ;
+  int  h = cv.get_height();
 
   gbstd::image  img(w,h);
 
     for(int  y = 0;  y < h;  ++y){
     for(int  x = 0;  x < w;  ++x){
-      auto  pix = *m_canvas.get_pixel_pointer(x,y);
+      auto  pix = *cv.get_pixel_pointer(x,y);
 
       *img.get_pixel_pointer(x,y) = pix;
     }}
@@ -207,7 +199,7 @@ operator()() noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(m_canvas);
+                  m_core->undo();
                 }
 
 
@@ -219,7 +211,7 @@ operator()() noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(m_canvas);
+                  m_core->undo();
                 }
 
 
@@ -254,7 +246,7 @@ operator()() noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(m_canvas);
+                  m_core->undo();
                 }
 
 
@@ -266,7 +258,7 @@ operator()() noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(m_canvas);
+                  m_core->undo();
                 }
 
 
@@ -301,7 +293,7 @@ operator()() noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(m_canvas);
+                  m_core->undo();
                 }
 
 
@@ -313,7 +305,7 @@ operator()() noexcept
             {
                 if(!m_drawing_is_fixed)
                 {
-                  m_recorder.rollback(m_canvas);
+                  m_core->undo();
                 }
 
 
@@ -379,7 +371,9 @@ operator()() noexcept
           else
             if(gbstd::g_input.test_mouse_right())
             {
-              m_operation_rect = gbstd::rectangle(0,0,m_canvas.get_width(),m_canvas.get_height());
+              auto&  cv = m_core->get_canvas();
+
+              m_operation_rect = gbstd::rectangle(0,0,cv.get_width(),cv.get_height());
             }
         }
       break;
@@ -394,7 +388,7 @@ operator()() noexcept
         {
             if(!m_drawing_is_fixed)
             {
-              m_recorder.rollback(m_canvas);
+              m_core->undo();
             }
 
 
@@ -415,7 +409,7 @@ operator()() noexcept
         {
             if(!m_drawing_is_fixed)
             {
-              m_recorder.rollback(m_canvas);
+              m_core->undo();
             }
 
 

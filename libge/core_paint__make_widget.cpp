@@ -16,7 +16,7 @@ make_operation_widget() noexcept
   auto  undo_btn = new button(new label(u"Undo",colors::black),[](button_event  evt){
       if(evt.is_release())
       {
-        evt->get_userdata<core_paint>()->undo();
+        evt->get_userdata<core_paint>()->m_core->undo();
       }
   });
 

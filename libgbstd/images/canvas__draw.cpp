@@ -598,6 +598,34 @@ copy_canvas(const canvas&  cv, int   x, int  y) const noexcept
 }
 
 
+void
+canvas::
+draw_canvas(const canvas&  cv, int  permill, int  x, int  y) const noexcept
+{
+  int  src_w = cv.get_width() ;
+  int  src_h = cv.get_height();
+
+  int  w = ((src_w<<10)/100*permill)>>10;
+  int  h = ((src_h<<10)/100*permill)>>10;
+
+  int  x_unit = (src_w<<10)/w;
+  int  y_unit = (src_h<<10)/h;
+
+    for(int  yy = 0;  yy < h;  ++yy){
+    for(int  xx = 0;  xx < w;  ++xx){
+      int  xxx = (x_unit*xx)>>10;
+      int  yyy = (y_unit*yy)>>10;
+
+        if((xxx < src_w) &&
+           (yyy < src_h))
+        {
+          auto  pix = *cv.get_pixel_pointer(xxx,yyy);
+
+          draw_dot(pix,x+xx,y+yy);
+        }
+    }}
+}
+
 
 
 

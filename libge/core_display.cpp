@@ -168,6 +168,12 @@ render_grid(const gbstd::canvas&  cv, int  pixel_size) const noexcept
     }
 
 
+    for(int  y = 0;  y < hh;  ++y)
+    {
+      cv.draw_hline(gbstd::colors::gray,0,pixel_size*y,w);
+    }
+
+
   ww /= 8;
   hh /= 8;
 

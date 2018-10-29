@@ -6,8 +6,6 @@ set(SOURCES
   color_handler.cpp
   aniview.cpp
   seamless_pattern_view.cpp
-  arrange_view.cpp
-  parts_table.cpp
   drawing_recorder.cpp
   underlay_stacker.cpp
   core.cpp

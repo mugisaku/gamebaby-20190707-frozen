@@ -102,6 +102,8 @@ context2
 
   gbstd::menu*  m_menu;
 
+  previewer*  m_previewer;
+
   gbstd::frame*   m_menu_frame;
   gbstd::frame*   m_preview_frame;
 
@@ -124,6 +126,10 @@ context2
   gbstd::label*  m_cursor_label;
 
   context2() noexcept;
+
+  gbstd::image  get_result_image() noexcept;
+
+  void  load(const std::vector<uint8_t>&  buf);
 
 };
 

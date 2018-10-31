@@ -37,7 +37,7 @@ main_loop() noexcept
 
     if(f.size())
     {
-//      g_ge_context->load(f);
+      g_ge_context->load(f);
 
       f.clear();
     }
@@ -71,12 +71,12 @@ int
 main(int  argc, char**  argv)
 {
 #ifdef EMSCRIPTEN
-  set_caption("mkbggra - " __DATE__);
+  set_caption("mkbg - " __DATE__);
   set_description("<pre>"
                   "*マウスの左ボタンで、任意色を置き、\n"
                   " 右ボタンで透明色を置く\n"
                   "*画像の編集単位をセルと呼ぶ\n"
-                  "*PNGファイルをドラッグ・アンド・ドロップで読み込む\n"
+                  "*save parts as PNGで作成されたPNGファイルをドラッグ・アンド・ドロップで読み込む\n"
                   "◇tool\n"
                   "  *fill areaは指定地点と同色の領域を新たな色で塗りつぶす\n"
                   "  *selectはundoを除くoperationの有効範囲を変更する\n"
@@ -87,22 +87,12 @@ main(int  argc, char**  argv)
                   "◇operation\n"
                   "  *undoは最後の編集操作を取り消す。セルを移ると編集操作記録はクリアされる\n"
                   "  *copyは現在のセルから指定範囲を複製して保持する\n"
-                  "◇animation\n"
-                  "  *pushはアニメーションの最後尾に現在のセルを付け加える\n"
-                  "  *popはアニメーションの最後尾から、ひとつ取り除く\n"
-                  "◇underlay\n"
-                  "  *pushは下敷きの最上段に現在のセルを乗せる\n"
-                  "  *popは下敷きの最上段から、ひとつ取り除く\n"
-                  "  *show/hideは下敷きの有効/無効を切り替える\n"
-                  "◇save as png\n"
-                  "  *セルテーブルを一枚のPNG形式で出力する\n"
-                  "  *背景色と下敷きは反映されない\n"
-                  "◇save as apng\n"
-                  "  *アニメーションの内容をAPNG形式で出力する\n"
-                  "  *背景色と下敷き（有効なら）が反映される\n"
-                  "◇save as C code\n"
-                  "  *セルテーブルを一枚のPNG形式にし、C言語の配列リテラルとして出力する\n"
-                  "  *詳細はPNGで出力するのと同じ\n"
+                  "◇save parts as PNG\n"
+                  "  *各パーツを一枚のPNG形式で出力する\n"
+                  "◇save result as PNG\n"
+                  "  *previewにあるものをPNG形式で出力する\n"
+                  "◇save result as C code\n"
+                  "  *previewにあるものをPNG形式にし、C言語の配列リテラルとして出力する\n"
                   "</pre>"
   );
 

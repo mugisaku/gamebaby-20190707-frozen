@@ -206,6 +206,30 @@ public:
 
 
 
+class
+previewer: public gbstd::widget
+{
+  gbstd::canvas  m_a_base;
+  gbstd::canvas  m_b_base;
+  gbstd::canvas  m_top_edge;
+  gbstd::canvas  m_bottom_edge;
+  gbstd::canvas  m_left_edge;
+  gbstd::canvas  m_right_edge;
+
+public:
+  previewer(const gbstd::image&  img) noexcept;
+
+  void  process_before_reform() noexcept override;
+
+  void  render_product(gbstd::point  pt, int  flags, const gbstd::canvas&  cv) noexcept;
+
+  void  render(const gbstd::canvas&  cv) noexcept override;
+
+};
+
+
+
+
 class core;
 
 

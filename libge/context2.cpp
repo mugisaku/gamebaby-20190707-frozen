@@ -91,134 +91,6 @@ process(menu_event  evt) noexcept
 
 
 
-class
-preview: public gbstd::widget
-{
-  gbstd::canvas  m_a_base;
-  gbstd::canvas  m_b_base;
-  gbstd::canvas  m_top_edge;
-  gbstd::canvas  m_bottom_edge;
-  gbstd::canvas  m_left_edge;
-  gbstd::canvas  m_right_edge;
-
-  static constexpr int     top = 1;
-  static constexpr int  bottom = 2;
-  static constexpr int    left = 4;
-  static constexpr int   right = 8;
-
-public:
-  preview(const image&  img) noexcept;
-
-  void  process_before_reform() noexcept override;
-
-  void  render_product(point  pt, int  flags, const gbstd::canvas&  cv) noexcept;
-
-  void  render(const gbstd::canvas&  cv) noexcept override;
-
-};
-
-
-preview::
-preview(const image&  img) noexcept:
-m_a_base(     img,g_cell_size*0,0,g_cell_size,g_cell_size),
-m_b_base(     img,g_cell_size*1,0,g_cell_size,g_cell_size),
-m_top_edge(   img,g_cell_size*2,0,g_cell_size,g_cell_size),
-m_bottom_edge(img,g_cell_size*3,0,g_cell_size,g_cell_size),
-m_left_edge(  img,g_cell_size*4,0,g_cell_size,g_cell_size),
-m_right_edge( img,g_cell_size*5,0,g_cell_size,g_cell_size)
-{
-}
-
-
-
-
-void
-preview::
-process_before_reform() noexcept
-{
-  auto&  ctx = *get_userdata<context>();
-
-  set_content_width( g_cell_size*2*5);
-  set_content_height(g_cell_size*2*5);
-}
-
-
-void
-preview::
-render_product(point  pt, int  flags, const gbstd::canvas&  cv) noexcept
-{
-  int  x = g_cell_size*2*pt.x;
-  int  y = g_cell_size*2*pt.y;
-
-  cv.draw_canvas(m_a_base,x            ,y            );
-  cv.draw_canvas(m_b_base,x+g_cell_size,y            );
-  cv.draw_canvas(m_b_base,x            ,y+g_cell_size);
-  cv.draw_canvas(m_a_base,x+g_cell_size,y+g_cell_size);
-
-    if(flags&left)
-    {
-      cv.draw_canvas(m_left_edge,x,y            );
-      cv.draw_canvas(m_left_edge,x,y+g_cell_size);
-    }
-
-
-    if(flags&right)
-    {
-      cv.draw_canvas(m_right_edge,x+g_cell_size,y            );
-      cv.draw_canvas(m_right_edge,x+g_cell_size,y+g_cell_size);
-    }
-
-
-    if(flags&top)
-    {
-      cv.draw_canvas(m_top_edge,x            ,y);
-      cv.draw_canvas(m_top_edge,x+g_cell_size,y);
-    }
-
-
-    if(flags&bottom)
-    {
-      cv.draw_canvas(m_bottom_edge,x            ,y+g_cell_size);
-      cv.draw_canvas(m_bottom_edge,x+g_cell_size,y+g_cell_size);
-    }
-}
-
-
-void
-preview::
-render(const canvas&  cv) noexcept
-{
-  auto&  ctx = *get_userdata<context2>();
-
-  cv.fill(color());
-
-  ctx.m_core->get_display().render_background(cv,2);
-
-  render_product({0,0},top|left,cv);
-  render_product({1,0},top,cv);
-  render_product({2,0},top|right,cv);
-  render_product({0,1},left,cv);
-  render_product({1,1},0,cv);
-  render_product({2,1},right,cv);
-  render_product({0,2},bottom|left,cv);
-  render_product({1,2},bottom,cv);
-  render_product({2,2},bottom|right,cv);
-
-  render_product({3,0},bottom|top,cv);
-  render_product({4,0},left|right,cv);
-
-  render_product({3,1},bottom|top|left,cv);
-  render_product({4,1},bottom|top|right,cv);
-
-  render_product({3,2},bottom|left|right,cv);
-  render_product({4,2},top|left|right,cv);
-
-  render_product({0,3},top|bottom|left|right,cv);
-}
-
-
-
-
 context2::
 context2() noexcept
 {
@@ -254,13 +126,13 @@ context2() noexcept
 
   m_menu_frame = new frame("parts menu",m_menu);
 
-  auto  prev = new preview(m_source_image);
+  m_previewer = new previewer(m_source_image);
 
-  prev->set_userdata(this);
+  m_previewer->set_userdata(this);
 
-  m_preview_frame = new frame("preview",prev);
+  m_preview_frame = new frame("preview",m_previewer);
 
-  std::initializer_list<widget*>  ls = {m_core,m_menu,prev};
+  std::initializer_list<widget*>  ls = {m_core,m_menu,m_previewer};
 
   m_core->set_canvas({m_source_image,0,0,cell_size,cell_size});
   m_core->set_affected_widget_list(ls);
@@ -293,9 +165,11 @@ context2() noexcept
 
       if(evt.is_release())
       {
-        auto  bin = ctx.m_source_image.make_png_stream();
+        auto  img = ctx.get_result_image();
 
-        constexpr const char*  filepath = "noName.png";
+        auto  bin = img.make_png_stream();
+
+        constexpr const char*  filepath = "noName_result.png";
 
 #ifdef __EMSCRIPTEN__
         download(bin.data(),bin.size(),filepath);
@@ -306,12 +180,14 @@ context2() noexcept
   });
 
 
-  m_txt_save_button = new button(new label(u"save result as TXT",colors::black),[](button_event  evt){
+  m_txt_save_button = new button(new label(u"save result as C code",colors::black),[](button_event  evt){
     auto&  ctx = *evt->get_userdata<context2>();
 
       if(evt.is_release())
       {
-        auto  txt = ctx.m_source_image.make_txt_stream();
+        auto  img = ctx.get_result_image();
+
+        auto  txt = img.make_txt_stream();
 
         constexpr const char*  filepath = "noName.txt";
 
@@ -324,7 +200,46 @@ context2() noexcept
   });
 
 
-  set_userdata({m_parts_save_button,m_result_save_button},this);
+  set_userdata({m_parts_save_button,m_result_save_button,m_txt_save_button},this);
+}
+
+
+
+
+gbstd::image
+context2::
+get_result_image() noexcept
+{
+  gbstd::image  img(m_previewer->get_content_width(),m_previewer->get_content_height());
+
+  canvas  cv(img);
+
+  m_previewer->render(cv);
+
+  return std::move(img);
+}
+
+
+void
+context2::
+load(const std::vector<uint8_t>&  buf)
+{
+  image  img;
+
+  img.read_png_stream(buf.data());
+
+    if((img.get_width()  == m_source_image.get_width() ) &&
+       (img.get_height() == m_source_image.get_height()))
+    {
+      canvas  src_cv(img);
+      canvas  dst_cv(m_source_image);
+
+      dst_cv.copy_canvas(src_cv,0,0);
+
+      m_core->request_redraw();
+      m_previewer->request_redraw();
+      m_menu->request_redraw();
+    }
 }
 
 

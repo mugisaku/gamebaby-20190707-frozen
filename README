@@ -33,3 +33,12 @@ make
 
 
 
+リポジトリにはバイナリ・ファイル等は含めてないので、
+必要なファイルが無く、ビルドできないでしょう
+その場合は
+http://funnyboze.sannasubi.com/files/gamebaby.tar.xz
+を使ってください
+
+
+
+

@@ -224,7 +224,6 @@ public:
   };
 
 private:
-  element*  m_bottom =nullptr;
   element*  m_top    =nullptr;
   element*  m_current=nullptr;
 
@@ -244,7 +243,6 @@ public:
   void  seek() noexcept;
 
   element&      get_top() const noexcept{return *m_top;}
-  element&   get_bottom() const noexcept{return *m_bottom;}
   element&  get_current() const noexcept{return *m_current;}
 
   void  render(const gbstd::canvas&  cv) noexcept;

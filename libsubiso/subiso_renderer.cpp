@@ -66,6 +66,8 @@ update() noexcept
         }
 
 
+      els.emplace_back(nullptr,nullptr);
+
       refstack.assign(els.data(),els.size());
     }}
 
@@ -104,6 +106,8 @@ update() noexcept
             }
         }
 
+
+      els.emplace_back(nullptr,nullptr);
 
       refstack.assign(els.data(),els.size());
     }}

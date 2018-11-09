@@ -47,51 +47,75 @@ process_input() noexcept
 
     for(auto&  pt: g_point_buffer)
     {
+      static int  last_x;
+      static int  last_y;
+
       int  x = pt.x/subiso::g_plane_size;
       int  y = pt.y/subiso::g_plane_size;
 
 
       auto&  view = g_current_renderer->get_view();
 
-      auto  el = g_current_renderer->get_refstack(x,y).get_current();
+      auto&  ref = g_current_renderer->get_refstack(x,y).get_current();
 
-        if(g_last_plane != el.get_plane())
+        if((x != last_x) ||
+           (y != last_y))
+        {
+          lock = false;
+
+          last_x = x;
+          last_y = y;
+        }
+
+
+        if(!g_input.test_mouse_left() &&
+           !g_input.test_mouse_right())
         {
           lock = false;
         }
 
 
-      g_last_plane = el.get_plane();
-
-      auto&  box = *el.get_node()->m_box;
+      g_last_plane = ref.get_plane();
 
         if(!lock)
         {
-          auto&  nd = *el.get_node();
+          auto  nd = ref.get_node();
 
-            if(g_input.test_mouse_right())
+            if(nd)
             {
-              box.m_kind = subiso::box::kind::null;
+              auto&  box = *nd->m_box;
 
-              lock = true;
+                if(g_input.test_mouse_right())
+                {
+                  box.m_kind = subiso::box::kind::null;
+
+                  lock = true;
+                }
+
+              else
+                if(g_input.test_mouse_left())
+                {
+                    if(g_last_plane->is_top() && nd->m_up_node)
+                    {
+                      nd->m_up_node->m_box->m_kind = subiso::box::kind::earth;
+                    }
+
+
+                  lock = true;
+                }
             }
 
           else
             if(g_input.test_mouse_left())
             {
-                if(g_last_plane->is_top() && nd.m_up_node)
+              nd = ((&ref)-1)->get_node();
+
+                if(nd)
                 {
-                  nd.m_up_node->m_box->m_kind = subiso::box::kind::earth;
+                  nd->m_box->m_kind = subiso::box::kind::earth;
+
+                  lock = true;
                 }
-
-              else
-                if(nd.m_front_node)
-                {
-                  nd.m_front_node->m_box->m_kind = subiso::box::kind::earth;
-                }
-
-
-              lock = true;
             }
         }
     }
@@ -101,6 +125,8 @@ process_input() noexcept
 void
 update_screen() noexcept
 {
+  g_screen_canvas.fill(color());
+
   g_current_renderer->render(g_screen_canvas);
 
     if(g_last_plane)
@@ -177,8 +203,7 @@ main(int  argc, char**  argv)
                   "\n"
                   "適切な繋ぎ目を持つ画像に、自動で切り替わる\n"
                   "\n"
-                  "マウスの左ボタンを押すと、頂面ならその上位置に、\n"
-                  "                          前面ならその前位置に、ボックスを置く\n"
+                  "マウスの左ボタンを押すと、ボックスを置く\n"
                   "　　　　右ボタンを押すと、ボックスを消す\n"
                   "</pre>");
 
@@ -212,14 +237,10 @@ main(int  argc, char**  argv)
     }}
 
 
-  auto&  box = g_space.get_box(6,g_space.get_y_length()-2,4);
-
   g_front_renderer.assign(subiso::space_view(g_space));
   g_left_renderer.assign(g_front_renderer.get_view().make_revolved());
   g_back_renderer.assign(g_left_renderer.get_view().make_revolved());
   g_right_renderer.assign(g_back_renderer.get_view().make_revolved());
-
-  box.m_kind = subiso::box::kind::water;
 
   sdl::init(g_front_renderer.get_image_width(),g_front_renderer.get_image_height());
 

@@ -57,8 +57,6 @@ assign(const element*  els, int  n) noexcept
                   m_top = new element[n];
       m_current = m_top                 ;
 
-      m_bottom = m_top+n-1;
-
         for(int  i = 0;  i < n;  ++i)
         {
           m_top[i] = els[i];
@@ -78,9 +76,17 @@ seek() noexcept
 {
   m_current = m_top;
 
-    while(m_current->get_node()->m_box->is_null())
+    for(;;)
     {
-        if(m_current == m_bottom)
+      auto  nd = m_current->get_node();
+
+        if(!nd)
+        {
+           break;
+        }
+
+
+        if(!nd->m_box->is_null())
         {
           break;
         }

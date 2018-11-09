@@ -547,14 +547,36 @@ template<bool  COPY>
 void
 transfer(const canvas&  src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
 {
-  auto  src_pixptr_base = src.get_pixel_pointer(    0,    0);
-  auto  dst_pixptr_base = dst.get_pixel_pointer(dst_x,dst_y);
-
   int  src_w = src.get_width();
   int  src_h = src.get_height();
 
   int  dst_w = dst.get_width() ;
   int  dst_h = dst.get_height();
+
+    if((dst_x+src_w) >= dst_w)
+    {
+      src_w = (dst_w-dst_x);
+
+        if(src_w <= 0)
+        {
+          return;
+        }
+    }
+
+
+    if((dst_y+src_h) >= dst_h)
+    {
+      src_h = (dst_h-dst_y);
+
+        if(src_h <= 0)
+        {
+          return;
+        }
+    }
+
+
+  auto  src_pixptr_base = src.get_pixel_pointer(    0,    0);
+  auto  dst_pixptr_base = dst.get_pixel_pointer(dst_x,dst_y);
 
     for(int  y = 0;  y < src_h;  ++y)
     {

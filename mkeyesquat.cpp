@@ -7,6 +7,7 @@
 
 
 using namespace gbpng;
+using namespace gbstd;
 
 
 namespace{
@@ -20,7 +21,7 @@ constexpr uint8_t  bg_l = 0xFF;
 
 
 constexpr int  g_static_line_width = 1;
-constexpr int  g_moving_line_width = 2;
+constexpr int  g_moving_line_width = 1;
 
 
 template<int  N>
@@ -96,19 +97,12 @@ template<int  N>
 void
 draw_rect(direct_color_image&  img, rectangle  rect, uint8_t  l) noexcept
 {
-  draw_hline<N>(img,rect.x         ,rect.y         ,rect.w,l);
-  draw_hline<N>(img,rect.x         ,rect.y+rect.h-1,rect.w,l);
-  draw_vline<N>(img,rect.x         ,rect.y         ,rect.h,l);
-  draw_vline<N>(img,rect.x+rect.w-1,rect.y         ,rect.h,l);
-}
-
-
-void
-fill_rect(direct_color_image&  img, rectangle  rect, uint8_t  l) noexcept
-{
-    for(int  y = 0;  y < rect.h;  ++y)
+    if((rect.w >= 0) && (rect.h >= 0))
     {
-      draw_hline<1>(img,rect.x,rect.y+y,rect.w,l);
+      draw_hline<N>(img,rect.x         ,rect.y         ,rect.w,l);
+      draw_hline<N>(img,rect.x         ,rect.y+rect.h-1,rect.w,l);
+      draw_vline<N>(img,rect.x         ,rect.y         ,rect.h,l);
+      draw_vline<N>(img,rect.x+rect.w-1,rect.y         ,rect.h,l);
     }
 }
 
@@ -220,7 +214,9 @@ make_base_image(const direct_color_image&  src) noexcept
 
     for(int  n = 0;  n < 6;  ++n)
     {
-      draw_rect<g_static_line_width>(img,get_rect(g_screen_w,16<<n),fg_l);
+      auto  rect = get_rect(g_screen_w,16<<n);
+
+      draw_rect<g_static_line_width>(img,rect,fg_l);
     }
 
 
@@ -266,45 +262,18 @@ main(int  argc, char**  argv)
 
   auto  base_img = make_base_image(img);
 
+  constexpr int  den = 200;
   constexpr int  shift_amount = 16;
 
-  constexpr int  depth = g_screen_w*2;
-
-  int   next = depth>>1;
-
-  int  subtract_amount = (8<<shift_amount);
-
-  std::vector<int>  nls;
-
-    for(int  n = (g_screen_w<<shift_amount);  (n>>shift_amount) >= 5;  n -= subtract_amount)
+    for(int  n = den;  n > 5;  --n)
     {
-      int  nn = (n>>shift_amount);
-
-        if(nn <= next)
-        {
-          next            >>= 1;
-          subtract_amount >>= 1;
-        }
-
-
-      nls.emplace_back(nn);
-    }
-
-
-  auto  it_begin = nls.cbegin();
-  auto  it       = nls.cbegin();
-  auto  it_end   = nls.cend();
-
-    while(it != it_end)
-    {
-      auto  n = *it++;
-
 printf("\r%3d processing...",n);
 fflush(stdout);
       img = base_img;
 
-      fill_rect(                     img,get_rect(g_screen_w,n),fg_l);
-      draw_rect<g_moving_line_width>(img,get_rect(g_screen_w,n),fg_l);
+      auto  rect = get_rect(den,n);
+
+      draw_rect<2>(img,rect,fg_l);
 
       ani.append(img);
 
@@ -312,18 +281,15 @@ fflush(stdout);
     }
 
 
-  --it;
-
-    while(it >= it_begin)
+    for(int  n = 5; n < den;  ++n)
     {
-      auto  n = *it--;
-
 printf("\r%3d processing...",n);
 fflush(stdout);
       img = base_img;
 
-      fill_rect(                     img,get_rect(g_screen_w,n),fg_l);
-      draw_rect<g_moving_line_width>(img,get_rect(g_screen_w,n),fg_l);
+      auto  rect = get_rect(den,0);
+
+      draw_rect<2>(img,rect,fg_l);
 
       ani.append(img);
 

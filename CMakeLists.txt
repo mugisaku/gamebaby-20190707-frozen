@@ -11,8 +11,12 @@ endif(CCACHE_FOUND)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
+if(OPT)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
 if(NOT CMAKE_BUILD_TYPE)
-#  set(CMAKE_BUILD_TYPE Release)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
@@ -54,19 +58,21 @@ set(SDL_SOURCES
 add_subdirectory(libgbstd)
 add_subdirectory(libge)
 add_subdirectory(libgbpng)
-#add_subdirectory(libgbsnd)
-#add_subdirectory(libgbscr)
+add_subdirectory(libsubiso)
+
 
 include_directories(./)
 include_directories(/usr/include/SDL2)
 add_executable("test_sdl${EXECUTABLE_EXTENSION}" test_sdl.cpp ${SDL_SOURCES})
+add_executable("rectmania_sdl${EXECUTABLE_EXTENSION}" rectmania_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkfont_sdl${EXECUTABLE_EXTENSION}" mkfont_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkicon_sdl${EXECUTABLE_EXTENSION}" mkicon_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkforest_sdl${EXECUTABLE_EXTENSION}" mkforest_sdl.cpp ${SDL_SOURCES})
 add_executable("mkanigra_sdl${EXECUTABLE_EXTENSION}" mkanigra_sdl.cpp ${SDL_SOURCES})
 add_executable("mkbg_sdl${EXECUTABLE_EXTENSION}" mkbg_sdl.cpp ${SDL_SOURCES})
 add_executable("mkeyesquat${EXECUTABLE_EXTENSION}" mkeyesquat.cpp ${SDL_SOURCES})
-target_link_libraries("test_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
+target_link_libraries("test_sdl${EXECUTABLE_EXTENSION}" "subiso" "gbstd" "gbpng" "z")
+target_link_libraries("rectmania_sdl${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
 target_link_libraries("mkeyesquat${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
 #target_link_libraries("mkicon_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
 target_link_libraries("mkanigra_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")

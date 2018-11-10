@@ -42,6 +42,8 @@ void
 space_view::
 clear() noexcept
 {
+  m_space = nullptr;
+
   m_x_length = 0;
   m_y_length = 0;
   m_z_length = 0;
@@ -106,6 +108,8 @@ assign(const space_view&  rhs) noexcept
 
       size_t  n = rhs.m_x_length*rhs.m_y_length*rhs.m_z_length;
 
+      m_space = rhs.m_space;
+
       auto  src = rhs.m_nodes;
       auto  dst =     m_nodes;
 
@@ -137,6 +141,7 @@ assign(space_view&&  rhs) noexcept
     {
       clear();
 
+      std::swap(m_space   ,rhs.m_space);
       std::swap(m_nodes   ,rhs.m_nodes);
       std::swap(m_x_length,rhs.m_x_length);
       std::swap(m_y_length,rhs.m_y_length);
@@ -153,6 +158,8 @@ space_view::
 assign(space&  sp) noexcept
 {
   resize(sp.get_x_length(),sp.get_y_length(),sp.get_z_length());
+
+  m_space = &sp;
 
     for(int  z = 0;  z < m_z_length;  ++z){
     for(int  y = 0;  y < m_y_length;  ++y){
@@ -181,6 +188,8 @@ make_revolved() const noexcept
   space_view  sv;
 
   sv.resize(m_y_length,m_x_length,m_z_length);
+
+  sv.m_space = m_space;
 
     for(int  z = 0;  z < m_z_length;  ++z){
     for(int  y = 0;  y < m_y_length;  ++y){

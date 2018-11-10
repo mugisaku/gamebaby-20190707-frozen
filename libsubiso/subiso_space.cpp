@@ -8,6 +8,17 @@ namespace subiso{
 
 
 
+void
+space::
+reset_distance_all() noexcept
+{
+    for(auto&  box: m_boxes)
+    {
+      box.set_distance(0xFFFFFFFF);
+    }
+}
+
+
 box*
 space::
 get_box_pointer(int  x, int  y, int  z) noexcept
@@ -38,6 +49,8 @@ resize(int  xl, int  yl, int  zl) noexcept
     for(int  y = 0;  y < yl;  ++y){
     for(int  x = 0;  x < xl;  ++x){
       auto&  box = get_box(x,y,z);
+
+      box.m_space = this;
 
       box.m_index = point3d{x,y,z};
 

@@ -41,6 +41,7 @@ point3d
 };
 
 
+class space;
 class box;
 class plane;
 
@@ -71,6 +72,8 @@ plane
 struct
 box
 {
+  space*  m_space=nullptr;
+
   point3d  m_index;
 
   enum class kind{
@@ -85,7 +88,18 @@ box
   plane  m_left_plane;
   plane  m_right_plane;
 
+  int  m_distance=0;
+
   operator bool() const noexcept{return m_kind != kind::null;}
+
+  space*  get_space(          ) const noexcept{return m_space     ;}
+  void    set_space(space*  sp)       noexcept{       m_space = sp;}
+
+  const point3d&  get_index(           ) const noexcept{return m_index     ;}
+  void            set_index(point3d  pt)       noexcept{       m_index = pt;}
+
+  int   get_distance(      ) const noexcept{return m_distance    ;}
+  void  set_distance(int  v)       noexcept{       m_distance = v;}
 
   bool  is_null() const noexcept{return m_kind == kind::null;}
   bool  is_earth() const noexcept{return m_kind == kind::earth;}
@@ -109,6 +123,8 @@ public:
   int  get_x_length() const noexcept{return m_x_length;}
   int  get_y_length() const noexcept{return m_y_length;}
   int  get_z_length() const noexcept{return m_z_length;}
+
+  void  reset_distance_all() noexcept;
 
         box&  get_box(int  x, int  y, int  z)       noexcept{return m_boxes[(m_x_length*m_y_length*z)+(m_x_length*y)+x];}
   const box&  get_box(int  x, int  y, int  z) const noexcept{return m_boxes[(m_x_length*m_y_length*z)+(m_x_length*y)+x];}
@@ -163,6 +179,8 @@ public:
   };
 
 private:
+  space*  m_space=nullptr;
+
   int  m_x_length=0;
   int  m_y_length=0;
   int  m_z_length=0;

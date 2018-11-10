@@ -137,7 +137,7 @@ public:
     set_content_height(h);
   }
 
-  void  do_on_mouse_act(point  mouse_pos) noexcept
+  void  do_on_mouse_act(point  mouse_pos) noexcept override
   {
     int  x = mouse_pos.x/subiso::g_plane_size;
     int  y = mouse_pos.y/subiso::g_plane_size;
@@ -243,13 +243,14 @@ main(int  argc, char**  argv)
 {
 #ifdef __EMSCRIPTEN__
   set_description("<pre>"
-                  "三次元空間で、頂面と前面だけを持つボックスを、\n"
-                  "ふたつの面を同じ比率で二次元にレンダリングするプログラム\n"
+                  "正方形の頂面と側面を等尺で、\n"
+                  "二次元にレンダリングするプログラム\n"
                   "\n"
                   "適切な繋ぎ目を持つ画像に、自動で切り替わる\n"
                   "\n"
                   "マウスの左ボタンを押すと、ボックスを置く\n"
                   "　　　　右ボタンを押すと、ボックスを消す\n"
+                  "左下のボタンで視点を回転させる\n"
                   "</pre>");
 
   show_github_link();
@@ -291,7 +292,7 @@ main(int  argc, char**  argv)
 
   set_userdata({l_button,r_button},sh);
 
-  g_window.set_root_widget(make_column({buttons,sh}));
+  g_window.set_root_widget(make_column({sh,buttons}));
 
   sdl::init(g_window.get_width(),g_window.get_height());
 

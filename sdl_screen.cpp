@@ -69,6 +69,8 @@ update_screen(const gbstd::canvas&  cv) noexcept
       SDL_RenderCopy(g_renderer,g_texture,nullptr,&g_dst_rect);
 
       SDL_RenderPresent(g_renderer);
+
+      gbstd::g_needed_to_redraw = false;
     }
 }
 
@@ -142,6 +144,9 @@ resize_screen(int  w, int  h) noexcept
       SDL_DestroyTexture(g_texture);
                          g_texture  = SDL_CreateTexture(g_renderer,SDL_PIXELFORMAT_ARGB1555,SDL_TEXTUREACCESS_STREAMING,w,h);
     }
+
+
+  gbstd::g_needed_to_redraw = true;
 }
 
 

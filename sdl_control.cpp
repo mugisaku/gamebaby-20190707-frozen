@@ -196,8 +196,7 @@ update_control() noexcept
   static gbstd::user_input  previous_input                 ;
                             previous_input = gbstd::g_input;
 
-  gbstd::g_time             = SDL_GetTicks();
-  gbstd::g_needed_to_redraw = false;
+  gbstd::g_time = SDL_GetTicks();
 
 #ifdef EMSCRIPTEN
   try_read_dropped_file();

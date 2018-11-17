@@ -12,11 +12,11 @@ void
 plane_reference::
 reset_top_link(const box_view&  bv) noexcept
 {
-  m_tops.m_left_up_box  = bv.get_box();
-  m_tops.m_back_up_box  = bv.get_box();
-  m_tops.m_right_up_box = bv.get_box();
-  m_tops.m_front_box    = bv.get_box();
-  m_tops.m_back_box     = bv.get_box();
+  m_tops.m_left_up_box  = bv.get_left_up_box();
+  m_tops.m_back_up_box  = bv.get_back_up_box();
+  m_tops.m_right_up_box = bv.get_right_up_box();
+  m_tops.m_front_box    = bv.get_front_box();
+  m_tops.m_back_box     = bv.get_back_box();
 }
 
 
@@ -24,11 +24,9 @@ void
 plane_reference::
 reset_front_link(const box_view&  bv) noexcept
 {
-  m_fronts.m_up_box          = bv.get_box();
-  m_fronts.m_down_box        = bv.get_box();
-  m_fronts.m_left_front_box  = bv.get_box();
-  m_fronts.m_right_front_box = bv.get_box();
-  m_fronts.m_front_down_box  = bv.get_box();
+  m_fronts.m_left_front_box  = bv.get_left_front_box();
+  m_fronts.m_right_front_box = bv.get_right_front_box();
+  m_fronts.m_front_down_box  = bv.get_front_down_box();
 }
 
 
@@ -43,7 +41,7 @@ assign(direction  dir, plane*  pl) noexcept
       box_view  bv(*m_plane->m_box,dir);
 
 
-      m_left_box  = bv.get_left_box();
+      m_left_box  = bv.get_left_box() ;
       m_right_box = bv.get_right_box();
 
         if(pl->is_top()){  reset_top_link(bv);}
@@ -58,7 +56,7 @@ assign(direction  dir, plane*  pl) noexcept
 
 
 namespace{
-bool  is_same( const box*  ptr, box::kind  k){return ptr? (ptr->m_kind == k):false;}
+bool  is_not_same( const box*  ptr, box::kind  k){return !ptr || (ptr->m_kind != k);}
 bool  is_valid(const box*  ptr){return ptr? *ptr:false;}
 }
 
@@ -73,20 +71,20 @@ get_flags() const noexcept
 
   int  flags = 0;
 
-    if(m_plane->m_kind == plane::kind::top)
+    if(m_plane->is_top())
     {
-        if(!is_same(m_right_box,k)        || is_valid(m_tops.m_right_up_box)){flags |=  right_flag;}
-        if(!is_same(m_left_box,k)         || is_valid(m_tops.m_left_up_box) ){flags |=   left_flag;}
-        if(!is_same(m_tops.m_back_box,k)  || is_valid(m_tops.m_back_up_box) ){flags |=    top_flag;}
-        if(!is_same(m_tops.m_front_box,k)                                   ){flags |= bottom_flag;}
+        if(is_not_same(m_right_box,k)        || is_valid(m_tops.m_right_up_box)){flags |=  right_flag;}
+        if(is_not_same(m_left_box,k)         || is_valid(m_tops.m_left_up_box) ){flags |=   left_flag;}
+        if(is_not_same(m_tops.m_back_box,k)  || is_valid(m_tops.m_back_up_box) ){flags |=    top_flag;}
+        if(is_not_same(m_tops.m_front_box,k)                                   ){flags |= bottom_flag;}
     }
 
   else
     {
-        if(!is_same(m_right_box,k)         || is_valid(m_fronts.m_right_front_box)){flags |=  right_flag;}
-        if(!is_same(m_left_box,k)          || is_valid(m_fronts.m_left_front_box) ){flags |=   left_flag;}
-        if(!is_same(m_fronts.m_down_box,k) || is_valid(m_fronts.m_front_down_box) ){flags |= bottom_flag;}
-        if(!is_same(m_fronts.m_up_box,k)                                          ){flags |=    top_flag;}
+        if(is_not_same(m_right_box,k)    || is_valid(m_fronts.m_right_front_box)){flags |=  right_flag;}
+        if(is_not_same(m_left_box,k)     || is_valid(m_fronts.m_left_front_box) ){flags |=   left_flag;}
+        if(is_not_same(box.m_down_box,k) || is_valid(m_fronts.m_front_down_box) ){flags |= bottom_flag;}
+        if(is_not_same(box.m_up_box,k)                                          ){flags |=    top_flag;}
     }
 
 

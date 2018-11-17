@@ -29,6 +29,11 @@ box*  box_view::get_right_box() const noexcept{return m(is_front()? 2:is_right()
 box*   box_view::get_back_box() const noexcept{return m(is_front()? 4:is_right()? 6:is_back()? 0:2);}
 box*   box_view::get_left_box() const noexcept{return m(is_front()? 6:is_right()? 0:is_back()? 2:4);}
 
+box*   box_view::get_back_down_box()  const noexcept{return l(is_front()? 4:is_right()? 6:is_back()? 0:2);}
+box*   box_view::get_back_up_box()    const noexcept{return u(is_front()? 4:is_right()? 6:is_back()? 0:2);}
+box*   box_view::get_front_down_box() const noexcept{return l(is_front()? 0:is_right()? 2:is_back()? 4:6);}
+box*   box_view::get_front_up_box()   const noexcept{return u(is_front()? 0:is_right()? 2:is_back()? 4:6);}
+
 box*  box_view::get_left_up_box()         const noexcept{return u(is_front()? 6:is_right()? 0:is_back()? 2:4);}
 box*  box_view::get_left_down_box()       const noexcept{return l(is_front()? 6:is_right()? 0:is_back()? 2:4);}
 box*  box_view::get_left_back_box()       const noexcept{return m(is_front()? 5:is_right()? 7:is_back()? 1:3);}

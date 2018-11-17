@@ -46,12 +46,11 @@ shell: public widget
   {
     auto  pl = ref.get_plane();
 
-/*
       if(pl)
       {
           if(g_input.test_mouse_right())
           {
-            nd->change_box(subiso::box::kind::null);
+            pl->m_box->be_null();
 
             m_lock = true;
           }
@@ -59,9 +58,9 @@ shell: public widget
         else
           if(g_input.test_mouse_left())
           {
-              if(m_last_plane->is_top() && nd->m_up_node)
+              if(m_last_plane->is_top() && ref.get_box()->m_up_box)
               {
-                nd->m_up_node->change_box(subiso::box::kind::earth);
+                ref.get_box()->m_up_box->be_earth();
               }
 
 
@@ -72,16 +71,15 @@ shell: public widget
     else
       if(g_input.test_mouse_left())
       {
-        nd = ((&ref)-1)->get_node();
+        auto  box = ((&ref)-1)->get_box();
 
-          if(nd)
+          if(box)
           {
-            nd->change_box(subiso::box::kind::earth);
+            box->be_earth();
 
             m_lock = true;
           }
       }
-*/
   }
 
 public:
@@ -184,7 +182,9 @@ public:
       {
         string_form  sf;
 
-        auto  i = m_last_plane->m_box->m_index;
+        auto&  box = *m_last_plane->m_box;
+
+        auto  i = box.m_index;
 
   //      auto  flags = g_last_box->m_top_plane.get_flags();
 

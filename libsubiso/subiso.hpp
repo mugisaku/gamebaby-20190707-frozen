@@ -209,7 +209,7 @@ box_view
 public:
   box_view() noexcept{}
   box_view(direction  dir) noexcept: m_dir(dir){}
-  box_view(subiso::box&  box, direction  dir) noexcept{assign(box,dir);}
+  box_view(subiso::box&  box, direction  dir=direction::front) noexcept{assign(box,dir);}
 
   box_view&  assign(subiso::box&  box, direction  dir) noexcept;
 
@@ -238,6 +238,11 @@ public:
   box*   get_right_box() const noexcept;
   box*   get_front_box() const noexcept;
   box*    get_back_box() const noexcept;
+
+  box*   get_back_down_box()  const noexcept;
+  box*   get_back_up_box()    const noexcept;
+  box*   get_front_down_box() const noexcept;
+  box*   get_front_up_box()   const noexcept;
 
   box*   get_left_up_box()         const noexcept;
   box*   get_left_down_box()       const noexcept;
@@ -299,27 +304,28 @@ public:
 };
 
 
+
+
+struct tops{
+  box*  m_left_up_box =nullptr;
+  box*  m_back_up_box =nullptr;
+  box*  m_right_up_box=nullptr;
+  box*  m_front_box   =nullptr;
+  box*  m_back_box    =nullptr;
+};
+
+struct fronts{
+  box*  m_front_down_box =nullptr;
+  box*  m_left_front_box =nullptr;
+  box*  m_right_front_box=nullptr;
+};
+
+
 class
 plane_reference
 {
   box*  m_left_box =nullptr;
   box*  m_right_box=nullptr;
-
-  struct tops{
-    box*  m_left_up_box =nullptr;
-    box*  m_back_up_box =nullptr;
-    box*  m_right_up_box=nullptr;
-    box*  m_front_box   =nullptr;
-    box*  m_back_box    =nullptr;
-  };
-
-  struct fronts{
-    box*  m_up_box         =nullptr;
-    box*  m_down_box       =nullptr;
-    box*  m_front_down_box =nullptr;
-    box*  m_left_front_box =nullptr;
-    box*  m_right_front_box=nullptr;
-  };
 
   union{
     tops      m_tops;
@@ -339,6 +345,12 @@ public:
 
   box*      get_box() const noexcept{return m_plane->m_box;}
   plane*  get_plane() const noexcept{return m_plane       ;}
+
+  box*  get_left_box()  const noexcept{return  m_left_box;}
+  box*  get_right_box() const noexcept{return m_right_box;}
+
+  const tops&    get_tops()   const noexcept{return m_tops;}
+  const fronts&  get_fronts() const noexcept{return m_fronts;}
 
   int  get_flags() const noexcept;
 

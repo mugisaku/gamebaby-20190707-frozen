@@ -81,31 +81,31 @@ resize(int  xl, int  yl, int  zl) noexcept
       box.m_up_box   = get_box_pointer(x,y,z+1);
 
       box.m_middle_boxes[0] = get_box_pointer(x  ,y-1,z);
-      box.m_middle_boxes[1] = get_box_pointer(x-1,y-1,z);
-      box.m_middle_boxes[2] = get_box_pointer(x-1,y  ,z);
-      box.m_middle_boxes[3] = get_box_pointer(x-1,y+1,z);
+      box.m_middle_boxes[1] = get_box_pointer(x+1,y-1,z);
+      box.m_middle_boxes[2] = get_box_pointer(x+1,y  ,z);
+      box.m_middle_boxes[3] = get_box_pointer(x+1,y+1,z);
       box.m_middle_boxes[4] = get_box_pointer(x  ,y+1,z);
-      box.m_middle_boxes[5] = get_box_pointer(x+1,y+1,z);
-      box.m_middle_boxes[6] = get_box_pointer(x+1,y  ,z);
-      box.m_middle_boxes[7] = get_box_pointer(x+1,y-1,z);
+      box.m_middle_boxes[5] = get_box_pointer(x-1,y+1,z);
+      box.m_middle_boxes[6] = get_box_pointer(x-1,y  ,z);
+      box.m_middle_boxes[7] = get_box_pointer(x-1,y-1,z);
 
       box.m_lower_boxes[0] = get_box_pointer(x  ,y-1,z-1);
-      box.m_lower_boxes[1] = get_box_pointer(x-1,y-1,z-1);
-      box.m_lower_boxes[2] = get_box_pointer(x-1,y  ,z-1);
-      box.m_lower_boxes[3] = get_box_pointer(x-1,y+1,z-1);
+      box.m_lower_boxes[1] = get_box_pointer(x+1,y-1,z-1);
+      box.m_lower_boxes[2] = get_box_pointer(x+1,y  ,z-1);
+      box.m_lower_boxes[3] = get_box_pointer(x+1,y+1,z-1);
       box.m_lower_boxes[4] = get_box_pointer(x  ,y+1,z-1);
-      box.m_lower_boxes[5] = get_box_pointer(x+1,y+1,z-1);
-      box.m_lower_boxes[6] = get_box_pointer(x+1,y  ,z-1);
-      box.m_lower_boxes[7] = get_box_pointer(x+1,y-1,z-1);
+      box.m_lower_boxes[5] = get_box_pointer(x-1,y+1,z-1);
+      box.m_lower_boxes[6] = get_box_pointer(x-1,y  ,z-1);
+      box.m_lower_boxes[7] = get_box_pointer(x-1,y-1,z-1);
 
       box.m_upper_boxes[0] = get_box_pointer(x  ,y-1,z+1);
-      box.m_upper_boxes[1] = get_box_pointer(x-1,y-1,z+1);
-      box.m_upper_boxes[2] = get_box_pointer(x-1,y  ,z+1);
-      box.m_upper_boxes[3] = get_box_pointer(x-1,y+1,z+1);
+      box.m_upper_boxes[1] = get_box_pointer(x+1,y-1,z+1);
+      box.m_upper_boxes[2] = get_box_pointer(x+1,y  ,z+1);
+      box.m_upper_boxes[3] = get_box_pointer(x+1,y+1,z+1);
       box.m_upper_boxes[4] = get_box_pointer(x  ,y+1,z+1);
-      box.m_upper_boxes[5] = get_box_pointer(x+1,y+1,z+1);
-      box.m_upper_boxes[6] = get_box_pointer(x+1,y  ,z+1);
-      box.m_upper_boxes[7] = get_box_pointer(x+1,y-1,z+1);
+      box.m_upper_boxes[5] = get_box_pointer(x-1,y+1,z+1);
+      box.m_upper_boxes[6] = get_box_pointer(x-1,y  ,z+1);
+      box.m_upper_boxes[7] = get_box_pointer(x-1,y-1,z+1);
     }}}
 }
 

@@ -160,6 +160,12 @@ public:
   canvas&  assign(const canvas&  cv, int  x, int  y, int  w, int  h) noexcept;
   canvas&  assign(const canvas&  cv, const rectangle&  rect) noexcept{return assign(cv,rect.x,rect.y,rect.w,rect.h);}
 
+  void  move_x(int  v) noexcept{m_pointer +=               v;}
+  void  move_y(int  v) noexcept{m_pointer += m_image_width*v;}
+
+  void  set_width( int  v) noexcept{m_width  = v;}
+  void  set_height(int  v) noexcept{m_height = v;}
+
   int   get_width() const noexcept{return m_width ;}
   int  get_height() const noexcept{return m_height;}
 
@@ -244,6 +250,9 @@ public:
 
   void  copy_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  copy_canvas(const canvas&  cv, point  pt) const noexcept{copy_canvas(cv,pt.x,pt.y);}
+
+  void  blend_canvas(const canvas&  cv, int  x, int  y) const noexcept;
+  void  blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) const noexcept;
 
 };
 

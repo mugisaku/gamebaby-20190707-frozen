@@ -34,12 +34,7 @@ g_window;
 class
 shell: public widget
 {
-  subiso::renderer  m_front;
-  subiso::renderer  m_back;
-  subiso::renderer  m_left;
-  subiso::renderer  m_right;
-
-  subiso::renderer*  m_current=nullptr;
+  subiso::space_handler  m_handler;
 
   point  m_last_point;
 
@@ -47,17 +42,16 @@ shell: public widget
 
   bool  m_lock=false;
 
-  void  process(subiso::plane_reference_stack::element&  ref) noexcept
+  void  process(subiso::plane_reference&  ref) noexcept
   {
-    auto  nd = ref.get_node();
+    auto  pl = ref.get_plane();
 
-      if(nd)
+/*
+      if(pl)
       {
-        auto&  box = *nd->m_box;
-
           if(g_input.test_mouse_right())
           {
-            box.m_kind = subiso::box::kind::null;
+            nd->change_box(subiso::box::kind::null);
 
             m_lock = true;
           }
@@ -67,7 +61,7 @@ shell: public widget
           {
               if(m_last_plane->is_top() && nd->m_up_node)
               {
-                nd->m_up_node->m_box->m_kind = subiso::box::kind::earth;
+                nd->m_up_node->change_box(subiso::box::kind::earth);
               }
 
 
@@ -82,46 +76,52 @@ shell: public widget
 
           if(nd)
           {
-            nd->m_box->m_kind = subiso::box::kind::earth;
+            nd->change_box(subiso::box::kind::earth);
 
             m_lock = true;
           }
       }
+*/
   }
 
 public:
   shell(subiso::space&  sp) noexcept{assign(sp);}
 
-  subiso::renderer*  get_current() const noexcept{return m_current;}
+  subiso::space_handler&  get_handler() noexcept{return m_handler;}
 
   void  revolve_to_left() noexcept
   {
-    m_current = (m_current == &m_front)? &m_left
-               :(m_current == &m_left)?  &m_back
-               :(m_current == &m_back)?  &m_right
-               :&m_front;
+    auto  dir = m_handler.get_direction();
+
+    dir = (dir == subiso::direction::front)? subiso::direction::left
+         :(dir == subiso::direction::left)?  subiso::direction::back
+         :(dir == subiso::direction::back)?  subiso::direction::right
+         :                                   subiso::direction::front;
+
+    m_handler.set_direction(dir);
+
 
     request_redraw();
   }
 
   void  revolve_to_right() noexcept
   {
-    m_current = (m_current == &m_front)? &m_right
-               :(m_current == &m_left)?  &m_front
-               :(m_current == &m_back)?  &m_left
-               :&m_back;
+    auto  dir = m_handler.get_direction();
+
+    dir = (dir == subiso::direction::front)? subiso::direction::left
+         :(dir == subiso::direction::left)?  subiso::direction::back
+         :(dir == subiso::direction::back)?  subiso::direction::right
+         :                                   subiso::direction::front;
+
+    m_handler.set_direction(dir);
+
 
     request_redraw();
   }
 
   shell&  assign(subiso::space&  sp) noexcept
   {
-    m_front.assign(subiso::space_view(sp));
-    m_left.assign(m_front.get_view().make_revolved());
-    m_back.assign( m_left.get_view().make_revolved());
-    m_right.assign(m_back.get_view().make_revolved());
-
-    m_current = &m_front;
+    m_handler.assign(sp);
 
     request_reform();
 
@@ -130,8 +130,11 @@ public:
 
   void  process_before_reform() noexcept override
   {
-    int  w = std::max(m_front.get_image_width() ,m_left.get_image_width() );
-    int  h = std::max(m_front.get_image_height(),m_left.get_image_height());
+    auto&  fb = m_handler.get_stack_map(subiso::direction::front);
+    auto&  lr = m_handler.get_stack_map(subiso::direction::left );
+
+    int  w = std::max(fb.get_image_width() ,lr.get_image_width() );
+    int  h = std::max(fb.get_image_height(),lr.get_image_height());
 
     set_content_width( w);
     set_content_height(h);
@@ -142,9 +145,7 @@ public:
     int  x = mouse_pos.x/subiso::g_plane_size;
     int  y = mouse_pos.y/subiso::g_plane_size;
 
-    auto&  view = m_current->get_view();
-
-    auto&  ref = m_current->get_refstack(x,y).get_current();
+    auto&  ref = m_handler.get_stack_map().get_stack(x,y).get_current();
 
       if((x != m_last_point.x) ||
          (y != m_last_point.y))
@@ -177,7 +178,7 @@ public:
   {
     cv.fill(color());
 
-    m_current->render(cv);
+    m_handler.render(cv);
 
       if(m_last_plane)
       {
@@ -204,6 +205,8 @@ public:
 };
 
 
+shell*
+g_shell;
 
 
 void
@@ -213,6 +216,57 @@ main_loop() noexcept
 
   g_window.do_total_reform_if_necessary();
 
+  static uint32_t  next;
+
+    if(g_time >= next)
+    {
+/*
+      next = g_time+200;
+
+      static int  x=0;
+      static int  flag;
+
+      auto&  v = g_shell->get_current()->get_view();
+
+      auto  dir = v.get_direction();
+
+      auto  tr = (dir == subiso::direction::front)? subiso::space_view::transform_to_front
+                :(dir == subiso::direction::left)?  subiso::space_view::transform_to_left
+                :(dir == subiso::direction::back)?  subiso::space_view::transform_to_back
+                :                                   subiso::space_view::transform_to_right;
+
+      v.get_node(tr(x,5),5).m_box->be_null();
+
+        if(!flag)
+        {
+            if(++x >= 10)
+            {
+              flag = 1;
+            }
+        }
+
+      else
+        {
+            if(!--x)
+            {
+              flag = 0;
+            }
+        }
+
+
+      v.get_node(tr(x,5),5).m_box->be_earth();
+
+      g_shell->request_redraw();
+*/
+    }
+
+
+    if(g_modified_input.test_p() && g_input.test_p())
+    {
+      g_shell->request_redraw();
+    }
+
+  else
     if(g_point_buffer.size())
     {
         for(auto&  pt: g_point_buffer)
@@ -272,14 +326,14 @@ main(int  argc, char**  argv)
 
 
     for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
-    for(int  y = 0;  y < 4;  ++y){
+    for(int  y = 0;  y < 3;  ++y){
       g_space.get_box(4,y,z).m_kind = subiso::box::kind::earth;
     }}
 
 
     for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
     for(int  x = 0;  x < 5;  ++x){
-      g_space.get_box(x,4,z).m_kind = subiso::box::kind::earth;
+      g_space.get_box(x,3,z).m_kind = subiso::box::kind::earth;
     }}
 
 
@@ -288,11 +342,13 @@ main(int  argc, char**  argv)
 
   auto  buttons = make_row({l_button,r_button});
 
-  auto  sh = new shell(g_space);
+  g_shell = new shell(g_space);
 
-  set_userdata({l_button,r_button},sh);
+//  g_shell->get_current()->get_view().get_node(6,6,5).m_box->set_water_source_flag();
 
-  g_window.set_root_widget(make_column({sh,buttons}));
+  set_userdata({l_button,r_button},g_shell);
+
+  g_window.set_root_widget(make_column({g_shell,buttons}));
 
   sdl::init(g_window.get_width(),g_window.get_height());
 

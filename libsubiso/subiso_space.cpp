@@ -19,6 +19,17 @@ reset_distance_all() noexcept
 }
 
 
+void
+space::
+clear_search_flags() noexcept
+{
+    for(auto&  box: m_boxes)
+    {
+      box.m_search_flags = 0;
+    }
+}
+
+
 box*
 space::
 get_box_pointer(int  x, int  y, int  z) noexcept
@@ -56,21 +67,90 @@ resize(int  xl, int  yl, int  zl) noexcept
 
       box.m_kind = box::kind::null;
 
-      box.m_top_plane.m_box   = &box;
-      box.m_back_plane.m_box  = &box;
-      box.m_front_plane.m_box = &box;
-      box.m_left_plane.m_box  = &box;
-      box.m_right_plane.m_box = &box;
+      box.m_top_plane.m_box  = &box;
+      box.m_top_plane.m_kind = plane::kind::top;
 
-      box.m_top_plane.m_kind   = plane::kind::top;
-      box.m_back_plane.m_kind  = plane::kind::side;
-      box.m_front_plane.m_kind = plane::kind::side;
-      box.m_left_plane.m_kind  = plane::kind::side;
-      box.m_right_plane.m_kind = plane::kind::side;
+        for(auto&  pl: box.m_side_planes)
+        {
+          pl.m_box  = &box;
+          pl.m_kind = plane::kind::side;
+        }
+
+
+      box.m_down_box = get_box_pointer(x,y,z-1);
+      box.m_up_box   = get_box_pointer(x,y,z+1);
+
+      box.m_middle_boxes[0] = get_box_pointer(x  ,y-1,z);
+      box.m_middle_boxes[1] = get_box_pointer(x-1,y-1,z);
+      box.m_middle_boxes[2] = get_box_pointer(x-1,y  ,z);
+      box.m_middle_boxes[3] = get_box_pointer(x-1,y+1,z);
+      box.m_middle_boxes[4] = get_box_pointer(x  ,y+1,z);
+      box.m_middle_boxes[5] = get_box_pointer(x+1,y+1,z);
+      box.m_middle_boxes[6] = get_box_pointer(x+1,y  ,z);
+      box.m_middle_boxes[7] = get_box_pointer(x+1,y-1,z);
+
+      box.m_lower_boxes[0] = get_box_pointer(x  ,y-1,z-1);
+      box.m_lower_boxes[1] = get_box_pointer(x-1,y-1,z-1);
+      box.m_lower_boxes[2] = get_box_pointer(x-1,y  ,z-1);
+      box.m_lower_boxes[3] = get_box_pointer(x-1,y+1,z-1);
+      box.m_lower_boxes[4] = get_box_pointer(x  ,y+1,z-1);
+      box.m_lower_boxes[5] = get_box_pointer(x+1,y+1,z-1);
+      box.m_lower_boxes[6] = get_box_pointer(x+1,y  ,z-1);
+      box.m_lower_boxes[7] = get_box_pointer(x+1,y-1,z-1);
+
+      box.m_upper_boxes[0] = get_box_pointer(x  ,y-1,z+1);
+      box.m_upper_boxes[1] = get_box_pointer(x-1,y-1,z+1);
+      box.m_upper_boxes[2] = get_box_pointer(x-1,y  ,z+1);
+      box.m_upper_boxes[3] = get_box_pointer(x-1,y+1,z+1);
+      box.m_upper_boxes[4] = get_box_pointer(x  ,y+1,z+1);
+      box.m_upper_boxes[5] = get_box_pointer(x+1,y+1,z+1);
+      box.m_upper_boxes[6] = get_box_pointer(x+1,y  ,z+1);
+      box.m_upper_boxes[7] = get_box_pointer(x+1,y-1,z+1);
     }}}
 }
 
 
+
+
+
+
+std::vector<box*>
+space::
+search_slice(int  x, int  y, int  z) noexcept
+{
+  std::vector<box*>  buf;
+
+  std::vector<box*>  box_list;
+
+  int  i = 0;
+
+  box_list.emplace_back(&get_box(x,y,z));
+
+    while(i < box_list.size())
+    {
+      auto&  box = *box_list[i++];
+
+      auto&  flag = box.m_search_flags;
+
+        if(!flag)
+        {
+          flag = 1;
+
+            if(box.is_null())
+            {
+              buf.emplace_back(&box);
+
+                if(box.m_middle_boxes[0]){box_list.emplace_back(box.m_middle_boxes[0]);}
+                if(box.m_middle_boxes[2]){box_list.emplace_back(box.m_middle_boxes[2]);}
+                if(box.m_middle_boxes[4]){box_list.emplace_back(box.m_middle_boxes[4]);}
+                if(box.m_middle_boxes[6]){box_list.emplace_back(box.m_middle_boxes[6]);}
+            }
+        }
+    }
+
+
+  return std::move(buf);
+}
 
 
 }

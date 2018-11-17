@@ -8,58 +8,20 @@ namespace subiso{
 
 
 
-bool  is_valid(const space_view::node*  ptr){return ptr? *ptr->m_box:false;}
-
-
-int
-plane_reference_stack::
-element::
-get_flags() const noexcept
-{
-  auto&  box = *m_node->m_box;
-
-  int  flags = 0;
-
-    if(m_plane->m_kind == plane::kind::top)
-    {
-        if(m_node->m_up_node)
-        {
-            if(!is_valid(m_node->m_right_node) || is_valid(m_node->m_up_right_node)){flags |=  right_flag;}
-            if(!is_valid(m_node->m_left_node)  || is_valid(m_node->m_up_left_node) ){flags |=   left_flag;}
-            if(!is_valid(m_node->m_back_node)  || is_valid(m_node->m_up_back_node) ){flags |=    top_flag;}
-            if(!is_valid(m_node->m_front_node)                                     ){flags |= bottom_flag;}
-        }
-    }
-
-  else
-    {
-        if(!is_valid(m_node->m_right_node) || is_valid(m_node->m_front_right_node)){flags |=  right_flag;}
-        if(!is_valid(m_node->m_left_node)  || is_valid(m_node->m_front_left_node) ){flags |=   left_flag;}
-        if(!is_valid(m_node->m_down_node)  || is_valid(m_node->m_down_front_node) ){flags |= bottom_flag;}
-        if(!is_valid(m_node->m_up_node)                                           ){flags |=    top_flag;}
-    }
-
-
-  return flags;
-}
-
-
-
-
 void
 plane_reference_stack::
-assign(const element*  els, int  n) noexcept
+assign(const plane_reference*  refs, int  n) noexcept
 {
   delete[] m_top;
 
     if(n)
     {
-                  m_top = new element[n];
-      m_current = m_top                 ;
+                  m_top = new plane_reference[n];
+      m_current = m_top                         ;
 
         for(int  i = 0;  i < n;  ++i)
         {
-          m_top[i] = els[i];
+          m_top[i] = refs[i];
         }
     }
 
@@ -78,15 +40,15 @@ seek() noexcept
 
     for(;;)
     {
-      auto  nd = m_current->get_node();
+      auto  pl = m_current->get_plane();
 
-        if(!nd)
+        if(!pl)
         {
            break;
         }
 
 
-        if(!nd->m_box->is_null())
+        if(!pl->m_box->is_null() || (pl->m_box->m_water_value >= plane::m_waterization_level))
         {
           break;
         }

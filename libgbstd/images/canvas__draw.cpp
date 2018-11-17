@@ -651,6 +651,156 @@ draw_canvas(const canvas&  cv, int  permill, int  x, int  y) const noexcept
 
 
 
+bool
+correct(canvas&  src_cv,  int   dst_x, int   dst_y, int   dst_w, int   dst_h) noexcept
+{
+  auto  src_w = src_cv.get_width() ;
+  auto  src_h = src_cv.get_height();
+
+    if(dst_x < 0)
+    {
+        if((src_w+dst_x) <= 0)
+        {
+          return false;
+        }
+
+
+      src_cv.move_x(-dst_x);
+
+      src_w += dst_x    ;
+               dst_x = 0;
+    }
+
+
+    if(dst_y < 0)
+    {
+        if((src_h+dst_y) <= 0)
+        {
+          return false;
+        }
+
+
+      src_cv.move_y(-dst_y);
+
+      src_h += dst_y    ;
+               dst_y = 0;
+    }
+
+
+    if((dst_x+src_w) >= dst_w)
+    {
+      src_w = (dst_w-dst_x);
+
+        if(src_w <= 0)
+        {
+          return false;
+        }
+    }
+
+
+    if((dst_y+src_h) >= dst_h)
+    {
+      src_h = (dst_h-dst_y);
+
+        if(src_h <= 0)
+        {
+          return false;
+        }
+    }
+
+
+  src_cv.set_width( src_w);
+  src_cv.set_height(src_h);
+
+  return true;
+}
+
+
+void
+canvas::
+blend_canvas(const canvas&  cv, int  x, int  y) const noexcept
+{
+  canvas  src_cv = cv;
+
+    if(correct(src_cv,x,y,get_width(),get_height()))
+    {
+      auto  src_pixptr_base = cv.get_pixel_pointer(0,0);
+      auto  dst_pixptr_base =    get_pixel_pointer(x,y);
+
+      auto  src_w = src_cv.get_width() ;
+      auto  src_h = src_cv.get_height();
+
+        for(int  yy = 0;  yy < src_h;  ++yy)
+        {
+          auto  dst_pixptr = dst_pixptr_base                     ;
+                             dst_pixptr_base += get_image_width();
+
+          auto  src_pixptr = src_pixptr_base                            ;
+                             src_pixptr_base += src_cv.get_image_width();
+
+            for(int  xx = 0;  xx < src_w;  ++xx)
+            {
+              auto&  pix = *src_pixptr;
+
+                if(pix.color && (pix.z >= dst_pixptr->z))
+                {
+                  *dst_pixptr = pix;
+                }
+
+
+              ++dst_pixptr;
+              ++src_pixptr;
+            }
+        }
+    }
+}
+
+
+void
+canvas::
+blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) const noexcept
+{
+  canvas  src_cv = cv;
+
+    if(correct(src_cv,x,y,get_width(),get_height()))
+    {
+      auto  src_pixptr_base = cv.get_pixel_pointer(0,0);
+      auto  dst_pixptr_base =    get_pixel_pointer(x,y);
+
+      auto  src_w = src_cv.get_width() ;
+      auto  src_h = src_cv.get_height();
+
+        for(int  yy = 0;  yy < src_h;  ++yy)
+        {
+          auto  dst_pixptr = dst_pixptr_base                     ;
+                             dst_pixptr_base += get_image_width();
+
+          auto  src_pixptr = src_pixptr_base                            ;
+                             src_pixptr_base += src_cv.get_image_width();
+
+            for(int  xx = 0;  xx < src_w;  ++xx)
+            {
+              auto&  pix = *src_pixptr;
+
+                if(pix.color && (pix.z >= z_base))
+                {
+                  *dst_pixptr = pix;
+                }
+
+
+              ++dst_pixptr;
+              ++src_pixptr;
+            }
+
+
+          z_base += z_add_amount;
+        }
+    }
+}
+
+
+
+
 }
 
 

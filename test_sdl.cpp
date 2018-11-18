@@ -38,7 +38,8 @@ shell: public widget
 
   point  m_last_point;
 
-  subiso::plane*  m_last_plane=nullptr;
+  const subiso::plane_reference_stack*  m_last_stack=nullptr;
+  subiso::plane*                        m_last_plane=nullptr;
 
   bool  m_lock=false;
 
@@ -143,7 +144,11 @@ public:
     int  x = mouse_pos.x/subiso::g_plane_size;
     int  y = mouse_pos.y/subiso::g_plane_size;
 
-    auto&  ref = m_handler.get_stack_map().get_stack(x,y).get_current();
+    auto&  refstack = m_handler.get_stack_map().get_stack(x,y);
+
+    m_last_stack = &refstack;
+
+    auto&  ref = refstack.get_current();
 
       if((x != m_last_point.x) ||
          (y != m_last_point.y))
@@ -193,6 +198,11 @@ public:
         cv.draw_string(chcolor,sf("X:%3d",i.x),0, 0);
         cv.draw_string(chcolor,sf("Y:%3d",i.y),0,16);
         cv.draw_string(chcolor,sf("Z:%3d",i.z),0,32);
+
+          if(m_last_stack)
+          {
+//            cv.draw_string(chcolor,sf("%3d",m_last_stack->get_depth()),0,48);
+          }
   /*
         g_screen_canvas.draw_string(chcolor,sf("%s%s%s%s",flags&top_flag? "T":"-",
                                                           flags&bottom_flag? "B":"-",
@@ -311,7 +321,7 @@ main(int  argc, char**  argv)
 #endif
 
 
-  g_space.resize(12,12,8);
+  g_space.resize(5,5,5);
 
     for(int  y = 0;  y < g_space.get_y_length();  ++y){
     for(int  x = 0;  x < g_space.get_x_length();  ++x){
@@ -326,14 +336,14 @@ main(int  argc, char**  argv)
 
 
     for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
-    for(int  y = 0;  y < 3;  ++y){
-      g_space.get_box(4,y,z).m_kind = subiso::box::kind::earth;
+    for(int  y = 0;  y < 2;  ++y){
+      g_space.get_box(1,y,z).m_kind = subiso::box::kind::earth;
     }}
 
 
     for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
-    for(int  x = 0;  x < 5;  ++x){
-      g_space.get_box(x,3,z).m_kind = subiso::box::kind::earth;
+    for(int  x = 0;  x < 2;  ++x){
+      g_space.get_box(x,1,z).m_kind = subiso::box::kind::earth;
     }}
 
 
@@ -343,8 +353,6 @@ main(int  argc, char**  argv)
   auto  buttons = make_row({l_button,r_button});
 
   g_shell = new shell(g_space);
-
-//  g_shell->get_current()->get_view().get_node(6,6,5).m_box->set_water_source_flag();
 
   set_userdata({l_button,r_button},g_shell);
 

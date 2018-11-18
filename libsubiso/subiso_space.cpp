@@ -153,6 +153,38 @@ search_slice(int  x, int  y, int  z) noexcept
 }
 
 
+void
+space::
+print() const noexcept
+{
+  printf("{\n");
+
+    for(int  z = m_z_length-1;  z >= 0;  --z)
+    {
+      printf("{\n");
+
+        for(int  y = m_y_length-1;  y >= 0;  --y)
+        {
+            for(int  x = 0;  x < m_x_length;  ++x)
+            {
+              auto&  box = get_box(x,y,z);
+
+              box.m_index.print();
+            }
+
+
+          printf("\n");
+        }
+
+
+      printf("}\n");
+    }
+
+
+  printf("}\n");
+}
+
+
 }
 
 

@@ -131,17 +131,32 @@ void
 stack_map::
 render(const gbstd::canvas&  cv) noexcept
 {
-  int  w = m_width ;
-  int  h = m_height;
-
-    for(int  y = 0;  y < h;  ++y){
-    for(int  x = 0;  x < w;  ++x){
+    for(int  y = 0;  y < m_height;  ++y){
+    for(int  x = 0;  x < m_width ;  ++x){
       auto&  stack = get_stack(x,y);
 
       gbstd::canvas  cocv(cv,g_plane_size*x,g_plane_size*y,g_plane_size,g_plane_size);
 
       stack.render(cocv);
     }}
+}
+
+
+void
+stack_map::
+print() const noexcept
+{
+  printf("{\n");
+
+    for(int  y = 0;  y < m_height;  ++y){
+    for(int  x = 0;  x < m_width ;  ++x){
+      auto&  stack = get_stack(x,y);
+
+      printf("%3d,",stack.get_length());
+    }printf("\n");}
+
+
+  printf("}\n");
 }
 
 

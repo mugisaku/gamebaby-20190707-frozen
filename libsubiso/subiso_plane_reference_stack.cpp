@@ -14,6 +14,8 @@ assign(const plane_reference*  refs, int  n) noexcept
 {
   delete[] m_top;
 
+  m_length = n;
+
     if(n)
     {
                   m_top = new plane_reference[n];
@@ -44,11 +46,11 @@ seek() noexcept
 
         if(!pl)
         {
-           break;
+          break;
         }
 
 
-        if(!pl->m_box->is_null() || (pl->m_box->m_water_value >= plane::m_waterization_level))
+        if(!pl->m_box->is_null())
         {
           break;
         }

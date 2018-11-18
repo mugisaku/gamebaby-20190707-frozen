@@ -189,6 +189,8 @@ public:
 
   void  resize(int  xl, int  yl, int  zl) noexcept;
 
+  void  print() const noexcept;
+
 };
 
 
@@ -298,8 +300,10 @@ public:
   int  get_x_length() const noexcept{return m_x_length;}
   int  get_y_length() const noexcept{return m_y_length;}
   int  get_z_length() const noexcept{return m_z_length;}
-\
+
   box&  get_box(int  x, int  y, int  z) const noexcept;
+
+  void  print() const noexcept;
 
 };
 
@@ -363,6 +367,8 @@ plane_reference_stack
   plane_reference*  m_top    =nullptr;
   plane_reference*  m_current=nullptr;
 
+  int  m_length=0;
+
 public:
   plane_reference_stack() noexcept{}
   plane_reference_stack(const plane_reference_stack&   rhs) noexcept=delete;
@@ -377,6 +383,8 @@ public:
   void  assign(const plane_reference*  refs, int  n) noexcept;
 
   void  seek() noexcept;
+
+  int  get_length() const noexcept{return m_length;}
 
   plane_reference&      get_top() const noexcept{return *m_top;}
   plane_reference&  get_current() const noexcept{return *m_current;}
@@ -425,6 +433,8 @@ public:
   const plane_reference_stack&  get_stack(int  x, int  y) const noexcept{return m_table[(m_width*y)+x];}
 
   void  render(const gbstd::canvas&  cv) noexcept;
+
+  void  print() const noexcept;
 
 };
 

@@ -22,7 +22,7 @@ g_image(g_binary);
 
 
 actor::
-actor() noexcept: m_position(0,0,12)
+actor() noexcept: m_position(0,0,24)
 {
 }
 

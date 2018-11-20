@@ -32,15 +32,15 @@ reset_front_link(const box_view&  bv) noexcept
 
 plane_reference&
 plane_reference::
-assign(direction  dir, plane*  pl, int  z_base) noexcept
+assign(direction  dir, plane*  pl) noexcept
 {
-  m_image_z_base = z_base;
-
   m_plane = pl;
 
     if(pl)
     {
-      box_view  bv(*m_plane->m_box,dir);
+      auto&  box = *m_plane->m_box;
+
+      box_view  bv(box,dir);
 
 
       m_left_box  = bv.get_left_box() ;
@@ -48,6 +48,9 @@ assign(direction  dir, plane*  pl, int  z_base) noexcept
 
         if(pl->is_top()){  reset_top_link(bv);}
       else              {reset_front_link(bv);}
+
+
+      m_image_z_base = g_plane_size*(1+box.m_index.z);
     }
 
 

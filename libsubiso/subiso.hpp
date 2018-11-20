@@ -402,9 +402,9 @@ plane_reference
 
 public:
   plane_reference() noexcept{}
-  plane_reference(direction  dir, plane*  pl, int  z_base) noexcept{assign(dir,pl,z_base);}
+  plane_reference(direction  dir, plane*  pl) noexcept{assign(dir,pl);}
 
-  plane_reference&  assign(direction  dir, plane*  pl, int  z_base) noexcept;
+  plane_reference&  assign(direction  dir, plane*  pl) noexcept;
 
   box*      get_box() const noexcept{return m_plane->m_box;}
   plane*  get_plane() const noexcept{return m_plane       ;}
@@ -417,7 +417,8 @@ public:
 
   int  get_flags() const noexcept;
 
-  int  get_image_z_base() const noexcept{return m_image_z_base;}
+  void  set_image_z_base(int  v)       noexcept{       m_image_z_base = v;}
+  int   get_image_z_base(      ) const noexcept{return m_image_z_base    ;}
 
 };
 

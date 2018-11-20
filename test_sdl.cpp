@@ -88,36 +88,6 @@ public:
 
   subiso::space_handler&  get_handler() noexcept{return m_handler;}
 
-  void  revolve_to_left() noexcept
-  {
-    auto  dir = m_handler.get_direction();
-
-    dir = (dir == subiso::direction::front)? subiso::direction::left
-         :(dir == subiso::direction::left)?  subiso::direction::back
-         :(dir == subiso::direction::back)?  subiso::direction::right
-         :                                   subiso::direction::front;
-
-    m_handler.set_direction(dir);
-
-
-    request_redraw();
-  }
-
-  void  revolve_to_right() noexcept
-  {
-    auto  dir = m_handler.get_direction();
-
-    dir = (dir == subiso::direction::front)? subiso::direction::left
-         :(dir == subiso::direction::left)?  subiso::direction::back
-         :(dir == subiso::direction::back)?  subiso::direction::right
-         :                                   subiso::direction::front;
-
-    m_handler.set_direction(dir);
-
-
-    request_redraw();
-  }
-
   shell&  assign(subiso::space&  sp) noexcept
   {
     m_handler.assign(sp);
@@ -135,7 +105,7 @@ public:
     int  w = std::max(fb.get_image_width() ,lr.get_image_width() );
     int  h = std::max(fb.get_image_height(),lr.get_image_height());
 
-    set_content_width( w);
+    set_content_width( w*4);
     set_content_height(h);
   }
 
@@ -181,7 +151,7 @@ public:
   {
     cv.fill(color());
 
-    m_handler.render(cv);
+    m_handler.render2(cv);
 
       if(m_last_plane)
       {
@@ -195,13 +165,9 @@ public:
 
         static character_color  chcolor(colors::black,colors::white);
 
-        cv.draw_string(chcolor,sf("X:%3d",i.x),0, 0);
-        cv.draw_string(chcolor,sf("Y:%3d",i.y),0,16);
-        cv.draw_string(chcolor,sf("Z:%3d",i.z),0,32);
-
-          if(m_last_stack)
+          if(0 && m_last_stack)
           {
-//            cv.draw_string(chcolor,sf("%3d",m_last_stack->get_depth()),0,48);
+            cv.draw_string(chcolor,sf("%3d",m_last_stack->get_current().get_image_z_base()),0,0);
           }
   /*
         g_screen_canvas.draw_string(chcolor,sf("%s%s%s%s",flags&top_flag? "T":"-",
@@ -210,6 +176,13 @@ public:
                                                           flags&right_flag? "R":"-"),0,48);
   */
       }
+  }
+
+  void  step() noexcept
+  {
+    m_handler.step();
+
+    request_redraw();
   }
 
 };
@@ -224,65 +197,22 @@ main_loop() noexcept
 {
   sdl::update_control();
 
+  g_shell->step();
+
   g_window.do_total_reform_if_necessary();
 
-  static uint32_t  next;
-
-    if(g_time >= next)
-    {
-/*
-      next = g_time+200;
-
-      static int  x=0;
-      static int  flag;
-
-      auto&  v = g_shell->get_current()->get_view();
-
-      auto  dir = v.get_direction();
-
-      auto  tr = (dir == subiso::direction::front)? subiso::space_view::transform_to_front
-                :(dir == subiso::direction::left)?  subiso::space_view::transform_to_left
-                :(dir == subiso::direction::back)?  subiso::space_view::transform_to_back
-                :                                   subiso::space_view::transform_to_right;
-
-      v.get_node(tr(x,5),5).m_box->be_null();
-
-        if(!flag)
-        {
-            if(++x >= 10)
-            {
-              flag = 1;
-            }
-        }
-
-      else
-        {
-            if(!--x)
-            {
-              flag = 0;
-            }
-        }
-
-
-      v.get_node(tr(x,5),5).m_box->be_earth();
-
-      g_shell->request_redraw();
-*/
-    }
-
-
-    if(g_modified_input.test_p() && g_input.test_p())
-    {
-      g_shell->request_redraw();
-    }
-
-  else
     if(g_point_buffer.size())
     {
         for(auto&  pt: g_point_buffer)
         {
           g_window.process_user_input(pt);
         }
+    }
+
+
+    if(g_shell->get_handler().test_dirty_flag())
+    {
+      g_shell->request_redraw();
     }
 
 
@@ -329,34 +259,12 @@ main(int  argc, char**  argv)
     }}
 
 
-    for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
-    for(int  x = 0;  x < g_space.get_x_length();  ++x){
-      g_space.get_box(x,g_space.get_y_length()-1,z).m_kind = subiso::box::kind::earth;
-    }}
-
-
-    for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
-    for(int  y = 0;  y < 2;  ++y){
-      g_space.get_box(1,y,z).m_kind = subiso::box::kind::earth;
-    }}
-
-
-    for(int  z = 0;  z < g_space.get_z_length()-1;  ++z){
-    for(int  x = 0;  x < 2;  ++x){
-      g_space.get_box(x,1,z).m_kind = subiso::box::kind::earth;
-    }}
-
-
-  auto  l_button = new button(new iconshow({&icons::left }),[](button_event  evt){if(evt.is_press()){evt->get_userdata<shell>()->revolve_to_left() ;}});
-  auto  r_button = new button(new iconshow({&icons::right}),[](button_event  evt){if(evt.is_press()){evt->get_userdata<shell>()->revolve_to_right();}});
-
-  auto  buttons = make_row({l_button,r_button});
+  g_space.get_box(1,0,1).m_kind = subiso::box::kind::earth;
+  g_space.get_box(1,1,1).m_kind = subiso::box::kind::earth;
 
   g_shell = new shell(g_space);
 
-  set_userdata({l_button,r_button},g_shell);
-
-  g_window.set_root_widget(make_column({g_shell,buttons}));
+  g_window.set_root_widget(g_shell);
 
   sdl::init(g_window.get_width(),g_window.get_height());
 

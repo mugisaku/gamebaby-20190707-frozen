@@ -543,116 +543,8 @@ draw_sprite(const sprite&  spr, int  x, int  y) const noexcept
 
 
 namespace{
-template<bool  COPY>
-void
-transfer(const canvas&  src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
-{
-  int  src_w = src.get_width();
-  int  src_h = src.get_height();
-
-  int  dst_w = dst.get_width() ;
-  int  dst_h = dst.get_height();
-
-    if((dst_x+src_w) >= dst_w)
-    {
-      src_w = (dst_w-dst_x);
-
-        if(src_w <= 0)
-        {
-          return;
-        }
-    }
-
-
-    if((dst_y+src_h) >= dst_h)
-    {
-      src_h = (dst_h-dst_y);
-
-        if(src_h <= 0)
-        {
-          return;
-        }
-    }
-
-
-  auto  src_pixptr_base = src.get_pixel_pointer(    0,    0);
-  auto  dst_pixptr_base = dst.get_pixel_pointer(dst_x,dst_y);
-
-    for(int  y = 0;  y < src_h;  ++y)
-    {
-      auto  dst_pixptr = dst_pixptr_base                         ;
-                         dst_pixptr_base += dst.get_image_width();
-
-      auto  src_pixptr = src_pixptr_base                         ;
-                         src_pixptr_base += src.get_image_width();
-
-        for(int  x = 0;  x < src_w;  ++x)
-        {
-          auto&  pix = *src_pixptr;
-
-            if(COPY || pix.color)
-            {
-              *dst_pixptr = pix;
-            }
-
-
-          ++dst_pixptr;
-          ++src_pixptr;
-        }
-    }
-}
-}
-
-
-void
-canvas::
-draw_canvas(const canvas&  cv, int   x, int  y) const noexcept
-{
-  transfer<false>(cv,*this,x,y);
-}
-
-
-void
-canvas::
-copy_canvas(const canvas&  cv, int   x, int  y) const noexcept
-{
-  transfer<true>(cv,*this,x,y);
-}
-
-
-void
-canvas::
-draw_canvas(const canvas&  cv, int  permill, int  x, int  y) const noexcept
-{
-  int  src_w = cv.get_width() ;
-  int  src_h = cv.get_height();
-
-  int  w = ((src_w<<10)/100*permill)>>10;
-  int  h = ((src_h<<10)/100*permill)>>10;
-
-  int  x_unit = (src_w<<10)/w;
-  int  y_unit = (src_h<<10)/h;
-
-    for(int  yy = 0;  yy < h;  ++yy){
-    for(int  xx = 0;  xx < w;  ++xx){
-      int  xxx = (x_unit*xx)>>10;
-      int  yyy = (y_unit*yy)>>10;
-
-        if((xxx < src_w) &&
-           (yyy < src_h))
-        {
-          auto  pix = *cv.get_pixel_pointer(xxx,yyy);
-
-          draw_dot(pix,x+xx,y+yy);
-        }
-    }}
-}
-
-
-
-
 bool
-correct(canvas&  src_cv,  int   dst_x, int   dst_y, int   dst_w, int   dst_h) noexcept
+correct(canvas&  src_cv, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexcept
 {
   auto  src_w = src_cv.get_width() ;
   auto  src_h = src_cv.get_height();
@@ -716,6 +608,94 @@ correct(canvas&  src_cv,  int   dst_x, int   dst_y, int   dst_w, int   dst_h) no
 }
 
 
+template<bool  COPY>
+void
+transfer(const canvas&  orig_src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
+{
+  canvas  src = orig_src;
+
+    if(correct(src,dst_x,dst_y,dst.get_width(),dst.get_height()))
+    {
+      auto  src_pixptr_base = src.get_pixel_pointer(    0,    0);
+      auto  dst_pixptr_base = dst.get_pixel_pointer(dst_x,dst_y);
+
+      auto  src_w = src.get_width() ;
+      auto  src_h = src.get_height();
+
+        for(int  y = 0;  y < src_h;  ++y)
+        {
+          auto  dst_pixptr = dst_pixptr_base                         ;
+                             dst_pixptr_base += dst.get_image_width();
+
+          auto  src_pixptr = src_pixptr_base                         ;
+                             src_pixptr_base += src.get_image_width();
+
+            for(int  x = 0;  x < src_w;  ++x)
+            {
+              auto&  pix = *src_pixptr;
+
+                if(COPY || pix.color)
+                {
+                  *dst_pixptr = pix;
+                }
+
+
+              ++dst_pixptr;
+              ++src_pixptr;
+            }
+        }
+    }
+}
+}
+
+
+void
+canvas::
+draw_canvas(const canvas&  cv, int   x, int  y) const noexcept
+{
+  transfer<false>(cv,*this,x,y);
+}
+
+
+void
+canvas::
+copy_canvas(const canvas&  cv, int   x, int  y) const noexcept
+{
+  transfer<true>(cv,*this,x,y);
+}
+
+
+void
+canvas::
+draw_canvas(const canvas&  cv, int  permill, int  x, int  y) const noexcept
+{
+  int  src_w = cv.get_width() ;
+  int  src_h = cv.get_height();
+
+  int  w = ((src_w<<10)/100*permill)>>10;
+  int  h = ((src_h<<10)/100*permill)>>10;
+
+  int  x_unit = (src_w<<10)/w;
+  int  y_unit = (src_h<<10)/h;
+
+    for(int  yy = 0;  yy < h;  ++yy){
+    for(int  xx = 0;  xx < w;  ++xx){
+      int  xxx = (x_unit*xx)>>10;
+      int  yyy = (y_unit*yy)>>10;
+
+        if((xxx < src_w) &&
+           (yyy < src_h))
+        {
+          auto  pix = *cv.get_pixel_pointer(xxx,yyy);
+
+          draw_dot(pix,x+xx,y+yy);
+        }
+    }}
+}
+
+
+
+
 void
 canvas::
 blend_canvas(const canvas&  cv, int  x, int  y) const noexcept
@@ -742,7 +722,7 @@ blend_canvas(const canvas&  cv, int  x, int  y) const noexcept
             {
               auto&  pix = *src_pixptr;
 
-                if(pix.color && (pix.z >= dst_pixptr->z))
+                if(pix.color && (dst_pixptr->z <= pix.z))
                 {
                   *dst_pixptr = pix;
                 }
@@ -782,8 +762,10 @@ blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) 
             {
               auto&  pix = *src_pixptr;
 
-                if(pix.color && (pix.z >= z_base))
+                if(pix.color && (dst_pixptr->z <= z_base))
                 {
+                  pix.z = z_base;
+
                   *dst_pixptr = pix;
                 }
 

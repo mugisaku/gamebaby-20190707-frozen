@@ -32,8 +32,10 @@ reset_front_link(const box_view&  bv) noexcept
 
 plane_reference&
 plane_reference::
-assign(direction  dir, plane*  pl) noexcept
+assign(direction  dir, plane*  pl, int  z_base) noexcept
 {
+  m_image_z_base = z_base;
+
   m_plane = pl;
 
     if(pl)

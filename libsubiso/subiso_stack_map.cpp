@@ -20,6 +20,9 @@ clear() noexcept
 
   m_image_width  = 0;
   m_image_height = 0;
+
+  m_upper_image_height = 0;
+  m_lower_image_height = 0;
 }
 
 
@@ -34,8 +37,11 @@ assign(space_view  sv) noexcept
   m_width  = (xl   );
   m_height = (yl+zl);
 
-  m_image_width  = (g_plane_size*m_width );
-  m_image_height = (g_plane_size*m_height);
+  m_upper_image_height = (g_plane_size*yl);
+  m_lower_image_height = (g_plane_size*zl);
+
+  m_image_width  = (g_plane_size*m_width);
+  m_image_height = (m_upper_image_height+m_lower_image_height);
 
   delete[] m_table                                              ;
            m_table = new plane_reference_stack[m_width*m_height];
@@ -43,9 +49,9 @@ assign(space_view  sv) noexcept
 
   std::vector<plane_reference>  refs;
 
-  auto  dir = sv.get_direction();
+  m_dir = sv.get_direction();
 
-  box_view  bv(dir);
+  box_view  bv(m_dir);
 
     for(int  y = 0;  y < yl;  ++y){
     for(int  x = 0;  x < xl;  ++x){
@@ -53,13 +59,15 @@ assign(space_view  sv) noexcept
 
       auto  box = &sv.get_box(x,yl-1-y,zl-1);
 
+      int  img_z = g_plane_size*zl;
+
         while(box)
         {
           bv.set_box(*box);
 
           auto  pl = &bv.get_top_plane();
 
-          refs.emplace_back(dir,pl);
+          refs.emplace_back(m_dir,pl,img_z);
 
           box = bv.get_back_box();
 
@@ -73,13 +81,15 @@ assign(space_view  sv) noexcept
 
           pl = &bv.get_front_plane();
 
-          refs.emplace_back(dir,pl);
+          refs.emplace_back(m_dir,pl,img_z);
+
+          img_z -= g_plane_size;
 
           box = bv.get_down_box();
         }
 
 
-      refs.emplace_back(dir,nullptr);
+      refs.emplace_back(m_dir,nullptr,0);
 
       get_stack(x,y).assign(refs.data(),refs.size());
     }}
@@ -91,13 +101,17 @@ assign(space_view  sv) noexcept
 
       auto  box = &sv.get_box(x,0,zl-1-z);
 
+      int  img_z = g_plane_size*(zl/*-1-z*/);
+
         while(box)
         {
           bv.set_box(*box);
 
           auto  pl = &bv.get_front_plane();
 
-          refs.emplace_back(dir,pl);
+          refs.emplace_back(m_dir,pl,img_z);
+
+          img_z -= g_plane_size;
 
           box = bv.get_down_box();
 
@@ -111,13 +125,13 @@ assign(space_view  sv) noexcept
 
           pl = &bv.get_top_plane();
 
-          refs.emplace_back(dir,pl);
+          refs.emplace_back(m_dir,pl,img_z);
 
           box = bv.get_back_box();
         }
 
 
-      refs.emplace_back(dir,nullptr);
+      refs.emplace_back(m_dir,nullptr,0);
 
       get_stack(x,yl+z).assign(refs.data(),refs.size());
     }}

@@ -61,7 +61,7 @@ m_waterization_level = 16;
 
 void
 plane::
-render(int  flags, const gbstd::canvas&  cv) const noexcept
+render(int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept
 {
   gbstd::point  pt(1,1);
 
@@ -93,6 +93,8 @@ render(int  flags, const gbstd::canvas&  cv) const noexcept
 
   const gbstd::image*  img = &g_green_image;
 
+  int  z_add_amount = 0;
+
     if(m_kind == kind::top)
     {
         switch(m_box->m_kind)
@@ -104,6 +106,8 @@ render(int  flags, const gbstd::canvas&  cv) const noexcept
 
   else
     {
+      z_add_amount = -1;
+
         switch(m_box->m_kind)
         {
       case(box::kind::null): if(m_box->m_water_value >= m_waterization_level){img = &g_waterwall_image;}break;
@@ -114,7 +118,7 @@ render(int  flags, const gbstd::canvas&  cv) const noexcept
 
   bgcv = gbstd::canvas(*img,g_plane_size*pt.x,g_plane_size*pt.y,g_plane_size,g_plane_size);
 
-  cv.draw_canvas(bgcv,0,0);
+  cv.blend_canvas(bgcv,0,0,z_base,z_add_amount);
 }
 
 

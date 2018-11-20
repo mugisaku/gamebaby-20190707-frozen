@@ -73,7 +73,7 @@ render(const gbstd::canvas&  cv) noexcept
 
     if(pl)
     {
-      pl->render(el.get_flags(),cv);
+      pl->render(el.get_flags(),cv,el.get_image_z_base());
     }
 }
 

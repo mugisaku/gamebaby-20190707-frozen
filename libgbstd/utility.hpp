@@ -139,6 +139,51 @@ public:
 
 
 class
+incremental
+{
+  int  m_value=0;
+  int  m_add_amount=1;
+
+public:
+  incremental() noexcept{}
+  incremental(int  v, int  add=1) noexcept: m_value(v), m_add_amount(add){}
+
+  void  reset(int  v) noexcept{m_value = v;}
+
+  int  operator ++() noexcept
+  {
+    m_value += m_add_amount;
+
+    return m_value;
+  }
+
+  int  operator ++(int) noexcept
+  {
+    int  v = m_value                ;
+             m_value += m_add_amount;
+
+    return v;
+  }
+
+  int  operator --() noexcept
+  {
+    m_value -= m_add_amount;
+
+    return m_value;
+  }
+
+  int  operator --(int) noexcept
+  {
+    int  v = m_value                ;
+             m_value -= m_add_amount;
+
+    return v;
+  }
+
+};
+
+
+class
 string_form
 {
   char  m_buffer[512] = {0};

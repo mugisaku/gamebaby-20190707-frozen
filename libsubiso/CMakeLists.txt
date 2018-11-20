@@ -9,6 +9,7 @@ set(SOURCES
   subiso_space.cpp
   subiso_space_view.cpp
   subiso_space_handler.cpp
+  subiso_actor.cpp
 )
 
 

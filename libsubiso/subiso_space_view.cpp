@@ -80,7 +80,7 @@ print() const noexcept
             {
               auto&  box = get_box(x,y,z);
 
-              box.m_index.print();
+              box.get_index().print();
             }
 
 

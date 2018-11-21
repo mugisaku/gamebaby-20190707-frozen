@@ -120,11 +120,9 @@ class space_handler;
 
 
 
-struct
+class
 plane
 {
-  static const int  m_waterization_level;
-
   box*  m_box=nullptr;
 
   enum class kind{
@@ -133,7 +131,13 @@ plane
   } m_kind;
 
 
-  void  reset(box&  box, kind  k, plane*  up=nullptr, plane*  down=nullptr) noexcept;
+  plane(subiso::box&  box, kind  k) noexcept: m_box(&box), m_kind(k){}
+
+public:
+  static plane  make_top( subiso::box&  box) noexcept{return plane(box,kind::top );}
+  static plane  make_side(subiso::box&  box) noexcept{return plane(box,kind::side);}
+
+  box*  get_box() const noexcept{return m_box;}
 
   bool  is_top()   const noexcept{return m_kind == kind::top;}
   bool  is_side() const noexcept{return m_kind == kind::side;}
@@ -148,21 +152,9 @@ plane
 constexpr int  g_water_value_max = 266;
 
 
-struct
-box
+class
+box_link
 {
-  space*  m_space=nullptr;
-
-  point3d  m_index;
-
-  enum class kind{
-    null,
-    earth,
-  } m_kind=kind::null;
-
-  plane  m_top_plane;
-  plane  m_side_planes[4];
-
   box*  m_up_box  =nullptr;
   box*  m_down_box=nullptr;
 
@@ -170,31 +162,67 @@ box
   box*  m_middle_boxes[8];
   box*   m_lower_boxes[8];
 
+public:
+  box*  get_up_box(                 ) const noexcept{return m_up_box      ;}
+  void  set_up_box(subiso::box*  box)       noexcept{       m_up_box = box;}
+
+  box*  get_down_box(                 ) const noexcept{return m_down_box      ;}
+  void  set_down_box(subiso::box*  box)       noexcept{       m_down_box = box;}
+
+  box*  get_upper_box(                   int  i) const noexcept{return m_upper_boxes[i]      ;}
+  void  set_upper_box(subiso::box*  box, int  i)       noexcept{       m_upper_boxes[i] = box;}
+
+  box*  get_middle_box(                   int  i) const noexcept{return m_middle_boxes[i]      ;}
+  void  set_middle_box(subiso::box*  box, int  i)       noexcept{       m_middle_boxes[i] = box;}
+
+  box*  get_lower_box(                   int  i) const noexcept{return m_lower_boxes[i]      ;}
+  void  set_lower_box(subiso::box*  box, int  i)       noexcept{       m_lower_boxes[i] = box;}
+
+};
+
+
+class
+box: public box_link
+{
+public:
+  enum class kind{
+    null,
+    earth,
+  } m_kind=kind::null;
+
+private:
+  space*  m_space=nullptr;
+
+  point3d  m_index;
+
+  plane  m_top_plane;
+  plane  m_side_planes[4];
+
   int  m_distance=0;
 
+  actor*  m_owner_actor=nullptr;
+
   struct flags{
-    static constexpr uint32_t        active = 1;
-    static constexpr uint32_t  water_source = 2;
+    static constexpr uint32_t  active = 1;
   };
 
 
-  uint32_t  m_search_flags;
+  bool  m_check_flag;
 
   uint32_t  m_state=0;
 
-  int  m_main_counter=0;
-  int  m_water_value=0;
+public:
+  box() noexcept;
 
   operator bool() const noexcept{return m_kind != kind::null;}
 
+  void    check() noexcept{m_check_flag =  true;}
+  void  uncheck() noexcept{m_check_flag = false;}
+  bool  is_checked() const noexcept{return m_check_flag;}
+
   bool  test_active_flag() const noexcept{return m_state&flags::active;}
-  bool  test_water_source_flag() const noexcept{return m_state&flags::water_source;}
-
-  void  set_active_flag() noexcept{m_state |= flags::active;}
-  void  set_water_source_flag() noexcept{m_state |= flags::water_source;}
-
+  void    set_active_flag() noexcept{m_state |=  flags::active;}
   void  unset_active_flag() noexcept{m_state &= ~flags::active;}
-  void  unset_water_source_flag() noexcept{m_state &= ~flags::water_source;}
 
   space*  get_space(          ) const noexcept{return m_space     ;}
   void    set_space(space*  sp)       noexcept{       m_space = sp;}
@@ -202,8 +230,16 @@ box
   const point3d&  get_index(           ) const noexcept{return m_index     ;}
   void            set_index(point3d  pt)       noexcept{       m_index = pt;}
 
+        plane&  get_top_plane()       noexcept{return m_top_plane;}
+  const plane&  get_top_plane() const noexcept{return m_top_plane;}
+
+        plane&  get_side_plane(int  i)       noexcept{return m_side_planes[i];}
+  const plane&  get_side_plane(int  i) const noexcept{return m_side_planes[i];}
+
   int   get_distance(      ) const noexcept{return m_distance    ;}
   void  set_distance(int  v)       noexcept{       m_distance = v;}
+
+  kind  get_kind() const noexcept{return m_kind;}
 
   void  be_null()  noexcept{m_kind = kind::null;}
   void  be_earth() noexcept{m_kind = kind::earth;}
@@ -260,10 +296,10 @@ box_view
 
   direction  m_dir=direction::front;
 
-  box*  u(int  i) const noexcept{return m_box->m_upper_boxes[i];}
-  box*  m(int  i) const noexcept{return m_box->m_middle_boxes[i];}
-  box*  l(int  i) const noexcept{return m_box->m_lower_boxes[i];}
-  plane&  pl(int  i) const noexcept{return m_box->m_side_planes[i];}
+  box*  u(int  i) const noexcept{return m_box->get_upper_box(i);}
+  box*  m(int  i) const noexcept{return m_box->get_middle_box(i);}
+  box*  l(int  i) const noexcept{return m_box->get_lower_box(i);}
+  plane&  pl(int  i) const noexcept{return m_box->get_side_plane(i);}
 
 public:
   box_view() noexcept{}
@@ -277,7 +313,7 @@ public:
   bool  is_right() const noexcept{return m_dir == direction::right;}
   bool  is_back()  const noexcept{return m_dir == direction::back;}
 
-  plane&  get_top_plane() const noexcept{return m_box->m_top_plane;}
+  plane&  get_top_plane() const noexcept{return m_box->get_top_plane();}
 
   plane&  get_front_plane() const noexcept;
   plane&   get_left_plane() const noexcept;
@@ -290,8 +326,8 @@ public:
   void       set_direction(direction  dir)       noexcept{       m_dir = dir;}
   direction  get_direction(              ) const noexcept{return m_dir      ;}
 
-  box*     get_up_box() const noexcept{return m_box->m_up_box;}
-  box*   get_down_box() const noexcept{return m_box->m_down_box;}
+  box*     get_up_box() const noexcept{return m_box->get_up_box();}
+  box*   get_down_box() const noexcept{return m_box->get_down_box();}
 
   box*    get_left_box() const noexcept;
   box*   get_right_box() const noexcept;
@@ -406,8 +442,8 @@ public:
 
   plane_reference&  assign(direction  dir, plane*  pl) noexcept;
 
-  box*      get_box() const noexcept{return m_plane->m_box;}
-  plane*  get_plane() const noexcept{return m_plane       ;}
+  box*      get_box() const noexcept{return m_plane->get_box();}
+  plane*  get_plane() const noexcept{return m_plane          ;}
 
   box*  get_left_box()  const noexcept{return  m_left_box;}
   box*  get_right_box() const noexcept{return m_right_box;}

@@ -50,7 +50,7 @@ seek() noexcept
         }
 
 
-        if(!pl->m_box->is_null())
+        if(!pl->get_box()->is_null())
         {
           break;
         }

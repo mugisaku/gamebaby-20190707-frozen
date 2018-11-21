@@ -54,11 +54,6 @@ g_water_image(g_water_binary);
 
 
 
-const int
-plane::
-m_waterization_level = 16;
-
-
 void
 plane::
 render(int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept
@@ -95,11 +90,11 @@ render(int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept
 
   int  z_add_amount = 0;
 
-    if(m_kind == kind::top)
+    if(is_top())
     {
-        switch(m_box->m_kind)
+        switch(m_box->get_kind())
         {
-      case(box::kind::null): if(m_box->m_water_value >= m_waterization_level){img = &g_water_image;}break;
+//      case(box::kind::null ): if(m_box->m_water_value >= m_waterization_level){img = &g_water_image;}break;
       case(box::kind::earth): img = &g_green_image;break;
         }
     }
@@ -108,9 +103,9 @@ render(int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept
     {
       z_add_amount = -1;
 
-        switch(m_box->m_kind)
+        switch(m_box->get_kind())
         {
-      case(box::kind::null): if(m_box->m_water_value >= m_waterization_level){img = &g_waterwall_image;}break;
+//      case(box::kind::null ): if(m_box->m_water_value >= m_waterization_level){img = &g_waterwall_image;}break;
       case(box::kind::earth): img = &g_wall_image;break;
         }
     }

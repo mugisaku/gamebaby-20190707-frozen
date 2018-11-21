@@ -25,7 +25,7 @@ clear_search_flags() noexcept
 {
     for(auto&  box: m_boxes)
     {
-      box.m_search_flags = 0;
+      box.uncheck();
     }
 }
 
@@ -61,51 +61,41 @@ resize(int  xl, int  yl, int  zl) noexcept
     for(int  x = 0;  x < xl;  ++x){
       auto&  box = get_box(x,y,z);
 
-      box.m_space = this;
+      box.set_space(this);
 
-      box.m_index = point3d{x,y,z};
+      box.set_index(point3d{x,y,z});
 
-      box.m_kind = box::kind::null;
+      box.be_null();
 
-      box.m_top_plane.m_box  = &box;
-      box.m_top_plane.m_kind = plane::kind::top;
+      box.set_down_box(get_box_pointer(x,y,z-1));
+      box.set_up_box(  get_box_pointer(x,y,z+1));
 
-        for(auto&  pl: box.m_side_planes)
-        {
-          pl.m_box  = &box;
-          pl.m_kind = plane::kind::side;
-        }
+      box.set_middle_box(get_box_pointer(x  ,y-1,z),0);
+      box.set_middle_box(get_box_pointer(x+1,y-1,z),1);
+      box.set_middle_box(get_box_pointer(x+1,y  ,z),2);
+      box.set_middle_box(get_box_pointer(x+1,y+1,z),3);
+      box.set_middle_box(get_box_pointer(x  ,y+1,z),4);
+      box.set_middle_box(get_box_pointer(x-1,y+1,z),5);
+      box.set_middle_box(get_box_pointer(x-1,y  ,z),6);
+      box.set_middle_box(get_box_pointer(x-1,y-1,z),7);
 
+      box.set_lower_box(get_box_pointer(x  ,y-1,z-1),0);
+      box.set_lower_box(get_box_pointer(x+1,y-1,z-1),1);
+      box.set_lower_box(get_box_pointer(x+1,y  ,z-1),2);
+      box.set_lower_box(get_box_pointer(x+1,y+1,z-1),3);
+      box.set_lower_box(get_box_pointer(x  ,y+1,z-1),4);
+      box.set_lower_box(get_box_pointer(x-1,y+1,z-1),5);
+      box.set_lower_box(get_box_pointer(x-1,y  ,z-1),6);
+      box.set_lower_box(get_box_pointer(x-1,y-1,z-1),7);
 
-      box.m_down_box = get_box_pointer(x,y,z-1);
-      box.m_up_box   = get_box_pointer(x,y,z+1);
-
-      box.m_middle_boxes[0] = get_box_pointer(x  ,y-1,z);
-      box.m_middle_boxes[1] = get_box_pointer(x+1,y-1,z);
-      box.m_middle_boxes[2] = get_box_pointer(x+1,y  ,z);
-      box.m_middle_boxes[3] = get_box_pointer(x+1,y+1,z);
-      box.m_middle_boxes[4] = get_box_pointer(x  ,y+1,z);
-      box.m_middle_boxes[5] = get_box_pointer(x-1,y+1,z);
-      box.m_middle_boxes[6] = get_box_pointer(x-1,y  ,z);
-      box.m_middle_boxes[7] = get_box_pointer(x-1,y-1,z);
-
-      box.m_lower_boxes[0] = get_box_pointer(x  ,y-1,z-1);
-      box.m_lower_boxes[1] = get_box_pointer(x+1,y-1,z-1);
-      box.m_lower_boxes[2] = get_box_pointer(x+1,y  ,z-1);
-      box.m_lower_boxes[3] = get_box_pointer(x+1,y+1,z-1);
-      box.m_lower_boxes[4] = get_box_pointer(x  ,y+1,z-1);
-      box.m_lower_boxes[5] = get_box_pointer(x-1,y+1,z-1);
-      box.m_lower_boxes[6] = get_box_pointer(x-1,y  ,z-1);
-      box.m_lower_boxes[7] = get_box_pointer(x-1,y-1,z-1);
-
-      box.m_upper_boxes[0] = get_box_pointer(x  ,y-1,z+1);
-      box.m_upper_boxes[1] = get_box_pointer(x+1,y-1,z+1);
-      box.m_upper_boxes[2] = get_box_pointer(x+1,y  ,z+1);
-      box.m_upper_boxes[3] = get_box_pointer(x+1,y+1,z+1);
-      box.m_upper_boxes[4] = get_box_pointer(x  ,y+1,z+1);
-      box.m_upper_boxes[5] = get_box_pointer(x-1,y+1,z+1);
-      box.m_upper_boxes[6] = get_box_pointer(x-1,y  ,z+1);
-      box.m_upper_boxes[7] = get_box_pointer(x-1,y-1,z+1);
+      box.set_upper_box(get_box_pointer(x  ,y-1,z+1),0);
+      box.set_upper_box(get_box_pointer(x+1,y-1,z+1),1);
+      box.set_upper_box(get_box_pointer(x+1,y  ,z+1),2);
+      box.set_upper_box(get_box_pointer(x+1,y+1,z+1),3);
+      box.set_upper_box(get_box_pointer(x  ,y+1,z+1),4);
+      box.set_upper_box(get_box_pointer(x-1,y+1,z+1),5);
+      box.set_upper_box(get_box_pointer(x-1,y  ,z+1),6);
+      box.set_upper_box(get_box_pointer(x-1,y-1,z+1),7);
     }}}
 }
 
@@ -130,20 +120,18 @@ search_slice(int  x, int  y, int  z) noexcept
     {
       auto&  box = *box_list[i++];
 
-      auto&  flag = box.m_search_flags;
-
-        if(!flag)
+        if(!box.is_checked())
         {
-          flag = 1;
+          box.check();
 
             if(box.is_null())
             {
               buf.emplace_back(&box);
 
-                if(box.m_middle_boxes[0]){box_list.emplace_back(box.m_middle_boxes[0]);}
-                if(box.m_middle_boxes[2]){box_list.emplace_back(box.m_middle_boxes[2]);}
-                if(box.m_middle_boxes[4]){box_list.emplace_back(box.m_middle_boxes[4]);}
-                if(box.m_middle_boxes[6]){box_list.emplace_back(box.m_middle_boxes[6]);}
+                if(box.get_middle_box(0)){box_list.emplace_back(box.get_middle_box(0));}
+                if(box.get_middle_box(2)){box_list.emplace_back(box.get_middle_box(2));}
+                if(box.get_middle_box(4)){box_list.emplace_back(box.get_middle_box(4));}
+                if(box.get_middle_box(6)){box_list.emplace_back(box.get_middle_box(6));}
             }
         }
     }
@@ -169,7 +157,7 @@ print() const noexcept
             {
               auto&  box = get_box(x,y,z);
 
-              box.m_index.print();
+              box.get_index().print();
             }
 
 

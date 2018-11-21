@@ -51,7 +51,7 @@ shell: public widget
       {
           if(g_input.test_mouse_right())
           {
-            pl->m_box->be_null();
+            pl->get_box()->be_null();
 
             m_lock = true;
           }
@@ -59,9 +59,9 @@ shell: public widget
         else
           if(g_input.test_mouse_left())
           {
-              if(m_last_plane->is_top() && ref.get_box()->m_up_box)
+              if(m_last_plane->is_top() && ref.get_box()->get_up_box())
               {
-                ref.get_box()->m_up_box->be_earth();
+                ref.get_box()->get_up_box()->be_earth();
               }
 
 
@@ -157,9 +157,9 @@ public:
       {
         string_form  sf;
 
-        auto&  box = *m_last_plane->m_box;
+        auto&  box = *m_last_plane->get_box();
 
-        auto  i = box.m_index;
+        auto  i = box.get_index();
 
   //      auto  flags = g_last_box->m_top_plane.get_flags();
 

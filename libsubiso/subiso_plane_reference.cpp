@@ -38,7 +38,7 @@ assign(direction  dir, plane*  pl) noexcept
 
     if(pl)
     {
-      auto&  box = *m_plane->m_box;
+      auto&  box = *m_plane->get_box();
 
       box_view  bv(box,dir);
 
@@ -50,7 +50,7 @@ assign(direction  dir, plane*  pl) noexcept
       else              {reset_front_link(bv);}
 
 
-      m_image_z_base = g_plane_size*(1+box.m_index.z);
+      m_image_z_base = g_plane_size*(1+box.get_index().z);
     }
 
 
@@ -70,9 +70,9 @@ int
 plane_reference::
 get_flags() const noexcept
 {
-  auto&  box = *m_plane->m_box;
+  auto&  box = *m_plane->get_box();
 
-  auto  k = box.m_kind;
+  auto  k = box.get_kind();
 
   int  flags = 0;
 
@@ -86,10 +86,10 @@ get_flags() const noexcept
 
   else
     {
-        if(is_not_same(m_right_box,k)    || is_valid(m_fronts.m_right_front_box)){flags |=  right_flag;}
-        if(is_not_same(m_left_box,k)     || is_valid(m_fronts.m_left_front_box) ){flags |=   left_flag;}
-        if(is_not_same(box.m_down_box,k) || is_valid(m_fronts.m_front_down_box) ){flags |= bottom_flag;}
-        if(is_not_same(box.m_up_box,k)                                          ){flags |=    top_flag;}
+        if(is_not_same(m_right_box,k)        || is_valid(m_fronts.m_right_front_box)){flags |=  right_flag;}
+        if(is_not_same(m_left_box,k)         || is_valid(m_fronts.m_left_front_box) ){flags |=   left_flag;}
+        if(is_not_same(box.get_down_box(),k) || is_valid(m_fronts.m_front_down_box) ){flags |= bottom_flag;}
+        if(is_not_same(box.get_up_box(),k)                                          ){flags |=    top_flag;}
     }
 
 

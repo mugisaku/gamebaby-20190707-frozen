@@ -88,6 +88,7 @@ step() noexcept
 
         if(!lock)
         {
+/*
             if(change_direction_by_input())
             {
               next_time = gbstd::g_time+interval;
@@ -96,6 +97,7 @@ step() noexcept
 
               set_dirty_flag();
             }
+*/
         }
 
       else

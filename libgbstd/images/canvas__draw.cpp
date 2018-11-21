@@ -704,8 +704,8 @@ blend_canvas(const canvas&  cv, int  x, int  y) const noexcept
 
     if(correct(src_cv,x,y,get_width(),get_height()))
     {
-      auto  src_pixptr_base = cv.get_pixel_pointer(0,0);
-      auto  dst_pixptr_base =    get_pixel_pointer(x,y);
+      auto  src_pixptr_base = src_cv.get_pixel_pointer(0,0);
+      auto  dst_pixptr_base =        get_pixel_pointer(x,y);
 
       auto  src_w = src_cv.get_width() ;
       auto  src_h = src_cv.get_height();
@@ -744,8 +744,8 @@ blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) 
 
     if(correct(src_cv,x,y,get_width(),get_height()))
     {
-      auto  src_pixptr_base = cv.get_pixel_pointer(0,0);
-      auto  dst_pixptr_base =    get_pixel_pointer(x,y);
+      auto  src_pixptr_base = src_cv.get_pixel_pointer(0,0);
+      auto  dst_pixptr_base =        get_pixel_pointer(x,y);
 
       auto  src_w = src_cv.get_width() ;
       auto  src_h = src_cv.get_height();

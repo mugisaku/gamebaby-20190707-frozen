@@ -36,9 +36,9 @@ set(SOURCES
   file_ops/riff_chunk.cpp
   file_ops/riff_subchunk_view.cpp
   file_ops/wave.cpp
-  programs/process.cpp
-  programs/program.cpp
-  programs/sleep.cpp
+  jobs/process.cpp
+  jobs/job.cpp
+  jobs/job_list.cpp
   utility.cpp
   control.cpp
 #  programs/indication.cpp

@@ -74,87 +74,13 @@ transform_position(const stack_map&  map) noexcept
 
 void
 actor::
-process_input(direction  dir) noexcept
-{
-  constexpr int  stroke = 1;
-
-  gbstd::point  pt;
-
-    if(gbstd::g_input.test_shift())
-    {
-        if(gbstd::g_input.test_up())
-        {
-          m_position.z += stroke;
-        }
-
-      else
-        if(gbstd::g_input.test_down())
-        {
-          m_position.z += -stroke;
-        }
-
-
-      return;
-    }
-
-  else
-    if(gbstd::g_input.test_up())
-    {
-      pt.y = stroke;
-
-      m_dir = direction::back;
-    }
-
-  else
-    if(gbstd::g_input.test_down())
-    {
-      pt.y = -stroke;
-
-      m_dir = direction::front;
-    }
-
-  else
-    if(gbstd::g_input.test_left())
-    {
-      pt.x = -stroke;
-
-      m_dir = direction::left;
-    }
-
-  else
-    if(gbstd::g_input.test_right())
-    {
-      pt.x = stroke;
-
-      m_dir = direction::right;
-    }
-
-  else
-    {
-      return;
-    }
-
-
-  pt = transform(pt,dir);
-
-//  m_dir = transform(m_dir,dir);
-
-  m_position.x += pt.x;
-  m_position.y += pt.y;
-}
-
-
-void
-actor::
 step(direction  dir) noexcept
 {
-//    if(gbstd::g_time >= m_next_animation_time)
+    if(gbstd::g_time >= m_next_animation_time)
     {
       m_next_animation_time = gbstd::g_time+120;
 
       ++m_animation_counter;
-
-      process_input(dir);
 
       m_handler->set_dirty_flag();
     }

@@ -4,6 +4,7 @@
 
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
+#include"libgbstd/job.hpp"
 #include<list>
 
 
@@ -235,6 +236,9 @@ public:
 
         plane&  get_side_plane(int  i)       noexcept{return m_side_planes[i];}
   const plane&  get_side_plane(int  i) const noexcept{return m_side_planes[i];}
+
+  actor*   get_owner_actor(         ) const noexcept{return m_owner_actor    ;}
+  void     set_owner_actor(actor*  a)       noexcept{       m_owner_actor = a;}
 
   int   get_distance(      ) const noexcept{return m_distance    ;}
   void  set_distance(int  v)       noexcept{       m_distance = v;}
@@ -558,7 +562,10 @@ actor
 
   actor() noexcept;
 
-  void  process_input(direction  dir) noexcept;
+  space_handler*  get_handler() const noexcept{return m_handler;}
+
+  direction  get_direction(            ) const noexcept{return m_dir    ;}
+  void       set_direction(direction  d)       noexcept{       m_dir = d;}
 
   void  step(direction  dir) noexcept;
 
@@ -567,9 +574,13 @@ actor
 };
 
 
+
+
 class
 space_handler
 {
+  gbstd::job_list  m_job_list;
+
   stack_map  m_front_map;
   stack_map   m_back_map;
   stack_map   m_left_map;
@@ -584,6 +595,9 @@ space_handler
   bool  change_direction_by_input() noexcept;
 
 public:
+  template<typename  T>
+  void  add_timer();
+
   space_handler&  assign(space&  sp) noexcept;
 
   direction  get_direction(              ) const noexcept{return m_current_map->get_direction();}

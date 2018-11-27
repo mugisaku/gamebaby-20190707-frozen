@@ -764,9 +764,8 @@ blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) 
 
                 if(pix.color && (dst_pixptr->z <= z_base))
                 {
-                  pix.z = z_base;
-
-                  *dst_pixptr = pix;
+                  *dst_pixptr    =    pix;
+                   dst_pixptr->z = z_base;
                 }
 
 

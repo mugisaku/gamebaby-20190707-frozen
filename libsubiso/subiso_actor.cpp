@@ -44,25 +44,25 @@ transform_position(const stack_map&  map) noexcept
 
     switch(map.get_direction())
     {
-  case(direction::front):
+  case(directions::front):
       x = m_position.x;
       y = m_position.y;
 
       m_transformed_position = point3d(x,(uh-1-y)+(lh-1-z)-24,z);
       break;
-  case(direction::right):
+  case(directions::right):
       x =    m_position.y;
       y = uh-m_position.x;
 
       m_transformed_position = point3d(x,(uh-1-y)+(lh-1-z),z);
       break;
-  case(direction::back):
+  case(directions::back):
       x =  w-m_position.x;
       y = uh-m_position.y;
 
       m_transformed_position = point3d(x-24,(uh-1-y)+(lh-1-z),z);
       break;
-  case(direction::left):
+  case(directions::left):
       x = w-m_position.y;
       y =   m_position.x;
 
@@ -78,11 +78,11 @@ step(direction  dir) noexcept
 {
     if(gbstd::g_time >= m_next_animation_time)
     {
-      m_next_animation_time = gbstd::g_time+120;
+      m_next_animation_time = gbstd::g_time+200;
 
       ++m_animation_counter;
 
-      m_handler->set_dirty_flag();
+      m_dirty_flag = true;
     }
 }
 
@@ -95,20 +95,20 @@ render(const stack_map&  map, const gbstd::canvas&  cv) const noexcept
 
   gbstd::point  src_pt;
 
-  auto  transformed_dir = transform(m_dir,map.get_direction());
+  auto  transformed_dir = m_dir+map.get_direction();
 
     switch(transformed_dir)
     {
-  case(direction::front):
+  case(directions::front):
       src_pt = {0,0};
       break;
-  case(direction::back):
+  case(directions::back):
       src_pt = {0,24};
       break;
-  case(direction::left):
+  case(directions::left):
       src_pt = {24,0};
       break;
-  case(direction::right):
+  case(directions::right):
       src_pt = {24,24};
       break;
     }

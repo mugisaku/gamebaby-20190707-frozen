@@ -63,17 +63,25 @@ seek() noexcept
 
 void
 plane_reference_stack::
-render(const gbstd::canvas&  cv) noexcept
+render(direction  dir, const gbstd::canvas&  cv) noexcept
 {
   seek();
 
-  auto&  el = get_current();
+  auto  el = get_current();
 
-  auto  pl = el.get_plane();
-
-    if(pl)
+    if(el)
     {
-      pl->render(el.get_flags(),cv,el.get_image_z_base());
+      auto  pl = el->get_plane();
+
+        if(pl)
+        {
+            if(pl->get_box()->is_stairs())
+            {
+            }
+
+
+          pl->render(dir,el->get_flags(),cv,el->get_image_z_base());
+        }
     }
 }
 

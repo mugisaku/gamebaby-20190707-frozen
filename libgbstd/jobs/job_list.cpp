@@ -8,6 +8,50 @@ namespace gbstd{
 
 
 
+struct
+job_list::
+element
+{
+  job  m_job;
+
+  element*  m_next;
+
+};
+
+
+
+job&
+job_list::iterator::
+operator*() const noexcept
+{
+  return m_data->m_job;
+}
+
+
+job_list::iterator&
+job_list::iterator::
+operator++() noexcept
+{
+  m_data = m_data->m_next;
+
+  return *this;
+}
+
+
+job_list::iterator
+job_list::iterator::
+operator++(int) noexcept
+{
+  auto  tmp = *this;
+
+  m_data = m_data->m_next;
+
+  return tmp;
+}
+
+
+
+
 void
 job_list::
 clear() noexcept
@@ -47,6 +91,33 @@ add(job&&  job) noexcept
 void
 job_list::
 step() noexcept
+{
+START:
+    if(m_first)
+    {
+        if(m_first->m_job.is_finished())
+        {
+          auto  next = m_first->m_next;
+
+          delete m_first       ;
+                 m_first = next;
+
+          --m_number_of_jobs;
+
+          goto START;
+        }
+
+      else
+        {
+          m_first->m_job.step();
+        }
+    }
+}
+
+
+void
+job_list::
+step_all() noexcept
 {
   element*  last = nullptr;
   element*  next = m_first;

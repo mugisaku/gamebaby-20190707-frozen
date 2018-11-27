@@ -5,6 +5,7 @@
 #include"libgbstd/utility.hpp"
 #include"libgbstd/control.hpp"
 #include<utility>
+#include<new>
 #include<string>
 #include<cstdint>
 
@@ -20,57 +21,10 @@ class  process;
 using process_callback = void(*)(process&  proc, void*  dat);
 
 
-
-
-class
-job
-{
-  process*  m_process=nullptr;
-
-public:
-  template<typename  T>
-  job(void  (*cb)(process&,T*), uint32_t  intval, T*  dat) noexcept{assign(cb,intval,dat);}
-
-  job(process*  proc=nullptr) noexcept{assign(proc);}
-  job(process_callback  cb, uint32_t  intval) noexcept{assign(cb,intval);}
-  job(const job&   rhs) noexcept{assign(rhs);}
-  job(      job&&  rhs) noexcept{assign(std::move(rhs));}
- ~job(){clear();}
-
-  job&  operator=(const job&   rhs) noexcept{return assign(rhs);}
-  job&  operator=(      job&&  rhs) noexcept{return assign(std::move(rhs));}
-  job&  operator=(process*  proc) noexcept{return assign(proc);}
-
-  job&  assign(const job&   rhs) noexcept;
-  job&  assign(      job&&  rhs) noexcept;
-  job&  assign(process*  proc) noexcept;
-  job&  assign(process_callback  cb, uint32_t  intval) noexcept;
-
-  template<typename  T>job&  assign(void  (*cb)(process&,T*), uint32_t  intval, T*  dat) noexcept;
-
-  operator bool() const noexcept{return m_process;}
-
-  bool  is_finished() const noexcept;
-
-  void  clear() noexcept;
-
-  process*  get_process() const noexcept{return m_process;}
-
-  void  step() noexcept;
-
-};
-
-
-
-
 class
 job_list
 {
-  struct element{
-    job  m_job;
-
-    element*  m_next;
-  };
+  struct element;
 
   element*  m_first=nullptr;
 
@@ -94,7 +48,11 @@ public:
 
   void  add(job&&  job) noexcept;
 
+  template<typename...  ARGS>void  add(ARGS...  args) noexcept{add(job(args...));}
+
+
   void  step() noexcept;
+  void  step_all() noexcept;
 
   class iterator{
     element*  m_data;
@@ -103,23 +61,10 @@ public:
 
     constexpr operator bool() const noexcept{return m_data;}
 
-    constexpr job&  operator*() const noexcept{return m_data->m_job;}
+    job&  operator*() const noexcept;
 
-    iterator&  operator++() noexcept
-    {
-      m_data = m_data->m_next;
-
-      return *this;
-    }
-
-    iterator  operator++(int) noexcept
-    {
-      auto  tmp = *this;
-
-      m_data = m_data->m_next;
-
-      return tmp;
-    }
+    iterator&  operator++()    noexcept;
+    iterator   operator++(int) noexcept;
   };
 
   iterator  begin() const noexcept{return iterator(m_first);}
@@ -137,7 +82,9 @@ process
 
   uint32_t  m_id=0;
 
-  job       m_foreground_job;
+  std::string  m_name;
+
+  job_list  m_foreground_job_list;
   job_list  m_background_job_list;
 
   uint32_t  m_next_time=0;
@@ -160,28 +107,48 @@ process
 
 public:
   process() noexcept{}
-  process(process_callback  cb, uint32_t  intval, void*  dat=nullptr) noexcept;
-  process(const process&   rhs) noexcept{assign(rhs);}
+  process(const char*  name, process_callback  cb, uint32_t  intval, void*  dat=nullptr) noexcept{assign(name,cb,intval,dat);}
+  process(const process&   rhs) noexcept=delete;
   process(      process&&  rhs) noexcept{assign(std::move(rhs));}
+ ~process(){clear();}
 
-  process&  operator=(const process&   rhs) noexcept{return assign(rhs);}
+  process&  operator=(const process&   rhs) noexcept=delete;
   process&  operator=(      process&&  rhs) noexcept{return assign(std::move(rhs));}
 
-  process&  assign(const process&   rhs) noexcept;
-  process&  assign(      process&&  rhs) noexcept;
+  process&  assign(process&&  rhs) noexcept;
+  process&  assign(const char*  name, process_callback  cb, uint32_t  intval, void*  dat=nullptr) noexcept;
+
+  template<typename  T>
+  process(const char*  name, void  (*cb)(process&,T*), uint32_t  intval, T*  dat) noexcept
+  {
+    assign(name,reinterpret_cast<process_callback>(cb),intval,dat);
+  }
+
+  template<typename  T>
+  process&
+  assign(const char*  name, void  (*cb)(process&,T*), uint32_t  intval, T*  dat) noexcept
+  {
+    return assign(name,reinterpret_cast<process_callback>(cb),intval,dat);
+  }
+
 
   bool  is_running()  const noexcept{return m_state == state::running;}
   bool  is_stopping() const noexcept{return m_state == state::stopping;}
   bool  is_waiting()  const noexcept{return m_state == state::waiting;}
   bool  is_exited()   const noexcept{return m_state == state::exited;}
 
+  void  clear() noexcept;
+  void  reset() noexcept;
+
+  const std::string&  get_name() const noexcept{return m_name;}
+
   void   run() noexcept{m_state = state::running;}
   void  stop() noexcept{m_state = state::stopping;}
   void  wait() noexcept{m_state = state::waiting;}
   void  exit() noexcept{m_state = state::exited;}
 
-        job&  get_foreground_job()       noexcept{return m_foreground_job;}
-  const job&  get_foreground_job() const noexcept{return m_foreground_job;}
+        job_list&  get_foreground_job_list()       noexcept{return m_foreground_job_list;}
+  const job_list&  get_foreground_job_list() const noexcept{return m_foreground_job_list;}
 
         job_list&  get_background_job_list()       noexcept{return m_background_job_list;}
   const job_list&  get_background_job_list() const noexcept{return m_background_job_list;}
@@ -206,12 +173,52 @@ public:
 };
 
 
-template<typename  T>job&
-job::
-assign(void  (*cb)(process&,T*), uint32_t  intval, T*  dat) noexcept
+
+
+class
+job
 {
-  return assign(new process(reinterpret_cast<process_callback>(cb),intval,dat));
-}
+  process  m_process;
+
+public:
+  job() noexcept{}
+  job(const job&   rhs) noexcept=delete;
+  job(      job&&  rhs) noexcept{assign(std::move(rhs));}
+ ~job(){clear();}
+
+  job&  operator=(const job&   rhs) noexcept=delete;
+  job&  operator=(      job&&  rhs) noexcept{return assign(std::move(rhs));}
+
+  job&  assign(job&&  rhs) noexcept;
+
+  template<typename...  ARGS>
+  job(ARGS...  args) noexcept
+  {
+    m_process.assign(args...);
+  }
+
+  template<typename...  ARGS>
+  job&
+  assign(ARGS...  args) noexcept
+  {
+    clear();
+
+    m_process.assign(args...);
+
+    return *this;
+  }
+
+  operator bool() const noexcept{return m_process;}
+
+  bool  is_finished() const noexcept;
+
+  void  clear() noexcept;
+
+  process&  get_process() noexcept{return m_process;}
+
+  void  step() noexcept;
+
+};
 
 
 

@@ -25,7 +25,7 @@ set(SOURCES
 
 include_directories(./)
 include_directories(../)
-add_library("ge" SHARED ${SOURCES})
+add_library("ge" STATIC ${SOURCES})
 
 
 

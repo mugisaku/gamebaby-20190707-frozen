@@ -20,62 +20,67 @@ constexpr int    left_flag = 4;
 constexpr int   right_flag = 8;
 
 
-enum class
+class
 direction
 {
-  front,
-  right,
-  back,
-  left,
+  static constexpr int  m_mask_value = 3;
+
+  int  m_value;
+
+public:
+  constexpr direction(int  v=0) noexcept: m_value(v&m_mask_value){}
+
+  constexpr operator int() const noexcept{return m_value&m_mask_value;}
+
+  constexpr bool  operator==(direction  d) const noexcept{return (m_value&m_mask_value) == (d.m_value&m_mask_value);}
+  constexpr bool  operator!=(direction  d) const noexcept{return (m_value&m_mask_value) != (d.m_value&m_mask_value);}
+
+  constexpr bool  operator==(int  i) const noexcept{return (m_value&m_mask_value) == (i&m_mask_value);}
+  constexpr bool  operator!=(int  i) const noexcept{return (m_value&m_mask_value) != (i&m_mask_value);}
+
+  constexpr direction  operator+(direction  d) const noexcept{return direction(m_value+d.m_value);}
+  constexpr direction  operator-(direction  d) const noexcept{return direction(m_value-d.m_value);}
+  constexpr direction  operator+(int        i) const noexcept{return direction(m_value+i        );}
+  constexpr direction  operator-(int        i) const noexcept{return direction(m_value-i        );}
+  constexpr direction  operator~(            ) const noexcept{return direction(m_value+2        );}
+
+  direction&  operator+=(direction  d) noexcept{  m_value += d.m_value;  return *this;}
+  direction&  operator-=(direction  d) noexcept{  m_value -= d.m_value;  return *this;}
+  direction&  operator+=(int        i) noexcept{  m_value +=         i;  return *this;}
+  direction&  operator-=(int        i) noexcept{  m_value -=         i;  return *this;}
+
+  direction&  operator++() noexcept{  ++m_value;  return *this;}
+  direction&  operator--() noexcept{  --m_value;  return *this;}
+
+  direction  operator++(int) noexcept{  auto  t = *this;  ++m_value;  return t;}
+  direction  operator--(int) noexcept{  auto  t = *this;  --m_value;  return t;}
 
 };
 
 
-constexpr direction
-transform(direction  a, direction  b) noexcept
-{
-  return static_cast<direction>((static_cast<int>(a)-static_cast<int>(b))&3);
+
+
+namespace directions{
+constexpr direction  front = direction(0);
+constexpr direction  right = direction(1);
+constexpr direction   back = direction(2);
+constexpr direction   left = direction(3);
 }
 
 
-constexpr direction
-get_left(direction  dir) noexcept
+inline constexpr const char*
+get_name(direction  d) noexcept
 {
-  return (dir == direction::front)? direction::left
-        :(dir == direction::back )? direction::right
-        :(dir == direction::left )? direction::back
-        :                           direction::front;
+  return (d == directions::front)? "front"
+        :(d == directions::right)? "right"
+        :(d == directions::back )? "back"
+        :(d == directions::left )? "left"
+        :                          "unknown";
 }
 
 
-constexpr direction
-get_right(direction  dir) noexcept
-{
-  return (dir == direction::front)? direction::right
-        :(dir == direction::back )? direction::left
-        :(dir == direction::left )? direction::front
-        :                           direction::back;
-}
+inline void  print(direction  d) noexcept{printf("%s",get_name(d));}
 
-
-constexpr direction
-get_opposite(direction  dir) noexcept
-{
-  return (dir == direction::front)? direction::back
-        :(dir == direction::back )? direction::front
-        :(dir == direction::left )? direction::right
-        :                           direction::left;
-}
-
-
-constexpr const char*
-get_name(direction  dir) noexcept
-{
-  return (dir == direction::front)? "front"
-        :(dir == direction::back )? "back"
-        :(dir == direction::left )? "left"
-        :                           "right";
-}
 
 
 struct
@@ -101,14 +106,14 @@ point3d
 };
 
 
-constexpr gbstd::point
+inline constexpr gbstd::point
 transform(gbstd::point  pt, direction  dir) noexcept
 {
-  return (dir == direction::front)? pt
-        :(dir == direction::right)? gbstd::point( pt.y,-pt.x)
-        :(dir == direction::back )? gbstd::point(-pt.x,-pt.y)
-        :(dir == direction::left )? gbstd::point(-pt.y, pt.x)
-        :                           gbstd::point(    0,    0);
+  return (dir == directions::front)? pt
+        :(dir == directions::right)? gbstd::point( pt.y,-pt.x)
+        :(dir == directions::back )? gbstd::point(-pt.x,-pt.y)
+        :(dir == directions::left )? gbstd::point(-pt.y, pt.x)
+        :                            gbstd::point(    0,    0);
 }
 
 
@@ -126,24 +131,28 @@ plane
 {
   box*  m_box=nullptr;
 
+  int  m_index=0;
+
   enum class kind{
      top,
     side,
   } m_kind;
 
 
-  plane(subiso::box&  box, kind  k) noexcept: m_box(&box), m_kind(k){}
+  plane(subiso::box&  box, kind  k, int  i) noexcept: m_box(&box), m_kind(k), m_index(i){}
 
 public:
-  static plane  make_top( subiso::box&  box) noexcept{return plane(box,kind::top );}
-  static plane  make_side(subiso::box&  box) noexcept{return plane(box,kind::side);}
+  static plane  make_top( subiso::box&  box        ) noexcept{return plane(box,kind::top ,0);}
+  static plane  make_side(subiso::box&  box, int  i) noexcept{return plane(box,kind::side,i);}
 
   box*  get_box() const noexcept{return m_box;}
+
+  int  get_index() const noexcept{return m_index;}
 
   bool  is_top()   const noexcept{return m_kind == kind::top;}
   bool  is_side() const noexcept{return m_kind == kind::side;}
 
-  void  render(int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept;
+  void  render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept;
 
 };
 
@@ -189,6 +198,9 @@ public:
   enum class kind{
     null,
     earth,
+    water,
+    stairs,
+
   } m_kind=kind::null;
 
 private:
@@ -203,8 +215,11 @@ private:
 
   actor*  m_owner_actor=nullptr;
 
+  direction  m_dir;
+
   struct flags{
     static constexpr uint32_t  active = 1;
+    static constexpr uint32_t  source = 2;
   };
 
 
@@ -225,6 +240,10 @@ public:
   void    set_active_flag() noexcept{m_state |=  flags::active;}
   void  unset_active_flag() noexcept{m_state &= ~flags::active;}
 
+  bool  test_source_flag() const noexcept{return m_state&flags::source;}
+  void    set_source_flag() noexcept{m_state |=  flags::source;}
+  void  unset_source_flag() noexcept{m_state &= ~flags::source;}
+
   space*  get_space(          ) const noexcept{return m_space     ;}
   void    set_space(space*  sp)       noexcept{       m_space = sp;}
 
@@ -243,13 +262,20 @@ public:
   int   get_distance(      ) const noexcept{return m_distance    ;}
   void  set_distance(int  v)       noexcept{       m_distance = v;}
 
+  direction   get_direction(            ) const noexcept{return m_dir    ;}
+  void        set_direction(direction  d)       noexcept{       m_dir = d;}
+
   kind  get_kind() const noexcept{return m_kind;}
 
   void  be_null()  noexcept{m_kind = kind::null;}
   void  be_earth() noexcept{m_kind = kind::earth;}
+  void  be_water(bool  src) noexcept;
+  void  be_stairs(direction  d) noexcept;
 
   bool  is_null() const noexcept{return m_kind == kind::null;}
   bool  is_earth() const noexcept{return m_kind == kind::earth;}
+  bool  is_water() const noexcept{return m_kind == kind::water;}
+  bool  is_stairs() const noexcept{return m_kind == kind::stairs;}
 
 };
 
@@ -298,7 +324,7 @@ box_view
 {
   box*  m_box=nullptr;
 
-  direction  m_dir=direction::front;
+  direction  m_dir=directions::front;
 
   box*  u(int  i) const noexcept{return m_box->get_upper_box(i);}
   box*  m(int  i) const noexcept{return m_box->get_middle_box(i);}
@@ -308,14 +334,14 @@ box_view
 public:
   box_view() noexcept{}
   box_view(direction  dir) noexcept: m_dir(dir){}
-  box_view(subiso::box&  box, direction  dir=direction::front) noexcept{assign(box,dir);}
+  box_view(subiso::box&  box, direction  dir=directions::front) noexcept{assign(box,dir);}
 
   box_view&  assign(subiso::box&  box, direction  dir) noexcept;
 
-  bool  is_front() const noexcept{return m_dir == direction::front;}
-  bool  is_left()  const noexcept{return m_dir == direction::left;}
-  bool  is_right() const noexcept{return m_dir == direction::right;}
-  bool  is_back()  const noexcept{return m_dir == direction::back;}
+  bool  is_front() const noexcept{return m_dir == directions::front;}
+  bool  is_right() const noexcept{return m_dir == directions::right;}
+  bool  is_back()  const noexcept{return m_dir == directions::back;}
+  bool  is_left()  const noexcept{return m_dir == directions::left;}
 
   plane&  get_top_plane() const noexcept{return m_box->get_top_plane();}
 
@@ -373,18 +399,18 @@ space_view
   int  m_y_length=0;
   int  m_z_length=0;
 
-  direction  m_dir=direction::front;
+  direction  m_dir=directions::front;
 
 public:
   space_view() noexcept{}
-  space_view(space&  sp, direction  dir=direction::front) noexcept{assign(sp,dir);}
+  space_view(space&  sp, direction  dir=directions::front) noexcept{assign(sp,dir);}
 
-  space_view&  assign(space&  sp, direction  dir=direction::front) noexcept;
+  space_view&  assign(space&  sp, direction  dir=directions::front) noexcept;
 
-  bool  is_front() const noexcept{return m_dir == direction::front;}
-  bool  is_left()  const noexcept{return m_dir == direction::left;}
-  bool  is_right() const noexcept{return m_dir == direction::right;}
-  bool  is_back()  const noexcept{return m_dir == direction::back;}
+  bool  is_front() const noexcept{return m_dir == directions::front;}
+  bool  is_right() const noexcept{return m_dir == directions::right;}
+  bool  is_back()  const noexcept{return m_dir == directions::back;}
+  bool  is_left()  const noexcept{return m_dir == directions::left;}
 
   void  update_size() noexcept;
 
@@ -488,10 +514,10 @@ public:
 
   int  get_length() const noexcept{return m_length;}
 
-  plane_reference&      get_top() const noexcept{return *m_top;}
-  plane_reference&  get_current() const noexcept{return *m_current;}
+  plane_reference*      get_top() const noexcept{return m_top;}
+  plane_reference*  get_current() const noexcept{return m_current;}
 
-  void  render(const gbstd::canvas&  cv) noexcept;
+  void  render(direction  dir, const gbstd::canvas&  cv) noexcept;
 
 };
 
@@ -545,24 +571,27 @@ public:
 struct
 actor
 {
-  space_handler*  m_handler=nullptr;
+  space*  m_space=nullptr;
 
   point3d  m_position;
   point3d  m_transformed_position;
 
   int  m_image_z=0;
 
-  direction  m_dir=direction::front;
+  direction  m_dir=directions::front;
 
   uint32_t  m_next_animation_time=0;
 
   int  m_animation_counter=0;
 
+  bool  m_dirty_flag;
+
   void  transform_position(const stack_map&  map) noexcept;
 
   actor() noexcept;
 
-  space_handler*  get_handler() const noexcept{return m_handler;}
+  void    set_space(space*  sp)       noexcept{       m_space = sp;}
+  space*  get_space(          ) const noexcept{return m_space     ;}
 
   direction  get_direction(            ) const noexcept{return m_dir    ;}
   void       set_direction(direction  d)       noexcept{       m_dir = d;}
@@ -579,40 +608,21 @@ actor
 class
 space_handler
 {
-  gbstd::job_list  m_job_list;
-
-  stack_map  m_front_map;
-  stack_map   m_back_map;
-  stack_map   m_left_map;
-  stack_map  m_right_map;
+  stack_map  m_map_table[4];
 
   stack_map*  m_current_map=nullptr;
 
-  actor  m_actor;
-
-  bool  m_dirty_flag=false;
-
-  bool  change_direction_by_input() noexcept;
-
 public:
-  template<typename  T>
-  void  add_timer();
-
   space_handler&  assign(space&  sp) noexcept;
 
   direction  get_direction(              ) const noexcept{return m_current_map->get_direction();}
-  void       set_direction(direction  dir)       noexcept;
+  void       set_direction(direction  dir)       noexcept{m_current_map = &m_map_table[dir];}
 
-  const stack_map&  get_stack_map(direction  dir) const noexcept;
-  const stack_map&  get_stack_map() const noexcept{return *m_current_map;}
+  const stack_map&  get_stack_map(direction  dir) const noexcept{return m_map_table[dir];}
+  const stack_map&  get_stack_map(              ) const noexcept{return *m_current_map;}
 
-  bool  test_dirty_flag() const noexcept{return m_dirty_flag       ;}
-  void   set_dirty_flag()       noexcept{       m_dirty_flag = true;}
-
-  void  step() noexcept;
-
-  void  render(const gbstd::canvas&  cv) noexcept;
-  void  render2(const gbstd::canvas&  cv) noexcept;
+  void  render(                const gbstd::canvas&  cv) noexcept{m_current_map->render(cv);}
+  void  render(direction  dir, const gbstd::canvas&  cv) noexcept{m_map_table[dir].render(cv);}
 
 };
 

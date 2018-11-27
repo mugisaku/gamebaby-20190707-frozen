@@ -8,23 +8,25 @@ namespace gbstd{
 
 
 
-process::
-process(process_callback  cb, uint32_t  intval, void*  dat) noexcept:
-m_callback(cb),
-m_interval(intval),
-m_data(dat)
-{
-}
-
-
-
-
 process&
 process::
-assign(const process&  rhs) noexcept
+assign(process&&  rhs) noexcept
 {
     if(this != &rhs)
     {
+      clear();
+
+      m_name = std::move(rhs.m_name);
+      m_next_time = rhs.m_next_time;
+
+      m_interval = rhs.m_interval;
+      m_callback = rhs.m_callback;
+
+      std::swap(m_data,rhs.m_data);
+
+      m_pc = rhs.m_pc;
+
+      m_state = rhs.m_state;
     }
 
 
@@ -32,15 +34,16 @@ assign(const process&  rhs) noexcept
 }
 
 
-
 process&
 process::
-assign(process&&  rhs) noexcept
+assign(const char*  name, process_callback  cb, uint32_t  intval, void*  dat) noexcept
 {
-    if(this != &rhs)
-    {
-    }
+  clear();
 
+  m_name     = name;
+  m_callback = cb;
+  m_interval = intval;
+  m_data     = dat;
 
   return *this;
 }
@@ -50,9 +53,37 @@ assign(process&&  rhs) noexcept
 
 void
 process::
+clear() noexcept
+{
+  reset();
+
+  m_foreground_job_list.clear();
+  m_background_job_list.clear();
+
+  m_name.clear();
+  m_interval = 0;
+  m_callback = nullptr;
+  m_data = nullptr;
+}
+
+
+void
+process::
+reset() noexcept
+{
+  m_state = state::running;
+
+  m_next_time = 0;
+
+  m_pc = 0;
+}
+
+
+void
+process::
 execute() noexcept
 {
-    if(gbstd::g_time >= m_next_time)
+    if(m_callback && (gbstd::g_time >= m_next_time))
     {
       m_callback(*this,m_data);
 
@@ -76,22 +107,13 @@ step()noexcept
 START:
     if(is_running())
     {
-        if(m_foreground_job)
+        if(m_foreground_job_list)
         {
-            if(m_foreground_job.is_finished())
-            {
-              m_foreground_job.clear();
-
-              execute();
-            }
-
-          else
-            {
-              m_foreground_job.step();
-            }
+          m_foreground_job_list.step();
         }
 
-      else
+
+        if(!m_foreground_job_list)
         {
           execute();
         }
@@ -103,7 +125,7 @@ START:
   else
     if(is_waiting())
     {
-      m_background_job_list.step();
+      m_background_job_list.step_all();
 
         if(!m_background_job_list)
         {

@@ -25,8 +25,8 @@ void
 space_view::
 update_size() noexcept
 {
-    if((m_dir == direction::front) ||
-       (m_dir == direction::back ))
+    if((m_dir == directions::front) ||
+       (m_dir == directions::back ))
     {
       m_x_length = m_space->get_x_length();
       m_y_length = m_space->get_y_length();
@@ -51,10 +51,10 @@ get_box(int  x, int  y, int  z) const noexcept
 {
     switch(m_dir)
     {
-  case(direction::front): return m_space->get_box(    x,y,z);
-  case(direction::left ): return m_space->get_box_ry( y,x,z);
-  case(direction::back ): return m_space->get_box_rxy(x,y,z);
-  case(direction::right): return m_space->get_box_rx( y,x,z);
+  case(directions::front): return m_space->get_box(    x,y,z);
+  case(directions::left ): return m_space->get_box_ry( y,x,z);
+  case(directions::back ): return m_space->get_box_rxy(x,y,z);
+  case(directions::right): return m_space->get_box_rx( y,x,z);
     }
 
 

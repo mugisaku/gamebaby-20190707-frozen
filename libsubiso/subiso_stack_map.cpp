@@ -143,7 +143,7 @@ render(const gbstd::canvas&  cv) noexcept
 
       gbstd::canvas  cocv(cv,g_plane_size*x,g_plane_size*y,g_plane_size,g_plane_size);
 
-      stack.render(cocv);
+      stack.render(m_dir,cocv);
     }}
 }
 

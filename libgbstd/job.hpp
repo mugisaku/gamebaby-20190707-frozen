@@ -210,6 +210,7 @@ public:
 
   operator bool() const noexcept{return m_process;}
 
+  bool  is_busy()     const noexcept;
   bool  is_finished() const noexcept;
 
   void  clear() noexcept;

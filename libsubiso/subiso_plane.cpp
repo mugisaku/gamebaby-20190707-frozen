@@ -81,6 +81,8 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
     {
       img = &g_stairs_image;
 
+      z_add_amount = -1;
+
       auto  d = m_box->get_direction()-dir;
 
         if(is_top())
@@ -96,7 +98,7 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
       else
         {
-          z_add_amount = -1;
+          z_base -= (g_plane_size/2);
 
             switch(d)
             {
@@ -146,7 +148,7 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
       else
         {
-          z_add_amount = -1;
+          z_add_amount = -2;
 
             switch(m_box->get_kind())
             {
@@ -160,7 +162,7 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
   bgcv = gbstd::canvas(*img,g_plane_size*pt.x,g_plane_size*pt.y,g_plane_size,g_plane_size);
 
-  cv.blend_canvas(bgcv,0,0,z_base,z_add_amount);
+  cv.blend_canvas(bgcv,0,0,z_base*2,z_add_amount);
 }
 
 

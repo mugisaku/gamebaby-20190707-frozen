@@ -28,217 +28,271 @@ subiso::space_handler  g_handler;
 subiso::actor          g_actor;
 
 
-constexpr int  g_number_of_steps = 4;
-constexpr int  g_move_length = subiso::g_plane_size/g_number_of_steps;
-
-
 void
-move_left(gbstd::process&  proc, subiso::actor*  actor) noexcept
+move_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
 {
-    if(proc.get_pc() < g_move_length)
+  actor->step();
+
+  int  n = 2;
+
+    while(n--)
     {
-      actor->m_position.x -= g_number_of_steps;
+        if(actor->m_first_move_context)
+        {
+          actor->m_first_move_context(actor->m_current_position);
+        }
+
+      else
+        if(actor->m_second_move_context)
+        {
+          actor->m_second_move_context(actor->m_current_position);
+        }
+
+      else
+        {
+          actor->m_current_step_box = actor->m_next_step_box          ;
+                                      actor->m_next_step_box = nullptr;
+
+          proc.exit();
+        }
+
+
+      proc += 1;
     }
-
-  else
-    {
-     proc.exit();
-    }
-
-
-  proc.add_pc(1);
 }
 
 
 void
-move_right(gbstd::process&  proc, subiso::actor*  actor) noexcept
+start_fall(gbstd::process&  proc, subiso::actor*  actor, box&  down_box) noexcept
 {
-    if(proc.get_pc() < g_move_length)
+  actor->m_next_step_box = &down_box;
+
+  int   n = g_plane_size/2;
+  int  nn = g_plane_size/2;
+
+    if(down_box.is_stairs())
     {
-      actor->m_position.x += g_number_of_steps;
+      nn /= 2;
     }
 
-  else
-    {
-      proc.exit();
-    }
 
+  actor->m_first_move_context.assign( 0,0,-1, n);
+  actor->m_second_move_context.assign(0,0,-1,nn);
 
-  proc.add_pc(1);
+  proc.get_foreground_job_list().add("fall player",move_actor,40,actor);
+
+  proc.step();
 }
 
 
 void
-move_front(gbstd::process&  proc, subiso::actor*  actor) noexcept
+start_move_from_stairs(gbstd::process&  proc, subiso::actor*  actor, const box_view&  bv, int  x, int  y) noexcept
 {
-    if(proc.get_pc() < g_move_length)
+  int   z = 0;
+  int  zz = 0;
+
+    if(actor->is_forward_direction())//to go down
     {
-      actor->m_position.y += g_number_of_steps;
+      auto  dst_box = bv.get_front_box();
+
+        if(dst_box && !dst_box->is_earth())
+        {
+          actor->m_next_step_box = dst_box;
+
+          z = 1;
+
+            if(dst_box->is_stairs())
+            {
+              zz = 1;
+            }
+
+
+          actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
+          actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
+
+
+          proc.get_foreground_job_list().add("move player",move_actor,40,actor);
+
+          proc.step();
+        }
+    }
+
+  else
+    if(actor->is_reverse_direction())//to go up
+    {
+      auto  dst_box = bv.get_front_up_box();
+
+        if(dst_box && !dst_box->is_earth())
+        {
+          actor->m_next_step_box = dst_box;
+
+          z = 1;
+
+            if(dst_box->is_stairs())
+            {
+              zz = 1;
+            }
+
+
+          actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
+          actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
+
+
+          proc.get_foreground_job_list().add("move player",move_actor,40,actor);
+
+          proc.step();
+        }
     }
 
   else
     {
-      proc.exit();
+      auto  dst_box = bv.get_front_box();
+
+        if(dst_box && dst_box->is_stairs() && (dst_box->get_direction() == bv.get_box()->get_direction()))
+        {
+          actor->m_next_step_box = dst_box;
+
+          actor->m_first_move_context.assign( x,y,0,g_plane_size/2);
+          actor->m_second_move_context.assign(x,y,0,g_plane_size/2);
+
+          proc.get_foreground_job_list().add("move player",move_actor,40,actor);
+
+          proc.step();
+        }
     }
-
-
-  proc.add_pc(1);
 }
 
 
 void
-move_back(gbstd::process&  proc, subiso::actor*  actor) noexcept
+start_move_from_not_stairs(gbstd::process&  proc, subiso::actor*  actor, const box_view&  bv, int  x, int  y) noexcept
 {
-    if(proc.get_pc() < g_move_length)
+  auto  dst_box = bv.get_front_box();
+
+    if(dst_box && !dst_box->is_earth())
     {
-      actor->m_position.y -= g_number_of_steps;
+      int  z = 0;
+
+        if(dst_box->is_stairs())
+        {
+            if(dst_box->get_direction() == ~actor->get_direction())
+            {
+              z = 1;
+            }
+
+          else
+            {
+              return;
+            }
+        }
+
+      else
+        if(dst_box->is_null())
+        {
+          auto  front_down_box = bv.get_front_down_box();
+
+            if(front_down_box && front_down_box->is_stairs())
+            {
+              z = -1;
+
+              dst_box = front_down_box;
+            }
+        }
+
+
+      actor->m_next_step_box = dst_box;
+
+
+      actor->m_first_move_context.assign( x,y,0,g_plane_size/2);
+      actor->m_second_move_context.assign(x,y,z,g_plane_size/2);
+
+      proc.get_foreground_job_list().add("move player",move_actor,40,actor);
+
+      proc.step();
     }
-
-  else
-    {
-      proc.exit();
-    }
-
-
-  proc.add_pc(1);
 }
 
 
 void
-move_up(gbstd::process&  proc, subiso::actor*  actor) noexcept
+change_front_box(gbstd::process&  proc, subiso::actor*  actor) noexcept
 {
-    if(proc.get_pc() < g_move_length)
-    {
-      actor->m_position.z += g_number_of_steps;
-    }
+  auto&  box = *actor->m_current_step_box;
 
-  else
+    if(box.is_stairs())
     {
-      proc.exit();
+      return;
     }
 
 
-  proc.add_pc(1);
-}
+  box_view  bv(box,actor->get_direction());
 
+  auto  front_box = bv.get_front_box();
 
-void
-move_down(gbstd::process&  proc, subiso::actor*  actor) noexcept
-{
-    if(proc.get_pc() < g_move_length)
+    if(front_box)
     {
-      actor->m_position.z += -g_number_of_steps;
+      bv.set_box(*front_box);
+
+        if(front_box->is_null())
+        {
+          auto  down_box = bv.get_down_box();
+
+            if(down_box && down_box->is_earth())
+            {
+              down_box->be_null();
+            }
+        }
+
+      else          
+        if(front_box->is_earth())
+        {
+          front_box->be_stairs(~actor->get_direction());
+        }
     }
-
-  else
-    {
-      proc.exit();
-    }
-
-
-  proc.add_pc(1);
 }
 
 
 void
 control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
 {
+  actor->step();
+
   auto&  sp = *actor->get_space();
 
   space_view  sv(sp,directions::front);
 
-  auto&  pos = actor->m_position;
-
-  auto&  box = sv.get_box(pos.x/g_plane_size,
-                          pos.y/g_plane_size,
-                          pos.z/g_plane_size);
-
-  box_view  bv(box,actor->get_direction());
-
-  auto  down_box = bv.get_down_box();
-
-    if(down_box && down_box->is_null())
+    if(!actor->m_current_step_box)
     {
-      proc.get_foreground_job_list().add("fall player",move_down,40,actor);
+      auto&  pos = actor->m_current_position;
 
-      proc.step();
-
-      return;
+      actor->m_current_step_box = &sv.get_box(pos.x/g_plane_size,
+                                              pos.y/g_plane_size,
+                                              pos.z/g_plane_size);
     }
 
 
-  gbstd::point  pt;
+  auto&  box = *actor->m_current_step_box;
+
+    {
+      auto  dst_box = box.get_down_box();
+
+        if(dst_box && !dst_box->is_earth())
+        {
+          start_fall(proc,actor,*dst_box);
+
+          return;
+        }
+    }
+
 
   direction  dir;
 
-  void  (*cb)(gbstd::process&  proc, subiso::actor*  actor) = nullptr;
-
-    if(gbstd::g_input.test_shift())
-    {
-           if(gbstd::g_input.test_up()  ){cb = move_up;}
-      else if(gbstd::g_input.test_down()){cb = move_down;}
-
-      return;
-    }
-
-  else
-    if(gbstd::g_input.test_up())
-    {
-      pt.y = 1;
-
-      dir = directions::back;
-    }
-
-  else
-    if(gbstd::g_input.test_down())
-    {
-      pt.y = -1;
-
-      dir = directions::front;
-    }
-
-  else
-    if(gbstd::g_input.test_left())
-    {
-      pt.x = -1;
-
-      dir = directions::left;
-    }
-
-  else
-    if(gbstd::g_input.test_right())
-    {
-      pt.x = 1;
-
-      dir = directions::right;
-    }
-
+       if(gbstd::g_input.test_up()   ){dir = directions::back ;}
+  else if(gbstd::g_input.test_down() ){dir = directions::front;}
+  else if(gbstd::g_input.test_left() ){dir = directions::left ;}
+  else if(gbstd::g_input.test_right()){dir = directions::right;}
   else
     if(gbstd::g_input.test_p())
     {
-      auto  front_box = bv.get_front_box();
-
-        if(front_box)
-        {
-          bv.set_box(*front_box);
-
-            if(front_box->is_null())
-            {
-              auto  down_box = bv.get_down_box();
-
-                if(down_box && down_box->is_earth())
-                {
-                  down_box->be_null();
-                }
-            }
-
-          else          
-            if(front_box->is_earth())
-            {
-              front_box->be_stairs(~actor->get_direction());
-            }
-        }
-
+      change_front_box(proc,actor);
 
       return;
     }
@@ -251,33 +305,28 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
 
   actor->set_direction(dir);
 
-       if(pt.x < 0){cb = move_left ;}
-  else if(pt.x > 0){cb = move_right;}
-  else if(pt.y < 0){cb = move_back ;}
-  else if(pt.y > 0){cb = move_front;}
+  box_view  bv(box,dir);
 
+  int  x = 0;
+  int  y = 0;
 
-    if(cb)
+    switch(dir)
     {
-      auto  front_box = bv.get_front_box();
+  case(directions::front): y = -1;break;
+  case(directions::back ): y =  1;break;
+  case(directions::left ): x = -1;break;
+  case(directions::right): x =  1;break;
+    }
 
-        if(front_box)
-        {
-            if(front_box->is_null())
-            {
-              proc.get_foreground_job_list().add("move player",cb,40,actor);
 
-              proc.step();
-            }
+    if(box.is_stairs())
+    {
+      start_move_from_stairs(proc,actor,bv,x,y);
+    }
 
-          else
-            if(front_box->is_stairs())
-            {
-//              proc.get_foreground_job() = gbstd::job(cb,40,actor);
-
-//              proc.step();
-            }
-        }
+  else
+    {
+      start_move_from_not_stairs(proc,actor,bv,x,y);
     }
 }
 

@@ -22,7 +22,7 @@ g_image(g_binary);
 
 
 actor::
-actor() noexcept: m_position(0,0,24)
+actor() noexcept: m_current_position(0,0,24)
 {
 }
 
@@ -40,31 +40,31 @@ transform_position(const stack_map&  map) noexcept
 
   int  x;
   int  y;
-  int  z = m_position.z;
+  int  z = m_current_position.z;
 
     switch(map.get_direction())
     {
   case(directions::front):
-      x = m_position.x;
-      y = m_position.y;
+      x = m_current_position.x;
+      y = m_current_position.y;
 
       m_transformed_position = point3d(x,(uh-1-y)+(lh-1-z)-24,z);
       break;
   case(directions::right):
-      x =    m_position.y;
-      y = uh-m_position.x;
+      x =    m_current_position.y;
+      y = uh-m_current_position.x;
 
       m_transformed_position = point3d(x,(uh-1-y)+(lh-1-z),z);
       break;
   case(directions::back):
-      x =  w-m_position.x;
-      y = uh-m_position.y;
+      x =  w-m_current_position.x;
+      y = uh-m_current_position.y;
 
       m_transformed_position = point3d(x-24,(uh-1-y)+(lh-1-z),z);
       break;
   case(directions::left):
-      x = w-m_position.y;
-      y =   m_position.x;
+      x = w-m_current_position.y;
+      y =   m_current_position.x;
 
       m_transformed_position = point3d(x-24,(uh-1-y)+(lh-1-z)-24,z);
       break;
@@ -74,7 +74,7 @@ transform_position(const stack_map&  map) noexcept
 
 void
 actor::
-step(direction  dir) noexcept
+step() noexcept
 {
     if(gbstd::g_time >= m_next_animation_time)
     {
@@ -125,7 +125,7 @@ render(const stack_map&  map, const gbstd::canvas&  cv) const noexcept
 
   gbstd::canvas  src_cv(g_image,src_pt.x,src_pt.y,24,24);
 
-  cv.blend_canvas(src_cv,dst_pt.x,dst_pt.y,m_transformed_position.z+24,-1);
+  cv.blend_canvas(src_cv,dst_pt.x,dst_pt.y,(m_transformed_position.z+24)*2,-2);
 }
 
 

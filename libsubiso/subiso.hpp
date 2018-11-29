@@ -92,6 +92,20 @@ point3d
 
   constexpr point3d(int  x_=0, int  y_=0, int  z_=0) noexcept: x(x_), y(y_), z(z_){}
 
+  constexpr operator bool() const noexcept{return x && y && z;}
+
+  constexpr bool  operator==(const point3d&  rhs) const noexcept
+  {
+    return (x == rhs.x) &&
+           (y == rhs.y) &&
+           (z == rhs.z);
+  }
+
+  constexpr bool  operator!=(const point3d&  rhs) const noexcept
+  {
+    return !(*this == rhs);
+  }
+
   point3d&  assign(int  x_, int  y_, int  z_) noexcept
   {
     x = x_;
@@ -568,12 +582,52 @@ public:
 
 
 
+class
+move_context
+{
+  int  m_x;
+  int  m_y;
+  int  m_z;
+  int  m_n;
+
+public:
+  constexpr move_context(int  x=0, int  y=0, int  z=0, int  n=0) noexcept:
+  m_x(x), m_y(y), m_z(z), m_n(n){}
+
+  constexpr operator bool() const noexcept{return m_n;}
+
+  move_context&  assign(int  x=0, int  y=0, int  z=0, int  n=0) noexcept
+  {
+    m_x = x;
+    m_y = y;
+    m_z = z;
+    m_n = n;
+
+    return *this;
+  }
+
+  void  operator()(point3d&  pt) noexcept
+  {
+    pt.x += m_x;
+    pt.y += m_y;
+    pt.z += m_z;
+
+    --m_n;
+  }
+
+};
+
+
 struct
 actor
 {
   space*  m_space=nullptr;
 
-  point3d  m_position;
+  point3d  m_current_position;
+
+  move_context  m_first_move_context;
+  move_context  m_second_move_context;
+
   point3d  m_transformed_position;
 
   int  m_image_z=0;
@@ -583,6 +637,9 @@ actor
   uint32_t  m_next_animation_time=0;
 
   int  m_animation_counter=0;
+
+  box*  m_next_step_box=nullptr;
+  box*  m_current_step_box=nullptr;
 
   bool  m_dirty_flag;
 
@@ -596,7 +653,10 @@ actor
   direction  get_direction(            ) const noexcept{return m_dir    ;}
   void       set_direction(direction  d)       noexcept{       m_dir = d;}
 
-  void  step(direction  dir) noexcept;
+  bool  is_forward_direction() const noexcept{return m_current_step_box->get_direction() ==  m_dir;}
+  bool  is_reverse_direction() const noexcept{return m_current_step_box->get_direction() == ~m_dir;}
+
+  void  step() noexcept;
 
   void  render(const stack_map&  map, const gbstd::canvas&  cv) const noexcept;
 

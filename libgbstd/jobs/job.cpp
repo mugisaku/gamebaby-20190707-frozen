@@ -34,6 +34,14 @@ clear() noexcept
 
 bool
 job::
+is_busy() const noexcept
+{
+  return m_process.get_foreground_job_list();
+}
+
+
+bool
+job::
 is_finished() const noexcept
 {
   return m_process.is_exited();

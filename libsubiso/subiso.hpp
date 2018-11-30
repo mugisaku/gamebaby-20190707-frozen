@@ -624,6 +624,7 @@ actor
   space*  m_space=nullptr;
 
   point3d  m_current_position;
+  point3d  m_next_position;
 
   move_context  m_first_move_context;
   move_context  m_second_move_context;

@@ -54,10 +54,179 @@ move_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
                                       actor->m_next_step_box = nullptr;
 
           proc.exit();
+
+          return;
+        }
+    }
+}
+
+
+void
+fall_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
+{
+  actor->step();
+
+  int  n = 2;
+
+    while(n--)
+    {
+      auto&  a = actor->m_current_position.z;
+      auto   b = actor->m_next_position.z;
+
+        if(a > b){--a;}
+      else
+        {
+          actor->m_current_step_box = actor->m_next_step_box          ;
+                                      actor->m_next_step_box = nullptr;
+
+          proc.exit();
+
+          return;
+        }
+    }
+}
+
+
+enum class
+step_kind
+{
+  null,
+  floor_to_floor,
+  floor_to_up_stairs,
+  floor_to_down_stairs,
+  up_stairs_to_floor,
+  up_stairs_to_up_stairs,
+  down_stairs_to_floor,
+  down_stairs_to_down_stairs,
+};
+
+
+struct
+step_info
+{
+  step_kind  kind;
+
+  box*  next_box;
+
+  void  for_up_stairs(  const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_down_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_floor(      const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir                    ) noexcept;
+
+  step_info(const subiso::actor&  actor) noexcept;
+
+};
+
+
+void
+step_info::
+for_up_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
+{
+  auto  front_up_box = front_box.get_up_box();
+
+    if(front_up_box && front_up_box->is_stairs() && (front_up_box->get_direction() == box_dir))
+    {
+      kind = step_kind::up_stairs_to_up_stairs;
+
+      next_box = front_up_box;
+    }
+
+  else
+    {
+      kind = step_kind::up_stairs_to_floor;
+
+      next_box = front_up_box;
+    }
+}
+
+
+void
+step_info::
+for_down_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
+{
+    if(front_box.is_null())
+    {
+      auto  front_down_box = front_box.get_down_box();
+
+        if(front_down_box && front_down_box->is_stairs() && (front_down_box->get_direction() == box_dir))
+        {
+          kind = step_kind::down_stairs_to_down_stairs;
+
+          next_box = front_down_box;
         }
 
+      else
+        {
+          kind = step_kind::down_stairs_to_floor;
 
-      proc += 1;
+          next_box = &front_box;
+        }
+    }
+}
+
+
+void
+step_info::
+for_floor(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir) noexcept
+{
+    if(front_box.is_stairs())
+    {
+        if(front_box.get_direction() == ~actor_dir)
+        {
+          kind = step_kind::floor_to_up_stairs;
+
+          next_box = &front_box;
+        }
+    }
+
+  else
+    if(front_box.is_null())
+    {
+      auto  front_down_box = front_box.get_down_box();
+
+        if(front_down_box && front_down_box->is_stairs() && (front_down_box->get_direction() == actor_dir))
+        {
+          kind = step_kind::floor_to_down_stairs;
+
+          next_box = front_down_box;
+        }
+
+      else
+        {
+          kind = step_kind::floor_to_floor;
+
+          next_box = &front_box;
+        }
+    }
+}
+
+
+step_info::
+step_info(const subiso::actor&  actor) noexcept:
+kind(step_kind::null),
+next_box(nullptr)
+{
+  auto&  box = *actor.m_current_step_box;
+
+  auto  actor_dir = actor.get_direction();
+
+  box_view  bv(box,actor_dir);
+
+  auto  front_box = bv.get_front_box();
+
+    if(front_box)
+    {
+        if(box.is_stairs())
+        {
+          auto  box_dir = box.get_direction();
+
+               if(box_dir ==  actor_dir){for_down_stairs(actor,bv,*front_box,actor_dir,box_dir);}
+          else if(box_dir == ~actor_dir){for_up_stairs(  actor,bv,*front_box,actor_dir,box_dir);}
+        }
+
+      else
+        {
+          for_floor(actor,bv,*front_box,actor_dir);
+        }
     }
 }
 
@@ -67,148 +236,17 @@ start_fall(gbstd::process&  proc, subiso::actor*  actor, box&  down_box) noexcep
 {
   actor->m_next_step_box = &down_box;
 
-  int   n = g_plane_size/2;
-  int  nn = g_plane_size/2;
+  actor->m_next_position.z = (g_plane_size*down_box.get_index().z);
 
     if(down_box.is_stairs())
     {
-      nn /= 2;
+      actor->m_next_position.z += g_plane_size/2;
     }
 
 
-  actor->m_first_move_context.assign( 0,0,-1, n);
-  actor->m_second_move_context.assign(0,0,-1,nn);
-
-  proc.get_foreground_job_list().add("fall player",move_actor,40,actor);
+  proc.get_foreground_job_list().add("fall player",fall_actor,40,actor);
 
   proc.step();
-}
-
-
-void
-start_move_from_stairs(gbstd::process&  proc, subiso::actor*  actor, const box_view&  bv, int  x, int  y) noexcept
-{
-  int   z = 0;
-  int  zz = 0;
-
-    if(actor->is_forward_direction())//to go down
-    {
-      auto  dst_box = bv.get_front_box();
-
-        if(dst_box && !dst_box->is_earth())
-        {
-          actor->m_next_step_box = dst_box;
-
-          z = 1;
-
-            if(dst_box->is_stairs())
-            {
-              zz = 1;
-            }
-
-
-          actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
-          actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
-
-
-          proc.get_foreground_job_list().add("move player",move_actor,40,actor);
-
-          proc.step();
-        }
-    }
-
-  else
-    if(actor->is_reverse_direction())//to go up
-    {
-      auto  dst_box = bv.get_front_up_box();
-
-        if(dst_box && !dst_box->is_earth())
-        {
-          actor->m_next_step_box = dst_box;
-
-          z = 1;
-
-            if(dst_box->is_stairs())
-            {
-              zz = 1;
-            }
-
-
-          actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
-          actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
-
-
-          proc.get_foreground_job_list().add("move player",move_actor,40,actor);
-
-          proc.step();
-        }
-    }
-
-  else
-    {
-      auto  dst_box = bv.get_front_box();
-
-        if(dst_box && dst_box->is_stairs() && (dst_box->get_direction() == bv.get_box()->get_direction()))
-        {
-          actor->m_next_step_box = dst_box;
-
-          actor->m_first_move_context.assign( x,y,0,g_plane_size/2);
-          actor->m_second_move_context.assign(x,y,0,g_plane_size/2);
-
-          proc.get_foreground_job_list().add("move player",move_actor,40,actor);
-
-          proc.step();
-        }
-    }
-}
-
-
-void
-start_move_from_not_stairs(gbstd::process&  proc, subiso::actor*  actor, const box_view&  bv, int  x, int  y) noexcept
-{
-  auto  dst_box = bv.get_front_box();
-
-    if(dst_box && !dst_box->is_earth())
-    {
-      int  z = 0;
-
-        if(dst_box->is_stairs())
-        {
-            if(dst_box->get_direction() == ~actor->get_direction())
-            {
-              z = 1;
-            }
-
-          else
-            {
-              return;
-            }
-        }
-
-      else
-        if(dst_box->is_null())
-        {
-          auto  front_down_box = bv.get_front_down_box();
-
-            if(front_down_box && front_down_box->is_stairs())
-            {
-              z = -1;
-
-              dst_box = front_down_box;
-            }
-        }
-
-
-      actor->m_next_step_box = dst_box;
-
-
-      actor->m_first_move_context.assign( x,y,0,g_plane_size/2);
-      actor->m_second_move_context.assign(x,y,z,g_plane_size/2);
-
-      proc.get_foreground_job_list().add("move player",move_actor,40,actor);
-
-      proc.step();
-    }
 }
 
 
@@ -319,15 +357,49 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
     }
 
 
-    if(box.is_stairs())
+  int   z = 0;
+  int  zz = 0;
+
+  step_info  inf(*actor);
+
+    switch(inf.kind)
     {
-      start_move_from_stairs(proc,actor,bv,x,y);
+  case(step_kind::null):
+      return;
+      break;
+  case(step_kind::floor_to_floor):
+      break;
+  case(step_kind::floor_to_up_stairs):
+      zz = 1;
+      break;
+  case(step_kind::floor_to_down_stairs):
+      zz = -1;
+      break;
+  case(step_kind::up_stairs_to_floor):
+      z = 1;
+      break;
+  case(step_kind::up_stairs_to_up_stairs):
+       z = 1;
+      zz = 1;
+      break;
+  case(step_kind::down_stairs_to_floor):
+      z = -1;
+      break;
+  case(step_kind::down_stairs_to_down_stairs):
+       z = -1;
+      zz = -1;
+      break;
     }
 
-  else
-    {
-      start_move_from_not_stairs(proc,actor,bv,x,y);
-    }
+
+  actor->m_next_step_box = inf.next_box;
+
+  actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
+  actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
+
+  proc.get_foreground_job_list().add("move player",move_actor,40,actor);
+
+  proc.step();
 }
 
 

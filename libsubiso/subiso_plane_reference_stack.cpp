@@ -34,15 +34,13 @@ assign(const plane_reference*  refs, int  n) noexcept
 }
 
 
-void
+plane_reference*
 plane_reference_stack::
-seek() noexcept
+seek(plane_reference*  p) noexcept
 {
-  m_current = m_top;
-
     for(;;)
     {
-      auto  pl = m_current->get_plane();
+      auto  pl = p->get_plane();
 
         if(!pl)
         {
@@ -56,8 +54,11 @@ seek() noexcept
         }
 
 
-      ++m_current;
+      ++p;
     }
+
+
+  return p;
 }
 
 
@@ -79,12 +80,16 @@ render(direction  dir, const gbstd::canvas&  cv) noexcept
 
             if(box.is_stairs() && (box != dir))
             {
-              auto  elel = (el+1);
-              auto  plpl = elel->get_plane();
+              auto  elel = seek(el+1);
 
-                if(plpl)
+                if(elel)
                 {
-                  plpl->render(dir,elel->get_flags(),cv,0/*elel->get_image_z_base()*/);
+                  auto  plpl = elel->get_plane();
+
+                    if(plpl)
+                    {
+                      plpl->render(dir,elel->get_flags(),cv,elel->get_image_z_base());
+                    }
                 }
             }
 

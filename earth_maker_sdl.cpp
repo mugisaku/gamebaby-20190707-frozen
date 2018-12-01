@@ -489,7 +489,7 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
   actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
   actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
 
-  proc.get_foreground_job_list().add("move player",move_actor,40,actor);
+  proc.get_foreground_job_list().add("move player",move_actor,20,actor);
 
   proc.step();
 }
@@ -515,6 +515,19 @@ void
 main_loop() noexcept
 {
   sdl::update_control();
+
+if(0)
+{
+    for(auto pt: gbstd::g_point_buffer)
+    {
+      auto&  map = g_handler.get_stack_map();
+
+      auto&  s = map.get_stack(pt.x/g_plane_size,pt.y/g_plane_size);
+
+      printf("%d\n",s.get_current()->get_image_z_base());
+    }
+}
+
 
   g_root_process.step();
 

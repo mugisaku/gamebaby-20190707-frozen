@@ -514,6 +514,8 @@ plane_reference_stack
 
   int  m_length=0;
 
+  static plane_reference*  seek(plane_reference*  p) noexcept;
+
 public:
   plane_reference_stack() noexcept{}
   plane_reference_stack(const plane_reference_stack&   rhs) noexcept=delete;
@@ -527,7 +529,7 @@ public:
 
   void  assign(const plane_reference*  refs, int  n) noexcept;
 
-  void  seek() noexcept;
+  void  seek() noexcept{m_current = seek(m_top);}
 
   int  get_length() const noexcept{return m_length;}
 

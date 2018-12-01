@@ -75,8 +75,17 @@ render(direction  dir, const gbstd::canvas&  cv) noexcept
 
         if(pl)
         {
-            if(pl->get_box()->is_stairs())
+          auto&  box = *pl->get_box();
+
+            if(box.is_stairs() && (box != dir))
             {
+              auto  elel = (el+1);
+              auto  plpl = elel->get_plane();
+
+                if(plpl)
+                {
+                  plpl->render(dir,elel->get_flags(),cv,0/*elel->get_image_z_base()*/);
+                }
             }
 
 

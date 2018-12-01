@@ -22,7 +22,7 @@ g_image(g_binary);
 
 
 actor::
-actor() noexcept: m_current_position(0,0,24)
+actor() noexcept
 {
 }
 
@@ -31,7 +31,26 @@ actor() noexcept: m_current_position(0,0,24)
 
 void
 actor::
-transform_position(const stack_map&  map) noexcept
+set_current_step_box(subiso::box*  box) noexcept
+{
+  m_current_step_box = box;
+
+    if(box)
+    {
+      auto&  i = box->get_index();
+
+      m_current_position.x = (g_plane_size*i.x);
+      m_current_position.y = (g_plane_size*i.y);
+      m_current_position.z = (g_plane_size*i.z);
+    }
+}
+
+
+
+
+void
+actor::
+transform(const stack_map&  map) noexcept
 {
   int   w = map.get_image_width() ;
   int  uh = map.get_upper_image_height();
@@ -42,7 +61,9 @@ transform_position(const stack_map&  map) noexcept
   int  y;
   int  z = m_current_position.z;
 
-    switch(map.get_direction())
+  auto  map_dir = map.get_direction();
+
+    switch(map_dir)
     {
   case(directions::front):
       x = m_current_position.x;
@@ -69,6 +90,9 @@ transform_position(const stack_map&  map) noexcept
       m_transformed_position = point3d(x-24,(uh-1-y)+(lh-1-z)-24,z);
       break;
     }
+
+
+  m_transformed_dir = m_dir-map_dir;
 }
 
 
@@ -76,6 +100,8 @@ void
 actor::
 step() noexcept
 {
+  m_flag_timer.update();
+
     if(gbstd::g_time >= m_next_animation_time)
     {
       m_next_animation_time = gbstd::g_time+200;
@@ -89,28 +115,18 @@ step() noexcept
 
 void
 actor::
-render(const stack_map&  map, const gbstd::canvas&  cv) const noexcept
+render(const gbstd::canvas&  cv) const noexcept
 {
   auto  dst_pt = gbstd::point(m_transformed_position.x,m_transformed_position.y);
 
   gbstd::point  src_pt;
 
-  auto  transformed_dir = m_dir+map.get_direction();
-
-    switch(transformed_dir)
+    switch(m_transformed_dir)
     {
-  case(directions::front):
-      src_pt = {0,0};
-      break;
-  case(directions::back):
-      src_pt = {0,24};
-      break;
-  case(directions::left):
-      src_pt = {24,0};
-      break;
-  case(directions::right):
-      src_pt = {24,24};
-      break;
+  case(directions::front): src_pt = { 0, 0};break;
+  case(directions::back ): src_pt = { 0,24};break;
+  case(directions::left ): src_pt = {24, 0};break;
+  case(directions::right): src_pt = {24,24};break;
     }
 
 

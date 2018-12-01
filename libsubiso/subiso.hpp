@@ -246,6 +246,9 @@ public:
 
   operator bool() const noexcept{return m_kind != kind::null;}
 
+  bool  operator==(direction  dir) const noexcept{return m_dir == dir;}
+  bool  operator!=(direction  dir) const noexcept{return m_dir != dir;}
+
   void    check() noexcept{m_check_flag =  true;}
   void  uncheck() noexcept{m_check_flag = false;}
   bool  is_checked() const noexcept{return m_check_flag;}
@@ -618,6 +621,37 @@ public:
 };
 
 
+
+
+class
+flag_timer
+{
+  struct flags{
+    static constexpr int  elapsed = 1;
+    static constexpr int   active = 2;
+  };
+
+  uint32_t  m_data=0;
+
+  uint32_t  m_next_time=0;
+
+public:
+  void  clear() noexcept{m_data = 0;}
+
+  void    set_timer(uint32_t  ms) noexcept;
+  void  unset_timer(            ) noexcept{m_data &= ~flags::active;}
+
+  bool  is_active() const noexcept{return m_data&flags::active;}
+
+  void    set_flag() noexcept{m_data |=  flags::elapsed;}
+  void  unset_flag() noexcept{m_data &= ~flags::elapsed;}
+  bool   test_flag() const noexcept{return m_data&flags::elapsed;}
+
+  void  update() noexcept;
+
+};
+
+
 struct
 actor
 {
@@ -634,6 +668,7 @@ actor
   int  m_image_z=0;
 
   direction  m_dir=directions::front;
+  direction  m_transformed_dir;
 
   uint32_t  m_next_animation_time=0;
 
@@ -644,12 +679,17 @@ actor
 
   bool  m_dirty_flag;
 
-  void  transform_position(const stack_map&  map) noexcept;
+  flag_timer  m_flag_timer;
+
+  void  transform(const stack_map&  map) noexcept;
 
   actor() noexcept;
 
   void    set_space(space*  sp)       noexcept{       m_space = sp;}
   space*  get_space(          ) const noexcept{return m_space     ;}
+
+  void  set_current_step_box(subiso::box*  box)       noexcept;
+  box*  get_current_step_box(                 ) const noexcept{return m_current_step_box;}
 
   direction  get_direction(            ) const noexcept{return m_dir    ;}
   void       set_direction(direction  d)       noexcept{       m_dir = d;}
@@ -657,9 +697,12 @@ actor
   bool  is_forward_direction() const noexcept{return m_current_step_box->get_direction() ==  m_dir;}
   bool  is_reverse_direction() const noexcept{return m_current_step_box->get_direction() == ~m_dir;}
 
+        flag_timer&  get_flag_timer()       noexcept{return m_flag_timer;}
+  const flag_timer&  get_flag_timer() const noexcept{return m_flag_timer;}
+
   void  step() noexcept;
 
-  void  render(const stack_map&  map, const gbstd::canvas&  cv) const noexcept;
+  void  render(const gbstd::canvas&  cv) const noexcept;
 
 };
 

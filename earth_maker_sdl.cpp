@@ -64,9 +64,7 @@ move_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
 void
 fall_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
 {
-  actor->step();
-
-  int  n = 2;
+  int  n = 4;
 
     while(n--)
     {
@@ -108,18 +106,19 @@ step_info
 
   box*  next_box;
 
-  void  for_up_stairs(  const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
-  void  for_down_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
-  void  for_floor(      const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir                    ) noexcept;
+  void  for_up_stairs(  subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_down_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_stairs(     subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_floor(      subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir                    ) noexcept;
 
-  step_info(const subiso::actor&  actor) noexcept;
+  step_info(subiso::actor&  actor) noexcept;
 
 };
 
 
 void
 step_info::
-for_up_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
+for_up_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
 {
   auto  front_up_box = front_box.get_up_box();
 
@@ -141,7 +140,7 @@ for_up_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direc
 
 void
 step_info::
-for_down_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
+for_down_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
 {
     if(front_box.is_null())
     {
@@ -166,7 +165,20 @@ for_down_stairs(const subiso::actor&  actor, box_view&  bv, box&  front_box, dir
 
 void
 step_info::
-for_floor(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir) noexcept
+for_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
+{
+    if(front_box.is_null() || (front_box.is_stairs() && (front_box.get_direction() == box_dir)))
+    {
+      kind = step_kind::floor_to_floor;
+
+      next_box = &front_box;
+    }
+}
+
+
+void
+step_info::
+for_floor(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir) noexcept
 {
     if(front_box.is_stairs())
     {
@@ -183,25 +195,59 @@ for_floor(const subiso::actor&  actor, box_view&  bv, box&  front_box, direction
     {
       auto  front_down_box = front_box.get_down_box();
 
-        if(front_down_box && front_down_box->is_stairs() && (front_down_box->get_direction() == actor_dir))
+        if(front_down_box)
         {
-          kind = step_kind::floor_to_down_stairs;
+            if(front_down_box->is_null())
+            {
+STEP_FOR_FALL:
+                if(actor.get_flag_timer().test_flag())
+                {
+                  actor.get_flag_timer().clear();
 
-          next_box = front_down_box;
+                  kind = step_kind::floor_to_floor;
+
+                  next_box = &front_box;
+                }
+
+              else
+                if(!actor.get_flag_timer().is_active())
+                {
+                  actor.get_flag_timer().set_timer(600);
+                }
+
+
+              return;
+            }
+
+          else
+            if(front_down_box->is_stairs())
+            {
+                if(front_down_box->get_direction() == actor_dir)
+                {
+                  kind = step_kind::floor_to_down_stairs;
+
+                  next_box = front_down_box;
+
+                  return;
+                }
+
+              else
+                {
+                  goto STEP_FOR_FALL;
+                }
+            }
         }
 
-      else
-        {
-          kind = step_kind::floor_to_floor;
 
-          next_box = &front_box;
-        }
+      kind = step_kind::floor_to_floor;
+
+      next_box = &front_box;
     }
 }
 
 
 step_info::
-step_info(const subiso::actor&  actor) noexcept:
+step_info(subiso::actor&  actor) noexcept:
 kind(step_kind::null),
 next_box(nullptr)
 {
@@ -221,6 +267,7 @@ next_box(nullptr)
 
                if(box_dir ==  actor_dir){for_down_stairs(actor,bv,*front_box,actor_dir,box_dir);}
           else if(box_dir == ~actor_dir){for_up_stairs(  actor,bv,*front_box,actor_dir,box_dir);}
+          else                          {for_stairs(     actor,bv,*front_box,actor_dir,box_dir);}
         }
 
       else
@@ -273,7 +320,7 @@ change_front_box(gbstd::process&  proc, subiso::actor*  actor) noexcept
         {
           auto  down_box = bv.get_down_box();
 
-            if(down_box && down_box->is_earth())
+            if(down_box && (down_box->is_earth() || down_box->is_stairs()))
             {
               down_box->be_null();
             }
@@ -321,6 +368,41 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
     }
 
 
+  auto  handler_dir = g_handler.get_direction();
+
+    if(gbstd::g_input.test_shift())
+    {
+      static bool  shift_lock;
+
+        if(!gbstd::g_input.test_left() &&
+           !gbstd::g_input.test_right())
+        {
+          shift_lock = false;
+        }
+
+
+        if(!shift_lock)
+        {
+            if(gbstd::g_input.test_left())
+            {
+              g_handler.set_direction(handler_dir+1);
+
+              shift_lock = true;
+            }
+
+          else
+            if(gbstd::g_input.test_right())
+            {
+              g_handler.set_direction(handler_dir-1);
+
+              shift_lock = true;
+            }
+        }
+
+      return;
+    }
+
+
   direction  dir;
 
        if(gbstd::g_input.test_up()   ){dir = directions::back ;}
@@ -337,18 +419,28 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
 
   else
     {
+      actor->get_flag_timer().clear();
+
       return;
     }
 
 
-  actor->set_direction(dir);
+  auto  transformed_dir = dir+handler_dir;
 
-  box_view  bv(box,dir);
+    if(actor->get_direction() != transformed_dir)
+    {
+      actor->get_flag_timer().clear();
+
+      actor->set_direction(transformed_dir);
+    }
+
+
+  box_view  bv(box,transformed_dir);
 
   int  x = 0;
   int  y = 0;
 
-    switch(dir)
+    switch(transformed_dir)
     {
   case(directions::front): y = -1;break;
   case(directions::back ): y =  1;break;
@@ -413,9 +505,9 @@ redraw_screen() noexcept
 
   auto&  map = g_handler.get_stack_map();
 
-  g_actor.transform_position(map);
+  g_actor.transform(map);
 
-  g_actor.render(map,g_screen_canvas);
+  g_actor.render(g_screen_canvas);
 }
 
 
@@ -463,11 +555,12 @@ main(int  argc, char**  argv)
 #endif
 
 
-  g_space.resize(8,8,5);
+  g_space.resize(8,8,6);
 
     for(int  y = 0;  y < g_space.get_y_length();  ++y){
     for(int  x = 0;  x < g_space.get_x_length();  ++x){
       g_space.get_box(x,y,0).m_kind = subiso::box::kind::earth;
+      g_space.get_box(x,y,1).m_kind = subiso::box::kind::earth;
     }}
 
 
@@ -480,6 +573,7 @@ main(int  argc, char**  argv)
   auto&  b_map = g_handler.get_stack_map(directions::left );
 
   g_actor.set_space(&g_space);
+  g_actor.set_current_step_box(&g_space.get_box(2,2,4));
 
   g_root_process.get_background_job_list().add("control player",control_player,80,&g_actor);
 

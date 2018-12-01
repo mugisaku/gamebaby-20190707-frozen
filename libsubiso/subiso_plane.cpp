@@ -91,7 +91,7 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
             {
           case(directions::front): pt = {2,0};break;
           case(directions::right): pt = {1,0};break;
-          case(directions::back ): pt = {3,0};break;
+          case(directions::back ): return;break;
           case(directions::left ): pt = {0,0};break;
             }
         }

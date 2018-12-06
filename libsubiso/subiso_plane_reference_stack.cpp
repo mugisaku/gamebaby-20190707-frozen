@@ -48,7 +48,9 @@ seek(plane_reference*  p) noexcept
         }
 
 
-        if(!pl->get_box()->is_null())
+      auto&  box = *pl->get_box();
+
+        if(!box.is_null() || box.test_water_filled_flag())
         {
           break;
         }

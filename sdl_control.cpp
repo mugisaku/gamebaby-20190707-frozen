@@ -42,8 +42,13 @@ process_key_down(const SDL_KeyboardEvent&  evt) noexcept
     case(SDLK_x    ):
         gbstd::g_input.set_n();
         break;
-    case(SDLK_F1):
-//        SDL_SaveBMP(surface,"__SCREEN.bmp");
+    case(SDLK_a    ):
+    case(SDLK_COLON):
+        gbstd::g_input.set_l();
+        break;
+    case(SDLK_s    ):
+    case(SDLK_RIGHTBRACKET):
+        gbstd::g_input.set_r();
         break;
       }
   }
@@ -73,7 +78,15 @@ process_key_up(const SDL_KeyboardEvent&  evt) noexcept
   case(SDLK_x    ):
       gbstd::g_input.unset_n();
       break;
-  case(SDLK_s):
+    case(SDLK_a    ):
+    case(SDLK_COLON):
+        gbstd::g_input.unset_l();
+        break;
+    case(SDLK_s    ):
+    case(SDLK_RIGHTBRACKET):
+        gbstd::g_input.unset_r();
+        break;
+  case(SDLK_t):
       screenshot();
       break;
     }

@@ -1,6 +1,5 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
-#include"libgbstd/job.hpp"
 #include"libgbstd/value.hpp"
 #include"libgbstd/parser.hpp"
 #include"libgbstd/window.hpp"
@@ -21,10 +20,6 @@ namespace{
 
 canvas
 g_screen_canvas;
-
-
-process
-g_base_process;
 
 
 void

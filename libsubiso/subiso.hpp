@@ -4,7 +4,7 @@
 
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
-#include"libgbstd/job.hpp"
+#include"libgbstd/process.hpp"
 #include<list>
 
 
@@ -18,6 +18,18 @@ constexpr int     top_flag = 1;
 constexpr int  bottom_flag = 2;
 constexpr int    left_flag = 4;
 constexpr int   right_flag = 8;
+
+namespace edge_flags{
+constexpr int   front = 1;
+constexpr int   right = 2;
+constexpr int    left = 4;
+constexpr int    back = 8;
+
+constexpr int   right_front = 1;
+constexpr int    right_back = 2;
+constexpr int     left_back = 4;
+constexpr int    left_front = 8;
+}
 
 
 class
@@ -193,14 +205,14 @@ public:
   box*  get_down_box(                 ) const noexcept{return m_down_box      ;}
   void  set_down_box(subiso::box*  box)       noexcept{       m_down_box = box;}
 
-  box*  get_upper_box(                   int  i) const noexcept{return m_upper_boxes[i]      ;}
-  void  set_upper_box(subiso::box*  box, int  i)       noexcept{       m_upper_boxes[i] = box;}
+  box*  get_upper_box(                   int  i) const noexcept{return m_upper_boxes[i&7]      ;}
+  void  set_upper_box(subiso::box*  box, int  i)       noexcept{       m_upper_boxes[i&7] = box;}
 
-  box*  get_middle_box(                   int  i) const noexcept{return m_middle_boxes[i]      ;}
-  void  set_middle_box(subiso::box*  box, int  i)       noexcept{       m_middle_boxes[i] = box;}
+  box*  get_middle_box(                   int  i) const noexcept{return m_middle_boxes[i&7]      ;}
+  void  set_middle_box(subiso::box*  box, int  i)       noexcept{       m_middle_boxes[i&7] = box;}
 
-  box*  get_lower_box(                   int  i) const noexcept{return m_lower_boxes[i]      ;}
-  void  set_lower_box(subiso::box*  box, int  i)       noexcept{       m_lower_boxes[i] = box;}
+  box*  get_lower_box(                   int  i) const noexcept{return m_lower_boxes[i&7]      ;}
+  void  set_lower_box(subiso::box*  box, int  i)       noexcept{       m_lower_boxes[i&7] = box;}
 
 };
 
@@ -212,7 +224,6 @@ public:
   enum class kind{
     null,
     earth,
-    water,
     stairs,
 
   } m_kind=kind::null;
@@ -225,6 +236,10 @@ private:
   plane  m_top_plane;
   plane  m_side_planes[4];
 
+  int     m_top_edge_flags=0;
+  int  m_middle_edge_flags=0;
+  int  m_bottom_edge_flags=0;
+
   int  m_distance=0;
 
   actor*  m_owner_actor=nullptr;
@@ -232,8 +247,9 @@ private:
   direction  m_dir;
 
   struct flags{
-    static constexpr uint32_t  active = 1;
-    static constexpr uint32_t  source = 2;
+    static constexpr uint32_t        active = 1;
+    static constexpr uint32_t  water_source = 2;
+    static constexpr uint32_t  water_filled = 4;
   };
 
 
@@ -253,13 +269,17 @@ public:
   void  uncheck() noexcept{m_check_flag = false;}
   bool  is_checked() const noexcept{return m_check_flag;}
 
-  bool  test_active_flag() const noexcept{return m_state&flags::active;}
+  bool   test_active_flag() const noexcept{return m_state&flags::active;}
   void    set_active_flag() noexcept{m_state |=  flags::active;}
   void  unset_active_flag() noexcept{m_state &= ~flags::active;}
 
-  bool  test_source_flag() const noexcept{return m_state&flags::source;}
-  void    set_source_flag() noexcept{m_state |=  flags::source;}
-  void  unset_source_flag() noexcept{m_state &= ~flags::source;}
+  bool   test_water_source_flag() const noexcept{return m_state&flags::water_source;}
+  void    set_water_source_flag() noexcept{m_state |=  flags::water_source;}
+  void  unset_water_source_flag() noexcept{m_state &= ~flags::water_source;}
+
+  bool   test_water_filled_flag() const noexcept{return m_state&flags::water_filled;}
+  void    set_water_filled_flag() noexcept{m_state |=  flags::water_filled;}
+  void  unset_water_filled_flag() noexcept{m_state &= ~flags::water_filled;}
 
   space*  get_space(          ) const noexcept{return m_space     ;}
   void    set_space(space*  sp)       noexcept{       m_space = sp;}
@@ -270,8 +290,8 @@ public:
         plane&  get_top_plane()       noexcept{return m_top_plane;}
   const plane&  get_top_plane() const noexcept{return m_top_plane;}
 
-        plane&  get_side_plane(int  i)       noexcept{return m_side_planes[i];}
-  const plane&  get_side_plane(int  i) const noexcept{return m_side_planes[i];}
+        plane&  get_side_plane(int  i)       noexcept{return m_side_planes[i&3];}
+  const plane&  get_side_plane(int  i) const noexcept{return m_side_planes[i&3];}
 
   actor*   get_owner_actor(         ) const noexcept{return m_owner_actor    ;}
   void     set_owner_actor(actor*  a)       noexcept{       m_owner_actor = a;}
@@ -282,16 +302,26 @@ public:
   direction   get_direction(            ) const noexcept{return m_dir    ;}
   void        set_direction(direction  d)       noexcept{       m_dir = d;}
 
+  int     get_top_edge_flags() const noexcept{return m_top_edge_flags;}
+  int  get_middle_edge_flags() const noexcept{return m_middle_edge_flags;}
+  int  get_bottom_edge_flags() const noexcept{return m_bottom_edge_flags;}
+
+  void  update_edge_flags() noexcept;
+
   kind  get_kind() const noexcept{return m_kind;}
+
+  void  flow_water() noexcept;
+
+  bool  is_surrounded_by_earth() const noexcept;
+  bool  is_surrounded_by_water() const noexcept;
+  bool   is_contacted_water() const noexcept;
 
   void  be_null()  noexcept{m_kind = kind::null;}
   void  be_earth() noexcept{m_kind = kind::earth;}
-  void  be_water(bool  src) noexcept;
   void  be_stairs(direction  d) noexcept;
 
   bool  is_null() const noexcept{return m_kind == kind::null;}
   bool  is_earth() const noexcept{return m_kind == kind::earth;}
-  bool  is_water() const noexcept{return m_kind == kind::water;}
   bool  is_stairs() const noexcept{return m_kind == kind::stairs;}
 
 };
@@ -363,9 +393,9 @@ public:
   plane&  get_top_plane() const noexcept{return m_box->get_top_plane();}
 
   plane&  get_front_plane() const noexcept;
-  plane&   get_left_plane() const noexcept;
   plane&  get_right_plane() const noexcept;
   plane&   get_back_plane() const noexcept;
+  plane&   get_left_plane() const noexcept;
 
   void  set_box(subiso::box&  box)       noexcept{       m_box = &box;}
   box*  get_box(                 ) const noexcept{return m_box       ;}
@@ -376,24 +406,13 @@ public:
   box*     get_up_box() const noexcept{return m_box->get_up_box();}
   box*   get_down_box() const noexcept{return m_box->get_down_box();}
 
-  box*    get_left_box() const noexcept;
-  box*   get_right_box() const noexcept;
   box*   get_front_box() const noexcept;
+  box*   get_right_box() const noexcept;
   box*    get_back_box() const noexcept;
+  box*    get_left_box() const noexcept;
 
-  box*   get_back_down_box()  const noexcept;
-  box*   get_back_up_box()    const noexcept;
   box*   get_front_down_box() const noexcept;
   box*   get_front_up_box()   const noexcept;
-
-  box*   get_left_up_box()         const noexcept;
-  box*   get_left_down_box()       const noexcept;
-  box*   get_left_back_box()       const noexcept;
-  box*   get_left_back_down_box()  const noexcept;
-  box*   get_left_back_up_box()    const noexcept;
-  box*   get_left_front_box()      const noexcept;
-  box*   get_left_front_down_box() const noexcept;
-  box*   get_left_front_up_box()   const noexcept;
 
   box*   get_right_up_box()         const noexcept;
   box*   get_right_down_box()       const noexcept;
@@ -403,6 +422,18 @@ public:
   box*   get_right_front_box()      const noexcept;
   box*   get_right_front_down_box() const noexcept;
   box*   get_right_front_up_box()   const noexcept;
+
+  box*   get_back_down_box()  const noexcept;
+  box*   get_back_up_box()    const noexcept;
+
+  box*   get_left_up_box()         const noexcept;
+  box*   get_left_down_box()       const noexcept;
+  box*   get_left_back_box()       const noexcept;
+  box*   get_left_back_down_box()  const noexcept;
+  box*   get_left_back_up_box()    const noexcept;
+  box*   get_left_front_box()      const noexcept;
+  box*   get_left_front_down_box() const noexcept;
+  box*   get_left_front_up_box()   const noexcept;
 
 };
 
@@ -482,6 +513,9 @@ plane_reference
 
   void    reset_top_link(const box_view&  bv) noexcept;
   void  reset_front_link(const box_view&  bv) noexcept;
+
+  int    get_flags_of_top_plane() const noexcept;
+  int  get_flags_of_front_plane() const noexcept;
 
 public:
   plane_reference() noexcept{}

@@ -77,6 +77,8 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
   int  z_add_amount = 0;
 
+  auto  water_filled = m_box->test_water_filled_flag();
+
     if(m_box->is_stairs())
     {
       img = &g_stairs_image;
@@ -87,25 +89,52 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
         if(is_top())
         {
-            switch(d)
+            if(water_filled)
             {
-          case(directions::front): pt = {2,0};break;
-          case(directions::right): pt = {1,0};break;
-          case(directions::back ): return;break;
-          case(directions::left ): pt = {0,0};break;
+              z_add_amount = 0;
+
+              img = &g_water_image;
+            }
+
+          else
+            {
+                switch(d)
+                {
+              case(directions::front): pt = {2,0};break;
+              case(directions::right): pt = {1,0};break;
+              case(directions::back ): pt = {3,0};break;
+              case(directions::left ): pt = {0,0};break;
+                }
             }
         }
 
       else
         {
-          z_base -= (g_plane_size/2);
-
-            switch(d)
+            if(d == directions::back)
             {
-          case(directions::front): pt = {2,1};break;
-          case(directions::right): pt = {1,1};break;
-          case(directions::back ): pt = {3,1};break;
-          case(directions::left ): pt = {0,1};break;
+              z_add_amount = -2;
+
+              pt = {3,1};
+            }
+
+          else
+            if(water_filled)
+            {
+              z_add_amount = -2;
+
+              img = &g_waterwall_image;
+            }
+
+          else
+            {
+              z_base -= (g_plane_size/2);
+
+                switch(d)
+                {
+              case(directions::front): pt = {2,1};break;
+              case(directions::right): pt = {1,1};break;
+              case(directions::left ): pt = {0,1};break;
+                }
             }
         }
     }
@@ -136,25 +165,41 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
         }
 
 
-        if(is_top())
+        if(water_filled)
         {
-            switch(m_box->get_kind())
+            if(is_top())
             {
-          case(box::kind::water ): img = &g_water_image;break;
-          case(box::kind::earth ): img = &g_green_image;break;
-          case(box::kind::stairs): img = &g_stairs_image;break;
+              img = &g_water_image;
+            }
+
+          else
+            {
+              z_add_amount = -2;
+
+              img = &g_waterwall_image;
             }
         }
 
       else
         {
-          z_add_amount = -2;
-
-            switch(m_box->get_kind())
+            if(is_top())
             {
-          case(box::kind::earth ): img = &g_wall_image;break;
-          case(box::kind::water ): img = &g_waterwall_image;break;
-          case(box::kind::stairs): img = &g_stairs_image;break;
+                switch(m_box->get_kind())
+                {
+              case(box::kind::earth ): img = &g_green_image;break;
+              case(box::kind::stairs): img = &g_stairs_image;break;
+                }
+            }
+
+          else
+            {
+              z_add_amount = -2;
+
+                switch(m_box->get_kind())
+                {
+              case(box::kind::earth ): img = &g_wall_image;break;
+              case(box::kind::stairs): img = &g_stairs_image;break;
+                }
             }
         }
     }

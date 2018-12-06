@@ -149,13 +149,15 @@ user_input
     static constexpr int   left = 0x002;
     static constexpr int  right = 0x004;
     static constexpr int   down = 0x008;
-    static constexpr int      p = 0x010;
-    static constexpr int      n = 0x020;
-    static constexpr int  shift = 0x040;
-    static constexpr int  start = 0x080;
+    static constexpr int  shift = 0x010;
+    static constexpr int  start = 0x020;
+    static constexpr int      p = 0x100;
+    static constexpr int      n = 0x200;
+    static constexpr int      l = 0x400;
+    static constexpr int      r = 0x800;
 
-    static constexpr int  mouse_left  = 0x100;
-    static constexpr int  mouse_right = 0x200;
+    static constexpr int  mouse_left  = 0x1000;
+    static constexpr int  mouse_right = 0x2000;
   };
 
   bool   test(int  flag) const noexcept{return m_state&flag;}
@@ -181,6 +183,8 @@ public:
 
   bool  test_p() const noexcept{return test(flags::p);}
   bool  test_n() const noexcept{return test(flags::n);}
+  bool  test_l() const noexcept{return test(flags::l);}
+  bool  test_r() const noexcept{return test(flags::r);}
 
   bool  test_shift() const noexcept{return test(flags::shift);}
   bool  test_start() const noexcept{return test(flags::start);}
@@ -197,6 +201,9 @@ public:
   void  set_p() noexcept{set(flags::p);}
   void  set_n() noexcept{set(flags::n);}
 
+  void  set_l() noexcept{set(flags::l);}
+  void  set_r() noexcept{set(flags::r);}
+
   void  set_shift() noexcept{set(flags::shift);}
   void  set_start() noexcept{set(flags::start);}
 
@@ -211,6 +218,8 @@ public:
 
   void  unset_p() noexcept{unset(flags::p);}
   void  unset_n() noexcept{unset(flags::n);}
+  void  unset_l() noexcept{unset(flags::l);}
+  void  unset_r() noexcept{unset(flags::r);}
 
   void  unset_shift() noexcept{unset(flags::shift);}
   void  unset_start() noexcept{unset(flags::start);}

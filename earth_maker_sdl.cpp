@@ -21,7 +21,7 @@ namespace{
 
 
 canvas  g_screen_canvas;
-process  g_root_process;
+process  g_base_process;
 
 subiso::space          g_space;
 subiso::space_handler  g_handler;
@@ -29,7 +29,7 @@ subiso::actor          g_actor;
 
 
 void
-move_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
+move_actor(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 {
   actor->step();
 
@@ -53,7 +53,7 @@ move_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
           actor->m_current_step_box = actor->m_next_step_box          ;
                                       actor->m_next_step_box = nullptr;
 
-          proc.exit();
+          exec.pop();
 
           return;
         }
@@ -62,7 +62,7 @@ move_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
 
 
 void
-fall_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
+fall_actor(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 {
   int  n = 4;
 
@@ -71,13 +71,14 @@ fall_actor(gbstd::process&  proc, subiso::actor*  actor) noexcept
       auto&  a = actor->m_current_position.z;
       auto   b = actor->m_next_position.z;
 
-        if(a > b){--a;}
+           if(a > b){--a;}
+      else if(a < b){++a;}
       else
         {
           actor->m_current_step_box = actor->m_next_step_box          ;
                                       actor->m_next_step_box = nullptr;
 
-          proc.exit();
+          exec.pop();
 
           return;
         }
@@ -108,8 +109,8 @@ step_info
 
   void  for_up_stairs(  subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
   void  for_down_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
-  void  for_stairs(     subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
-  void  for_floor(      subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir                    ) noexcept;
+  void  for_stairs(     subiso::actor&  actor, box_view&  bv, box&  front_box, direction  box_dir  ) noexcept;
+  void  for_floor(      subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir) noexcept;
 
   step_info(subiso::actor&  actor) noexcept;
 
@@ -165,7 +166,7 @@ for_down_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction
 
 void
 step_info::
-for_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept
+for_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  box_dir) noexcept
 {
     if(front_box.is_null() || (front_box.is_stairs() && (front_box.get_direction() == box_dir)))
     {
@@ -267,7 +268,7 @@ next_box(nullptr)
 
                if(box_dir ==  actor_dir){for_down_stairs(actor,bv,*front_box,actor_dir,box_dir);}
           else if(box_dir == ~actor_dir){for_up_stairs(  actor,bv,*front_box,actor_dir,box_dir);}
-          else                          {for_stairs(     actor,bv,*front_box,actor_dir,box_dir);}
+          else                          {for_stairs(     actor,bv,*front_box,box_dir);}
         }
 
       else
@@ -279,36 +280,9 @@ next_box(nullptr)
 
 
 void
-start_fall(gbstd::process&  proc, subiso::actor*  actor, box&  down_box) noexcept
+change_front_box(subiso::actor*  actor) noexcept
 {
-  actor->m_next_step_box = &down_box;
-
-  actor->m_next_position.z = (g_plane_size*down_box.get_index().z);
-
-    if(down_box.is_stairs())
-    {
-      actor->m_next_position.z += g_plane_size/2;
-    }
-
-
-  proc.get_foreground_job_list().add("fall player",fall_actor,40,actor);
-
-  proc.step();
-}
-
-
-void
-change_front_box(gbstd::process&  proc, subiso::actor*  actor) noexcept
-{
-  auto&  box = *actor->m_current_step_box;
-
-    if(box.is_stairs())
-    {
-      return;
-    }
-
-
-  box_view  bv(box,actor->get_direction());
+  box_view  bv(*actor->m_current_step_box,actor->get_direction());
 
   auto  front_box = bv.get_front_box();
 
@@ -323,6 +297,11 @@ change_front_box(gbstd::process&  proc, subiso::actor*  actor) noexcept
             if(down_box && (down_box->is_earth() || down_box->is_stairs()))
             {
               down_box->be_null();
+
+                if(down_box->is_contacted_water())
+                {
+                  down_box->flow_water();
+                }
             }
         }
 
@@ -330,13 +309,77 @@ change_front_box(gbstd::process&  proc, subiso::actor*  actor) noexcept
         if(front_box->is_earth())
         {
           front_box->be_stairs(~actor->get_direction());
+
+            if(front_box->is_contacted_water())
+            {
+              front_box->flow_water();
+            }
+        }
+
+      else          
+        if(front_box->is_stairs())
+        {
+          front_box->be_null();
         }
     }
 }
 
 
 void
-control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
+add_new_box_to_front(subiso::actor*  actor) noexcept
+{
+  box_view  bv(*actor->m_current_step_box,actor->get_direction());
+
+  auto  front_box = bv.get_front_box();
+
+    if(front_box && front_box->is_null())
+    {
+      auto  previous_box = front_box                ;
+      auto      down_box = front_box->get_down_box();
+
+        while(down_box)
+        {
+            if(down_box->is_null())
+            {
+              previous_box = down_box                           ;
+                             down_box = down_box->get_down_box();
+            }
+
+          else
+            if(down_box->is_earth())
+            {
+              break;
+            }
+
+          else
+            if(down_box->is_stairs())
+            {
+              previous_box = down_box                           ;
+
+              break;
+            }
+        }
+
+
+        if(!previous_box->test_water_filled_flag() && previous_box->is_surrounded_by_earth())
+        {
+          previous_box->set_water_source_flag();
+          previous_box->set_water_filled_flag();
+        }
+
+      else
+        {
+          previous_box->be_earth();
+
+          previous_box->unset_water_source_flag();
+          previous_box->unset_water_filled_flag();
+        }
+    }
+}
+
+
+void
+control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 {
   actor->step();
 
@@ -356,63 +399,133 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
 
   auto&  box = *actor->m_current_step_box;
 
-    {
-      auto  dst_box = box.get_down_box();
+  int  rem = (actor->m_current_position.z%g_plane_size);
 
-        if(dst_box && !dst_box->is_earth())
+    if(box.test_water_filled_flag())
+    {
+      auto  down_box = box.get_down_box();
+
+        if(!rem)
         {
-          start_fall(proc,actor,*dst_box);
+          actor->m_next_position.z  = (g_plane_size*box.get_index().z);
+          actor->m_next_position.z += (g_plane_size/2                );
+
+          exec.push(fall_actor);
 
           return;
+        }
+    }
+
+  else
+    {
+        if(rem && !box.is_stairs())
+        {
+          actor->m_next_position.z  = (g_plane_size*box.get_index().z);
+          actor->m_next_position.z -= (g_plane_size/2                );
+
+          exec.push(fall_actor);
+
+          return;
+        }
+
+      else
+        {
+          auto  down_box = box.get_down_box();
+
+            if(down_box && !down_box->is_earth())
+            {
+              actor->m_next_position.z  = (g_plane_size*down_box->get_index().z);
+
+                if(down_box->test_water_filled_flag() || down_box->is_stairs())
+                {
+                  actor->m_next_position.z += (g_plane_size/2);
+                }
+
+
+              exec.push(fall_actor);
+
+              return;
+            }
         }
     }
 
 
   auto  handler_dir = g_handler.get_direction();
 
+  direction  dir;
+
     if(gbstd::g_input.test_shift())
     {
-      static bool  shift_lock;
-
-        if(!gbstd::g_input.test_left() &&
-           !gbstd::g_input.test_right())
-        {
-          shift_lock = false;
-        }
+           if(gbstd::g_input.test_up()   ){dir = directions::back ;}
+      else if(gbstd::g_input.test_down() ){dir = directions::front;}
+      else if(gbstd::g_input.test_left() ){dir = directions::left ;}
+      else if(gbstd::g_input.test_right()){dir = directions::right;}
+      else{return;}
 
 
-        if(!shift_lock)
-        {
-            if(gbstd::g_input.test_left())
-            {
-              g_handler.set_direction(handler_dir+1);
-
-              shift_lock = true;
-            }
-
-          else
-            if(gbstd::g_input.test_right())
-            {
-              g_handler.set_direction(handler_dir-1);
-
-              shift_lock = true;
-            }
-        }
+      actor->set_direction(dir+handler_dir);
 
       return;
     }
 
 
-  direction  dir;
+  static bool  lock;
 
        if(gbstd::g_input.test_up()   ){dir = directions::back ;}
   else if(gbstd::g_input.test_down() ){dir = directions::front;}
   else if(gbstd::g_input.test_left() ){dir = directions::left ;}
   else if(gbstd::g_input.test_right()){dir = directions::right;}
+  else if(gbstd::g_input.test_l())
+    {
+        if(!lock)
+        {
+          g_handler.set_direction(handler_dir-1);
+
+          lock = true;
+        }
+
+
+      return;
+    }
+
+  else
+    if(gbstd::g_input.test_r())
+    {
+        if(!lock)
+        {
+          g_handler.set_direction(handler_dir+1);
+
+          lock = true;
+        }
+
+
+      return;
+    }
+
   else
     if(gbstd::g_input.test_p())
     {
-      change_front_box(proc,actor);
+        if(!lock)
+        {
+          add_new_box_to_front(actor);
+
+          lock = true;
+        }
+
+
+      return;
+    }
+
+  else
+    if(gbstd::g_input.test_n())
+    {
+        if(!lock)
+        {
+          change_front_box(actor);
+
+          lock = true;
+        }
+
 
       return;
     }
@@ -420,6 +533,8 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
   else
     {
       actor->get_flag_timer().clear();
+
+      lock = false;
 
       return;
     }
@@ -489,9 +604,7 @@ control_player(gbstd::process&  proc, subiso::actor*  actor) noexcept
   actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
   actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
 
-  proc.get_foreground_job_list().add("move player",move_actor,20,actor);
-
-  proc.step();
+  exec.push(move_actor);
 }
 
 
@@ -529,7 +642,7 @@ if(0)
 }
 
 
-  g_root_process.step();
+  g_base_process.step();
 
 //    if(g_needed_to_redraw)
     {
@@ -550,25 +663,26 @@ main(int  argc, char**  argv)
 {
 #ifdef __EMSCRIPTEN__
   set_description("<pre>"
-/*
-                  "正方形の頂面と側面を等尺で、\n"
-                  "二次元にレンダリングするプログラム\n"
+                  "方向キーで移動、Shiftキーを押しながら方向キーで方向転換\n"
+                  "前方に土BOXが無いとき、一時停止するが、長押しで進行\n"
                   "\n"
-                  "適切な繋ぎ目を持つ画像に、自動で切り替わる\n"
+                  "Aキー、または:キーを押すと、視点を左回転\n"
+                  "Sキー、または]キーを押すと、視点を右回転\n"
                   "\n"
+                  "Enterキーを押すと、前方下に土BOXを生成する\n"
+                  "四方が土BOXに囲まれているなら、水BOXになる\n"
                   "\n"
-*/
-                  "カーソルキーで移動（XY値を変化）\n"
-                  "Shiftキーを押しながら上下を押すと、Z値を変化\n"
-//                  "マウスの左ボタンを押すと、ボックスを置く\n"
-//                  "　　　　右ボタンを押すと、ボックスを消す\n"
+                  "Ctrlキーを押すと、前方に土BOXがあるとき、階段BOXに変化\n"
+                  "階段BOXがあるとき、それを除去\n"
+                  "なにもなければ、前方下の土BOXを除去\n"
+                  "\n"
                   "</pre>");
 
   show_github_link();
 #endif
 
 
-  g_space.resize(8,8,6);
+  g_space.resize(6,6,12);
 
     for(int  y = 0;  y < g_space.get_y_length();  ++y){
     for(int  x = 0;  x < g_space.get_x_length();  ++x){
@@ -588,7 +702,7 @@ main(int  argc, char**  argv)
   g_actor.set_space(&g_space);
   g_actor.set_current_step_box(&g_space.get_box(2,2,4));
 
-  g_root_process.get_background_job_list().add("control player",control_player,80,&g_actor);
+  g_base_process.assign("control player",20,control_player,&g_actor);
 
 
   sdl::init(a_map.get_image_width(),b_map.get_image_height());

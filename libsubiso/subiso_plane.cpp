@@ -79,7 +79,7 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
   auto  water_filled = m_box->test_water_filled_flag();
 
-    if(m_box->is_stairs())
+    if(!water_filled && m_box->is_stairs())
     {
       img = &g_stairs_image;
 
@@ -89,22 +89,12 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
         if(is_top())
         {
-            if(water_filled)
+            switch(d)
             {
-              z_add_amount = 0;
-
-              img = &g_water_image;
-            }
-
-          else
-            {
-                switch(d)
-                {
-              case(directions::front): pt = {2,0};break;
-              case(directions::right): pt = {1,0};break;
-              case(directions::back ): pt = {3,0};break;
-              case(directions::left ): pt = {0,0};break;
-                }
+          case(directions::front): pt = {2,0};break;
+          case(directions::right): pt = {1,0};break;
+          case(directions::back ): pt = {3,0};break;
+          case(directions::left ): pt = {0,0};break;
             }
         }
 
@@ -115,14 +105,6 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
               z_add_amount = -2;
 
               pt = {3,1};
-            }
-
-          else
-            if(water_filled)
-            {
-              z_add_amount = -2;
-
-              img = &g_waterwall_image;
             }
 
           else

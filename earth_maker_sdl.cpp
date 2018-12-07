@@ -21,11 +21,26 @@ namespace{
 
 
 canvas  g_screen_canvas;
+
+
+image    g_bg_image;
+canvas  g_bg_canvas;
+
+
 process  g_base_process;
 
 subiso::space          g_space;
 subiso::space_handler  g_handler;
 subiso::actor          g_actor;
+
+
+void
+redraw_bg() noexcept
+{
+  g_bg_canvas.fill(color());
+
+  g_handler.render(g_bg_canvas);
+}
 
 
 void
@@ -321,6 +336,9 @@ change_front_box(subiso::actor*  actor) noexcept
         {
           front_box->be_null();
         }
+
+
+      redraw_bg();
     }
 }
 
@@ -374,6 +392,11 @@ add_new_box_to_front(subiso::actor*  actor) noexcept
           previous_box->unset_water_source_flag();
           previous_box->unset_water_filled_flag();
         }
+
+
+      previous_box->update_edge_flags();
+
+      redraw_bg();
     }
 }
 
@@ -481,6 +504,8 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
         {
           g_handler.set_direction(handler_dir-1);
 
+          redraw_bg();
+
           lock = true;
         }
 
@@ -494,6 +519,8 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
         if(!lock)
         {
           g_handler.set_direction(handler_dir+1);
+
+          redraw_bg();
 
           lock = true;
         }
@@ -609,18 +636,19 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 
 
 
+
 void
 redraw_screen() noexcept
 {
-  g_screen_canvas.fill(color());
-
-  g_handler.render(g_screen_canvas);
-
   auto&  map = g_handler.get_stack_map();
 
   g_actor.transform(map);
 
+
+  g_screen_canvas.draw_canvas(g_bg_canvas,0,0);
+
   g_actor.render(g_screen_canvas);
+
 }
 
 
@@ -705,9 +733,15 @@ main(int  argc, char**  argv)
   g_base_process.assign("control player",20,control_player,&g_actor);
 
 
-  sdl::init(a_map.get_image_width(),b_map.get_image_height());
+  sdl::init(std::max(a_map.get_image_width() ,b_map.get_image_width() ),
+            std::max(a_map.get_image_height(),b_map.get_image_height()));
 
   g_screen_canvas = sdl::make_screen_canvas();
+
+  g_bg_image.resize(g_screen_canvas.get_width(),g_screen_canvas.get_height());
+  g_bg_canvas = g_bg_image;
+
+  redraw_bg();
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);

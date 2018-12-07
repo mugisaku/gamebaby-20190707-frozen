@@ -69,15 +69,45 @@ step() noexcept
 {
     if(g_time >= m_next_time)
     {
+      int  n = 8;
+
+BEGIN:
         if(!m_execution)
         {
           m_base_callback(m_execution,m_data);
         }
 
 
-        if(m_execution)
+      auto  last = m_execution.get();
+
+        if(last)
         {
-          m_execution(m_data);
+            for(;;)
+            {
+              last(m_execution,m_data);
+
+              auto  now = m_execution.get();
+
+                if(!now)
+                {
+                    if(!--n)
+                    {
+                      break;
+                    }
+
+
+                  goto BEGIN;
+                }
+
+              else
+                if(now == last)
+                {
+                  break;
+                }
+
+
+              last = now;
+            }
         }
 
 

@@ -90,13 +90,13 @@ render(direction  dir, const gbstd::canvas&  cv) noexcept
 
                     if(plpl)
                     {
-                      plpl->render(dir,elel->get_flags(),cv,elel->get_image_z_base());
+                      plpl->render(dir,elel->get_flags(dir),cv,elel->get_image_z_base());
                     }
                 }
             }
 
 
-          pl->render(dir,el->get_flags(),cv,el->get_image_z_base());
+          pl->render(dir,el->get_flags(dir),cv,el->get_image_z_base());
         }
     }
 }

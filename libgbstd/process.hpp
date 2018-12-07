@@ -17,51 +17,39 @@ class  process;
 class  execution;
 
 
+using base_callback = void(*)(execution&,void*);
+
+
 class
 execution
 {
   struct frame{
-    void  (*m_callback)(execution&,void*);
+    base_callback  m_callback;
 
-    frame(void(*cb)(execution&,void*)=nullptr) noexcept:
-
+    frame(base_callback  cb=nullptr) noexcept:
     m_callback(cb){}
 
   };
 
   std::vector<frame>  m_stack;
 
-  bool  m_lock=false;
-
 public:
   operator bool() const noexcept{return m_stack.size();}
 
   template<typename  T>void  push(void(*cb)(execution&,T*)) noexcept
   {
-    m_stack.emplace_back(reinterpret_cast<void(*)(execution&,void*)>(cb));
+    m_stack.emplace_back(reinterpret_cast<base_callback>(cb));
   }
 
   template<typename  T>void  replace(void(*cb)(execution&,T*)) noexcept
   {
-    m_stack.back() = frame(reinterpret_cast<void(*)(execution&,void*)>(cb));
+    m_stack.back() = frame(reinterpret_cast<base_callback>(cb));
   }
 
   void    pop() noexcept{m_stack.pop_back();}
   void  clear() noexcept{m_stack.clear();}
 
-  void  operator()(void*  dat) noexcept
-  {
-      if(!m_lock && m_stack.size())
-      {
-        m_lock = true;
-
-        auto&  f = m_stack.back();
-
-        f.m_callback(*this,dat);
-
-        m_lock = false;
-      }
-  }
+  base_callback  get() const noexcept{return m_stack.size()? m_stack.back().m_callback:nullptr;}
 
 };
 
@@ -71,10 +59,6 @@ public:
 class
 process
 {
-public:
-  using base_callback = void(*)(execution&,void*);
-
-private:
   std::string  m_name;
 
   uint32_t  m_next_time=0;

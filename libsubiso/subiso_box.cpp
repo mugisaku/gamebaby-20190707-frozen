@@ -25,9 +25,39 @@ void
 box::
 update_edge_flags() noexcept
 {
-  m_top_edge_flags    = 0;
-  m_middle_edge_flags = 0;
-  m_bottom_edge_flags = 0;
+    if(test_water_filled_flag() || is_earth())
+    {
+      m_top_edge_flags    = 0xF;
+      m_middle_edge_flags = 0xF;
+      m_bottom_edge_flags = 0xF;
+    }
+
+  else
+    if(is_stairs())
+    {
+      m_top_edge_flags    = edge_flags::back;
+      m_middle_edge_flags = edge_flags::left_back|edge_flags::right_back;
+      m_bottom_edge_flags = edge_flags::left|edge_flags::right|edge_flags::back;
+
+      m_top_edge_flags    = get_shifted_flags(   m_top_edge_flags,m_dir);
+      m_middle_edge_flags = get_shifted_flags(m_middle_edge_flags,m_dir);
+      m_bottom_edge_flags = get_shifted_flags(m_bottom_edge_flags,m_dir);
+    }
+}
+
+
+void
+box::
+update() noexcept
+{
+  update_edge_flags();
+
+  m_ground_line = g_plane_size*m_index.z;
+
+    if(test_water_filled_flag() || is_stairs())
+    {
+      m_ground_line += (g_plane_size/2);
+    }
 }
 
 

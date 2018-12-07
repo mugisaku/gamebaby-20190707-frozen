@@ -62,21 +62,60 @@ assign(direction  dir, plane*  pl) noexcept
 
 namespace{
 bool
-test_top(const box*  dst) noexcept
+test_top_edge(box*  dst, direction  dir, int  flag) noexcept
 {
-return 0;
+    if(!dst)
+    {
+      return false;
+    }
+
+
+  box_view  bv(*dst,dir);
+
+  return bv.test_top_edge(flag);
 }
 bool
-test_disconnection(const box*  dst, box::kind  k) noexcept
+test_middle_edge(box*  dst, direction  dir, int  flag) noexcept
 {
-return 0;
+    if(!dst)
+    {
+      return false;
+    }
+
+
+  box_view  bv(*dst,dir);
+
+  return bv.test_middle_edge(flag);
+}
+bool
+test_bottom_edge(box*  dst, direction  dir, int  flag) noexcept
+{
+    if(!dst)
+    {
+      return false;
+    }
+
+
+  box_view  bv(*dst,dir);
+
+  return bv.test_bottom_edge(flag);
+}
+bool
+is_not_same(const box*  dst, box::kind  k) noexcept
+{
+  return dst && (dst->get_kind() != k);
+}
+bool
+is_no_water_filled(const box*  dst) noexcept
+{
+  return dst && !dst->test_water_filled_flag();
 }
 }
 
 
 int
 plane_reference::
-get_flags_of_top_plane() const noexcept
+get_flags_of_top_plane(direction  dir) const noexcept
 {
   auto  box = m_plane->get_box();
 
@@ -84,12 +123,65 @@ get_flags_of_top_plane() const noexcept
 
   int  flags = 0;
 
-/*
-        if(is_not_same(m_right_box,k)        || test_top(m_tops.m_right_up_box)){flags |=  right_flag;}
-        if(is_not_same(m_left_box,k)         || is_valid(m_tops.m_left_up_box) ){flags |=   left_flag;}
-        if(is_not_same(m_tops.m_back_box,k)  || is_valid(m_tops.m_back_up_box) ){flags |=    top_flag;}
-        if(is_not_same(m_tops.m_front_box,k)                                   ){flags |= bottom_flag;}
-*/
+    if(box->test_water_filled_flag())
+    {
+        if(test_bottom_edge(m_tops.m_left_up_box,dir,edge_flags::right) ||
+           is_no_water_filled(m_left_box))
+        {
+          flags |= left_flag;
+        }
+
+
+        if(test_bottom_edge(m_tops.m_right_up_box,dir,edge_flags::left) ||
+           is_no_water_filled(m_right_box))
+        {
+          flags |= right_flag;
+        }
+
+
+        if(test_bottom_edge(m_tops.m_back_up_box,dir,edge_flags::front) ||
+           is_no_water_filled(m_tops.m_back_box))
+        {
+          flags |= top_flag;
+        }
+
+
+        if(is_no_water_filled(m_tops.m_front_box))
+        {
+          flags |= bottom_flag;
+        }
+    }
+
+  else
+    if(box->is_earth())
+    {
+        if(test_bottom_edge(m_tops.m_left_up_box,dir,edge_flags::right) ||
+           is_not_same(m_left_box,k))
+        {
+          flags |= left_flag;
+        }
+
+
+        if(test_bottom_edge(m_tops.m_right_up_box,dir,edge_flags::left) ||
+           is_not_same(m_right_box,k))
+        {
+          flags |= right_flag;
+        }
+
+
+        if(test_bottom_edge(m_tops.m_back_up_box,dir,edge_flags::front) ||
+           is_not_same(m_tops.m_back_box,k))
+        {
+          flags |= top_flag;
+        }
+
+
+        if(is_not_same(m_tops.m_front_box,k))
+        {
+          flags |= bottom_flag;
+        }
+    }
+
 
   return flags;
 }
@@ -97,7 +189,7 @@ get_flags_of_top_plane() const noexcept
 
 int
 plane_reference::
-get_flags_of_front_plane() const noexcept
+get_flags_of_front_plane(direction  dir) const noexcept
 {
   auto  box = m_plane->get_box();
 
@@ -105,12 +197,65 @@ get_flags_of_front_plane() const noexcept
 
   int  flags = 0;
 
-/*
-       if(is_not_same(m_right_box,k)        || is_valid(m_fronts.m_right_front_box)){flags |=  right_flag;}
-        if(is_not_same(m_left_box,k)         || is_valid(m_fronts.m_left_front_box) ){flags |=   left_flag;}
-        if(is_not_same(box.get_down_box(),k) || is_valid(m_fronts.m_front_down_box) ){flags |= bottom_flag;}
-        if(is_not_same(box.get_up_box(),k)                                          ){flags |=    top_flag;}
-*/
+    if(box->test_water_filled_flag())
+    {
+        if(test_middle_edge(m_fronts.m_left_front_box,dir,edge_flags::right_front) ||
+           is_no_water_filled(m_left_box))
+        {
+          flags |= left_flag;
+        }
+
+
+        if(test_middle_edge(m_fronts.m_right_front_box,dir,edge_flags::left_front) ||
+           is_no_water_filled(m_right_box))
+        {
+          flags |= right_flag;
+        }
+
+
+        if(test_top_edge(m_fronts.m_front_down_box,dir,edge_flags::back) ||
+           is_no_water_filled(box->get_down_box()))
+        {
+          flags |= bottom_flag;
+        }
+
+
+        if(is_no_water_filled(box->get_up_box()))
+        {
+          flags |= top_flag;
+        }
+    }
+
+  else
+    if(box->is_earth())
+    {
+        if(test_middle_edge(m_fronts.m_left_front_box,dir,edge_flags::right_front) ||
+           is_not_same(m_left_box,k))
+        {
+          flags |= left_flag;
+        }
+
+
+        if(test_middle_edge(m_fronts.m_right_front_box,dir,edge_flags::left_front) ||
+           is_not_same(m_right_box,k))
+        {
+          flags |= right_flag;
+        }
+
+
+        if(test_top_edge(m_fronts.m_front_down_box,dir,edge_flags::back) ||
+           is_not_same(box->get_down_box(),k))
+        {
+          flags |= bottom_flag;
+        }
+
+
+        if(is_not_same(box->get_up_box(),k))
+        {
+          flags |= top_flag;
+        }
+    }
+
 
   return flags;
 }
@@ -120,10 +265,10 @@ get_flags_of_front_plane() const noexcept
 
 int
 plane_reference::
-get_flags() const noexcept
+get_flags(direction  dir) const noexcept
 {
-  return m_plane->is_top()? get_flags_of_top_plane()
-        :                   get_flags_of_front_plane();
+  return m_plane->is_top()? get_flags_of_top_plane(  dir)
+        :                   get_flags_of_front_plane(dir);
 }
 
 

@@ -20,15 +20,22 @@ constexpr int    left_flag = 4;
 constexpr int   right_flag = 8;
 
 namespace edge_flags{
-constexpr int   front = 1;
-constexpr int   right = 2;
-constexpr int    left = 4;
-constexpr int    back = 8;
+constexpr int   front = 8;
+constexpr int   right = 4;
+constexpr int    left = 2;
+constexpr int    back = 1;
 
-constexpr int   right_front = 1;
-constexpr int    right_back = 2;
-constexpr int     left_back = 4;
-constexpr int    left_front = 8;
+constexpr int   right_front = 8;
+constexpr int    right_back = 4;
+constexpr int     left_back = 2;
+constexpr int    left_front = 1;
+}
+
+
+constexpr int
+get_shifted_flags(int  flags, int  n) noexcept
+{
+  return ((flags<<(4-(n&3)))|((flags&15)>>(n&3)))&15;
 }
 
 
@@ -242,6 +249,8 @@ private:
 
   int  m_distance=0;
 
+  int  m_ground_line=0;
+
   actor*  m_owner_actor=nullptr;
 
   direction  m_dir;
@@ -287,6 +296,8 @@ public:
   const point3d&  get_index(           ) const noexcept{return m_index     ;}
   void            set_index(point3d  pt)       noexcept{       m_index = pt;}
 
+  int  get_ground_line() const noexcept{return m_ground_line;}
+
         plane&  get_top_plane()       noexcept{return m_top_plane;}
   const plane&  get_top_plane() const noexcept{return m_top_plane;}
 
@@ -307,6 +318,7 @@ public:
   int  get_bottom_edge_flags() const noexcept{return m_bottom_edge_flags;}
 
   void  update_edge_flags() noexcept;
+  void  update() noexcept;
 
   kind  get_kind() const noexcept{return m_kind;}
 
@@ -376,6 +388,11 @@ box_view
   box*  u(int  i) const noexcept{return m_box->get_upper_box(i);}
   box*  m(int  i) const noexcept{return m_box->get_middle_box(i);}
   box*  l(int  i) const noexcept{return m_box->get_lower_box(i);}
+
+  int  te() const noexcept{return get_shifted_flags(m_box->get_top_edge_flags()   ,m_dir);}
+  int  me() const noexcept{return get_shifted_flags(m_box->get_middle_edge_flags(),m_dir);}
+  int  be() const noexcept{return get_shifted_flags(m_box->get_bottom_edge_flags(),m_dir);}
+
   plane&  pl(int  i) const noexcept{return m_box->get_side_plane(i);}
 
 public:
@@ -402,6 +419,10 @@ public:
 
   void       set_direction(direction  dir)       noexcept{       m_dir = dir;}
   direction  get_direction(              ) const noexcept{return m_dir      ;}
+
+  bool  test_top_edge(   int  flag) const noexcept{return te()&flag;}
+  bool  test_middle_edge(int  flag) const noexcept{return me()&flag;}
+  bool  test_bottom_edge(int  flag) const noexcept{return be()&flag;}
 
   box*     get_up_box() const noexcept{return m_box->get_up_box();}
   box*   get_down_box() const noexcept{return m_box->get_down_box();}
@@ -514,8 +535,8 @@ plane_reference
   void    reset_top_link(const box_view&  bv) noexcept;
   void  reset_front_link(const box_view&  bv) noexcept;
 
-  int    get_flags_of_top_plane() const noexcept;
-  int  get_flags_of_front_plane() const noexcept;
+  int    get_flags_of_top_plane(direction  dir) const noexcept;
+  int  get_flags_of_front_plane(direction  dir) const noexcept;
 
 public:
   plane_reference() noexcept{}
@@ -532,7 +553,7 @@ public:
   const tops&    get_tops()   const noexcept{return m_tops;}
   const fronts&  get_fronts() const noexcept{return m_fronts;}
 
-  int  get_flags() const noexcept;
+  int  get_flags(direction  dir) const noexcept;
 
   void  set_image_z_base(int  v)       noexcept{       m_image_z_base = v;}
   int   get_image_z_base(      ) const noexcept{return m_image_z_base    ;}

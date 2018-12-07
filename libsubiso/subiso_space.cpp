@@ -96,6 +96,8 @@ resize(int  xl, int  yl, int  zl) noexcept
       box.set_upper_box(get_box_pointer(x-1,y+1,z+1),5);
       box.set_upper_box(get_box_pointer(x-1,y  ,z+1),6);
       box.set_upper_box(get_box_pointer(x-1,y-1,z+1),7);
+
+      box.update();
     }}}
 }
 

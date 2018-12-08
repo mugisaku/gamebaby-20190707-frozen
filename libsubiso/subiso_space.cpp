@@ -48,6 +48,17 @@ get_box_pointer(int  x, int  y, int  z) noexcept
 
 void
 space::
+update() noexcept
+{
+    for(auto&  box: m_boxes)
+    {
+      box.update();
+    }
+}
+
+
+void
+space::
 resize(int  xl, int  yl, int  zl) noexcept
 {
   m_boxes.resize(xl*yl*zl);

@@ -371,6 +371,8 @@ public:
 
   void  resize(int  xl, int  yl, int  zl) noexcept;
 
+  void  update() noexcept;
+
   void  print() const noexcept;
 
 };

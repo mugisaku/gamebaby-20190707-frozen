@@ -39,6 +39,8 @@ redraw_bg() noexcept
 {
   g_bg_canvas.fill(color());
 
+  g_space.update();
+
   g_handler.render(g_bg_canvas);
 }
 
@@ -122,10 +124,11 @@ step_info
 
   box*  next_box;
 
-  void  for_up_stairs(  subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
-  void  for_down_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
-  void  for_stairs(     subiso::actor&  actor, box_view&  bv, box&  front_box, direction  box_dir  ) noexcept;
-  void  for_floor(      subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir) noexcept;
+  void  for_up_stairs(   subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_down_stairs( subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir, direction  box_dir) noexcept;
+  void  for_stairs(      subiso::actor&  actor, box_view&  bv, box&  front_box, direction  box_dir  ) noexcept;
+  void  for_floor(       subiso::actor&  actor, box_view&  bv, box&  front_box, direction  actor_dir) noexcept;
+  void  for_water_filled(subiso::actor&  actor, box_view&  bv, box&  front_box) noexcept;
 
   step_info(subiso::actor&  actor) noexcept;
 
@@ -188,6 +191,21 @@ for_stairs(subiso::actor&  actor, box_view&  bv, box&  front_box, direction  box
       kind = step_kind::floor_to_floor;
 
       next_box = &front_box;
+    }
+}
+
+
+void
+step_info::
+for_water_filled(subiso::actor&  actor, box_view&  bv, box&  front_box) noexcept
+{
+  auto  front_up_box = front_box.get_up_box();
+
+    if(front_box.is_earth() && front_up_box && front_up_box->is_null())
+    {
+      kind = step_kind::up_stairs_to_floor;
+
+      next_box = front_up_box;
     }
 }
 
@@ -287,6 +305,12 @@ next_box(nullptr)
         }
 
       else
+        if(box.test_water_filled_flag())
+        {
+          for_water_filled(actor,bv,*front_box);
+        }
+
+      else
         {
           for_floor(actor,bv,*front_box,actor_dir);
         }
@@ -323,11 +347,25 @@ change_front_box(subiso::actor*  actor) noexcept
       else          
         if(front_box->is_earth())
         {
-          front_box->be_stairs(~actor->get_direction());
-
-            if(front_box->is_contacted_water())
+            if(actor->m_current_step_box->test_water_filled_flag())
             {
-              front_box->flow_water();
+              front_box->be_null();
+
+                if(front_box->is_contacted_water())
+                {
+                  front_box->flow_water();
+                }
+            }
+
+          else
+            {
+              front_box->be_stairs(~actor->get_direction());
+
+                if(front_box->is_contacted_water())
+                {
+                  front_box->flow_water();
+                  front_box->update();
+                }
             }
         }
 
@@ -394,8 +432,6 @@ add_new_box_to_front(subiso::actor*  actor) noexcept
         }
 
 
-      previous_box->update_edge_flags();
-
       redraw_bg();
     }
 }
@@ -422,16 +458,15 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 
   auto&  box = *actor->m_current_step_box;
 
-  int  rem = (actor->m_current_position.z%g_plane_size);
-
     if(box.test_water_filled_flag())
     {
-      auto  down_box = box.get_down_box();
+      auto  up_box = box.get_up_box();
 
-        if(!rem)
+        if(up_box && up_box->is_null() && up_box->test_water_filled_flag())
         {
-          actor->m_next_position.z  = (g_plane_size*box.get_index().z);
-          actor->m_next_position.z += (g_plane_size/2                );
+          actor->m_next_position.z = up_box->get_ground_line();
+
+          actor->m_next_step_box = up_box;
 
           exec.push(fall_actor);
 
@@ -439,36 +474,33 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
         }
     }
 
-  else
+
     {
-        if(rem && !box.is_stairs())
+      auto  down_box = box.get_down_box();
+
+        if(down_box && (down_box->is_null() || down_box->is_stairs()))
         {
-          actor->m_next_position.z  = (g_plane_size*box.get_index().z);
-          actor->m_next_position.z -= (g_plane_size/2                );
+          actor->m_next_position.z = down_box->get_ground_line();
+
+          actor->m_next_step_box = down_box;
 
           exec.push(fall_actor);
 
           return;
         }
+    }
 
-      else
+
+    {
+        if(actor->m_current_position.z != box.get_ground_line())
         {
-          auto  down_box = box.get_down_box();
+          actor->m_next_position.z = box.get_ground_line();
 
-            if(down_box && !down_box->is_earth())
-            {
-              actor->m_next_position.z  = (g_plane_size*down_box->get_index().z);
+          actor->m_next_step_box = &box;
 
-                if(down_box->test_water_filled_flag() || down_box->is_stairs())
-                {
-                  actor->m_next_position.z += (g_plane_size/2);
-                }
+          exec.push(fall_actor);
 
-
-              exec.push(fall_actor);
-
-              return;
-            }
+          return;
         }
     }
 
@@ -498,6 +530,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
   else if(gbstd::g_input.test_down() ){dir = directions::front;}
   else if(gbstd::g_input.test_left() ){dir = directions::left ;}
   else if(gbstd::g_input.test_right()){dir = directions::right;}
+  else if(gbstd::g_input.test_start()){redraw_bg();return;}
   else if(gbstd::g_input.test_l())
     {
         if(!lock)
@@ -645,7 +678,7 @@ redraw_screen() noexcept
   g_actor.transform(map);
 
 
-  g_screen_canvas.draw_canvas(g_bg_canvas,0,0);
+  g_screen_canvas.copy_canvas(g_bg_canvas,0,0);
 
   g_actor.render(g_screen_canvas);
 
@@ -694,7 +727,7 @@ main(int  argc, char**  argv)
                   "方向キーで移動、Shiftキーを押しながら方向キーで方向転換\n"
                   "前方に土BOXが無いとき、一時停止するが、長押しで進行\n"
                   "\n"
-                  "Aキー、または:キーを押すと、視点を左回転\n"
+                  "Aキー、または[キーを押すと、視点を左回転\n"
                   "Sキー、または]キーを押すと、視点を右回転\n"
                   "\n"
                   "Enterキーを押すと、前方下に土BOXを生成する\n"
@@ -702,7 +735,7 @@ main(int  argc, char**  argv)
                   "\n"
                   "Ctrlキーを押すと、前方に土BOXがあるとき、階段BOXに変化\n"
                   "階段BOXがあるとき、それを除去\n"
-                  "なにもなければ、前方下の土BOXを除去\n"
+                  "なにもなければ、前方下のBOXを除去\n"
                   "\n"
                   "</pre>");
 

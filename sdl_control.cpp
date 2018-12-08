@@ -43,7 +43,7 @@ process_key_down(const SDL_KeyboardEvent&  evt) noexcept
         gbstd::g_input.set_n();
         break;
     case(SDLK_a    ):
-    case(SDLK_COLON):
+    case(SDLK_LEFTBRACKET):
         gbstd::g_input.set_l();
         break;
     case(SDLK_s    ):
@@ -79,7 +79,7 @@ process_key_up(const SDL_KeyboardEvent&  evt) noexcept
       gbstd::g_input.unset_n();
       break;
     case(SDLK_a    ):
-    case(SDLK_COLON):
+    case(SDLK_LEFTBRACKET):
         gbstd::g_input.unset_l();
         break;
     case(SDLK_s    ):

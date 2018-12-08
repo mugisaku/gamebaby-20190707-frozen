@@ -33,6 +33,14 @@ update_edge_flags() noexcept
     }
 
   else
+    if(is_null())
+    {
+      m_top_edge_flags    = 0;
+      m_middle_edge_flags = 0;
+      m_bottom_edge_flags = 0;
+    }
+
+  else
     if(is_stairs())
     {
       m_top_edge_flags    = edge_flags::back;
@@ -123,6 +131,7 @@ flow_water() noexcept
                 if(b->is_contacted_water())
                 {
                   b->set_water_filled_flag();
+                  b->update();
                 }
 
 

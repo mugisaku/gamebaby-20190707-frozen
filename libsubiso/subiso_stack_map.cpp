@@ -135,16 +135,66 @@ assign(space_view  sv) noexcept
 
 void
 stack_map::
-render(const gbstd::canvas&  cv) noexcept
+render_line_block(int  x_quo, int  y_quo, const gbstd::canvas&  cv, int  x, int  y) noexcept
 {
-    for(int  y = 0;  y < m_height;  ++y){
-    for(int  x = 0;  x < m_width ;  ++x){
-      auto&  stack = get_stack(x,y);
+    for(;;)
+    {
+      auto&  stack = get_stack(x_quo++,y_quo);
 
-      gbstd::canvas  cocv(cv,g_plane_size*x,g_plane_size*y,g_plane_size,g_plane_size);
+      stack.render(m_dir,cv,x,y);
 
-      stack.render(m_dir,cocv);
-    }}
+      x += g_plane_size;
+
+        if(x >= cv.get_width())
+        {
+          break;
+        }
+
+
+        if(x_quo >= m_width)
+        {
+          x_quo = 0;
+        }
+    }
+}
+
+
+void
+stack_map::
+render(gbstd::point  offset, const gbstd::canvas&  cv) noexcept
+{
+  int  x_off = offset.x%m_image_width ;
+  int  y_off = offset.x%m_image_height;
+
+    if(x_off < 0){x_off += m_image_width ;}
+    if(y_off < 0){y_off += m_image_height;}
+
+
+  int  x_quo = x_off/g_plane_size;
+  int  y_quo = y_off/g_plane_size;
+  int  x_rem = x_off%g_plane_size;
+  int  y_rem = y_off%g_plane_size;
+
+  int  x = -x_rem;
+  int  y = -y_rem;
+
+    for(;;)
+    {
+      render_line_block(x_quo,y_quo++,cv,x,y);
+
+      y += g_plane_size;
+
+        if(y >= cv.get_height())
+        {
+          break;
+        }
+
+
+        if(y_quo >= m_height)
+        {
+          y_quo = 0;
+        }
+    }
 }
 
 

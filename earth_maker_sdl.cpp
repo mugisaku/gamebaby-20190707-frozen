@@ -727,8 +727,8 @@ main(int  argc, char**  argv)
                   "方向キーで移動、Shiftキーを押しながら方向キーで方向転換\n"
                   "前方に土BOXが無いとき、一時停止するが、長押しで進行\n"
                   "\n"
-                  "Aキー、または[キーを押すと、視点を左回転\n"
-                  "Sキー、または]キーを押すと、視点を右回転\n"
+                  "Aキーを押すと、視点を左回転\n"
+                  "Sキーを押すと、視点を右回転\n"
                   "\n"
                   "Enterキーを押すと、前方下に土BOXを生成する\n"
                   "四方が土BOXに囲まれているなら、水BOXになる\n"
@@ -743,22 +743,17 @@ main(int  argc, char**  argv)
 #endif
 
 
-  g_space.resize(6,6,12);
+  g_space.resize(80,80,6);
 
     for(int  y = 0;  y < g_space.get_y_length();  ++y){
     for(int  x = 0;  x < g_space.get_x_length();  ++x){
       g_space.get_box(x,y,0).m_kind = subiso::box::kind::earth;
-      g_space.get_box(x,y,1).m_kind = subiso::box::kind::earth;
     }}
 
 
-  g_space.get_box(1,0,1).m_kind = subiso::box::kind::earth;
-  g_space.get_box(1,1,1).m_kind = subiso::box::kind::earth;
-
   g_handler.assign(g_space);
 
-  auto&  a_map = g_handler.get_stack_map(directions::front);
-  auto&  b_map = g_handler.get_stack_map(directions::left );
+  g_handler.set_view_size(200,200);
 
   g_actor.set_space(&g_space);
   g_actor.set_current_step_box(&g_space.get_box(2,2,4));
@@ -766,8 +761,7 @@ main(int  argc, char**  argv)
   g_base_process.assign("control player",20,control_player,&g_actor);
 
 
-  sdl::init(std::max(a_map.get_image_width() ,b_map.get_image_width() ),
-            std::max(a_map.get_image_height(),b_map.get_image_height()));
+  sdl::init(g_handler.get_view_width(),g_handler.get_view_height());
 
   g_screen_canvas = sdl::make_screen_canvas();
 

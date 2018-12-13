@@ -125,6 +125,24 @@ point3d
     return !(*this == rhs);
   }
 
+  point3d&  operator+=(const point3d&  rhs) noexcept
+  {
+    x += rhs.x;
+    y += rhs.y;
+    z += rhs.z;
+
+    return *this;
+  }
+
+  point3d&  operator-=(const point3d&  rhs) noexcept
+  {
+    x -= rhs.x;
+    y -= rhs.y;
+    z -= rhs.z;
+
+    return *this;
+  }
+
   point3d&  assign(int  x_, int  y_, int  z_) noexcept
   {
     x = x_;
@@ -185,7 +203,7 @@ public:
   bool  is_top()   const noexcept{return m_kind == kind::top;}
   bool  is_side() const noexcept{return m_kind == kind::side;}
 
-  void  render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept;
+  void  render(direction  dir, int  flags, const gbstd::canvas&  cv, int  x, int  y, int  z_base) const noexcept;
 
 };
 
@@ -593,7 +611,7 @@ public:
   plane_reference*      get_top() const noexcept{return m_top;}
   plane_reference*  get_current() const noexcept{return m_current;}
 
-  void  render(direction  dir, const gbstd::canvas&  cv) noexcept;
+  void  render(direction  dir, const gbstd::canvas&  cv, int  x, int  y) noexcept;
 
 };
 
@@ -635,7 +653,8 @@ public:
         plane_reference_stack&  get_stack(int  x, int  y)       noexcept{return m_table[(m_width*y)+x];}
   const plane_reference_stack&  get_stack(int  x, int  y) const noexcept{return m_table[(m_width*y)+x];}
 
-  void  render(const gbstd::canvas&  cv) noexcept;
+  void  render_line_block(int  x_quo, int  y_quo, const gbstd::canvas&  cv, int  x, int  y) noexcept;
+  void  render(gbstd::point  offset, const gbstd::canvas&  cv) noexcept;
 
   void  print() const noexcept;
 
@@ -775,6 +794,11 @@ space_handler
 
   stack_map*  m_current_map=nullptr;
 
+  point3d  m_view_offset;
+
+  int  m_view_width =0;
+  int  m_view_height=0;
+
 public:
   space_handler&  assign(space&  sp) noexcept;
 
@@ -784,8 +808,18 @@ public:
   const stack_map&  get_stack_map(direction  dir) const noexcept{return m_map_table[dir];}
   const stack_map&  get_stack_map(              ) const noexcept{return *m_current_map;}
 
-  void  render(                const gbstd::canvas&  cv) noexcept{m_current_map->render(cv);}
-  void  render(direction  dir, const gbstd::canvas&  cv) noexcept{m_map_table[dir].render(cv);}
+  const point3d&  get_view_offset() const noexcept{return m_view_offset;}
+
+  int  get_view_width()  const noexcept{return m_view_width ;}
+  int  get_view_height() const noexcept{return m_view_height;}
+
+  void  set_view_offset(point3d  pt) noexcept{m_view_offset  = pt;}
+  void  add_view_offset(point3d  pt) noexcept{m_view_offset += pt;}
+
+  void  set_view_size(int  w, int  h) noexcept;
+
+  void  render(                const gbstd::canvas&  cv) noexcept;
+  void  render(direction  dir, const gbstd::canvas&  cv) noexcept;
 
 };
 

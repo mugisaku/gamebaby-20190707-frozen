@@ -67,7 +67,7 @@ g_stairs_image(g_stairs_binary);
 
 void
 plane::
-render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const noexcept
+render(direction  dir, int  flags, const gbstd::canvas&  cv, int  x, int  y, int  z_base) const noexcept
 {
   gbstd::point  pt(1,1);
 
@@ -189,7 +189,7 @@ render(direction  dir, int  flags, const gbstd::canvas&  cv, int  z_base) const 
 
   bgcv = gbstd::canvas(*img,g_plane_size*pt.x,g_plane_size*pt.y,g_plane_size,g_plane_size);
 
-  cv.blend_canvas(bgcv,0,0,z_base*2,z_add_amount);
+  cv.blend_canvas(bgcv,x,y,z_base*2,z_add_amount);
 }
 
 

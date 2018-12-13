@@ -66,7 +66,7 @@ seek(plane_reference*  p) noexcept
 
 void
 plane_reference_stack::
-render(direction  dir, const gbstd::canvas&  cv) noexcept
+render(direction  dir, const gbstd::canvas&  cv, int  x, int  y) noexcept
 {
   seek();
 
@@ -90,13 +90,13 @@ render(direction  dir, const gbstd::canvas&  cv) noexcept
 
                     if(plpl)
                     {
-                      plpl->render(dir,elel->get_flags(dir),cv,elel->get_image_z_base());
+                      plpl->render(dir,elel->get_flags(dir),cv,x,y,elel->get_image_z_base());
                     }
                 }
             }
 
 
-          pl->render(dir,el->get_flags(dir),cv,el->get_image_z_base());
+          pl->render(dir,el->get_flags(dir),cv,x,y,el->get_image_z_base());
         }
     }
 }

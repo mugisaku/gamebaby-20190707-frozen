@@ -159,12 +159,59 @@ render_line_block(int  x_quo, int  y_quo, const gbstd::canvas&  cv, int  x, int 
 }
 
 
+gbstd::point
+stack_map::
+transform(const point3d&  src) const noexcept
+{
+  int  x;
+  int  y;
+
+  int   w = get_image_width()       ;
+  int  uh = get_upper_image_height();
+  int  lh = get_lower_image_height();
+
+    switch(m_dir)
+    {
+  case(directions::front):
+      x = src.x;
+      y = src.y;
+
+      return gbstd::point(x,(uh-1-y)+(lh-1-src.z));
+      break;
+  case(directions::right):
+      x =    src.y;
+      y = uh-src.x;
+
+      return gbstd::point(x,(uh-1-y)+(lh-1-src.z));
+      break;
+  case(directions::back):
+      x =  w-src.x;
+      y = uh-src.y;
+
+      return gbstd::point(x,(uh-1-y)+(lh-1-src.z));
+      break;
+  case(directions::left):
+      x = w-src.y;
+      y =   src.x;
+
+      return gbstd::point(x,(uh-1-y)+(lh-1-src.z));
+      break;
+    }
+
+
+  return gbstd::point();
+}
+
+
 void
 stack_map::
-render(gbstd::point  offset, const gbstd::canvas&  cv) noexcept
+render(gbstd::point  view_center_pos, const gbstd::canvas&  cv) noexcept
 {
-  int  x_off = offset.x%m_image_width ;
-  int  y_off = offset.x%m_image_height;
+  int  x_off = (view_center_pos.x-(cv.get_width() /2));
+  int  y_off = (view_center_pos.y-(cv.get_height()/2));
+
+  x_off %= m_image_width ;
+  y_off %= m_image_height;
 
     if(x_off < 0){x_off += m_image_width ;}
     if(y_off < 0){y_off += m_image_height;}

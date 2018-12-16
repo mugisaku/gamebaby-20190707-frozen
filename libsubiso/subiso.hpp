@@ -125,6 +125,21 @@ point3d
     return !(*this == rhs);
   }
 
+  constexpr point3d  operator+(const point3d&  rhs) const noexcept
+  {
+    return {x+rhs.x,y+rhs.y,z+rhs.z};
+  }
+
+  constexpr point3d  operator-(const point3d&  rhs) const noexcept
+  {
+    return {x-rhs.x,y-rhs.y,z-rhs.z};
+  }
+
+  constexpr point3d  operator-() const noexcept
+  {
+    return {-x,-y,-z};
+  }
+
   point3d&  operator+=(const point3d&  rhs) noexcept
   {
     x += rhs.x;
@@ -654,9 +669,42 @@ public:
   const plane_reference_stack&  get_stack(int  x, int  y) const noexcept{return m_table[(m_width*y)+x];}
 
   void  render_line_block(int  x_quo, int  y_quo, const gbstd::canvas&  cv, int  x, int  y) noexcept;
-  void  render(gbstd::point  offset, const gbstd::canvas&  cv) noexcept;
+
+  void  render(gbstd::point  view_center_pos, const gbstd::canvas&  cv) noexcept;
 
   void  print() const noexcept;
+
+  gbstd::point  transform(const point3d&  src) const noexcept;
+
+};
+
+
+
+
+class
+stack_mapset
+{
+  stack_map  m_table[4];
+
+public:
+  stack_mapset() noexcept{}
+  stack_mapset(space&  sp) noexcept{assign(sp);}
+
+  stack_mapset&  assign(space&  sp) noexcept
+  {
+    m_table[directions::front].assign(space_view(sp,directions::front));
+    m_table[directions::left ].assign(space_view(sp,directions::left ));
+    m_table[directions::right].assign(space_view(sp,directions::right));
+    m_table[directions::back ].assign(space_view(sp,directions::back ));
+
+    return *this;
+  }
+
+        stack_map&  get_stack_map(direction  dir)       noexcept{return m_table[dir];}
+  const stack_map&  get_stack_map(direction  dir) const noexcept{return m_table[dir];}
+
+        stack_map&  operator[](direction  dir)       noexcept{return m_table[dir];}
+  const stack_map&  operator[](direction  dir) const noexcept{return m_table[dir];}
 
 };
 
@@ -741,7 +789,7 @@ actor
   move_context  m_first_move_context;
   move_context  m_second_move_context;
 
-  point3d  m_transformed_position;
+  gbstd::point  m_transformed_position;
 
   int  m_image_z=0;
 
@@ -780,50 +828,9 @@ actor
 
   void  step() noexcept;
 
-  void  render(const gbstd::canvas&  cv) const noexcept;
+  void  render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept;
 
 };
-
-
-
-
-class
-space_handler
-{
-  stack_map  m_map_table[4];
-
-  stack_map*  m_current_map=nullptr;
-
-  point3d  m_view_offset;
-
-  int  m_view_width =0;
-  int  m_view_height=0;
-
-public:
-  space_handler&  assign(space&  sp) noexcept;
-
-  direction  get_direction(              ) const noexcept{return m_current_map->get_direction();}
-  void       set_direction(direction  dir)       noexcept{m_current_map = &m_map_table[dir];}
-
-  const stack_map&  get_stack_map(direction  dir) const noexcept{return m_map_table[dir];}
-  const stack_map&  get_stack_map(              ) const noexcept{return *m_current_map;}
-
-  const point3d&  get_view_offset() const noexcept{return m_view_offset;}
-
-  int  get_view_width()  const noexcept{return m_view_width ;}
-  int  get_view_height() const noexcept{return m_view_height;}
-
-  void  set_view_offset(point3d  pt) noexcept{m_view_offset  = pt;}
-  void  add_view_offset(point3d  pt) noexcept{m_view_offset += pt;}
-
-  void  set_view_size(int  w, int  h) noexcept;
-
-  void  render(                const gbstd::canvas&  cv) noexcept;
-  void  render(direction  dir, const gbstd::canvas&  cv) noexcept;
-
-};
-
-
 
 
 }

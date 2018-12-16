@@ -39,60 +39,10 @@ set_current_step_box(subiso::box*  box) noexcept
     {
       auto&  i = box->get_index();
 
-      m_current_position.x = (g_plane_size*i.x);
-      m_current_position.y = (g_plane_size*i.y);
+      m_current_position.x = (g_plane_size*i.x)+12;
+      m_current_position.y = (g_plane_size*i.y)+12;
       m_current_position.z = (g_plane_size*i.z);
     }
-}
-
-
-
-
-void
-actor::
-transform(const stack_map&  map) noexcept
-{
-  int   w = map.get_image_width() ;
-  int  uh = map.get_upper_image_height();
-  int  lh = map.get_lower_image_height();
-  int   h = uh+lh;
-
-  int  x;
-  int  y;
-  int  z = m_current_position.z;
-
-  auto  map_dir = map.get_direction();
-
-    switch(map_dir)
-    {
-  case(directions::front):
-      x = m_current_position.x;
-      y = m_current_position.y;
-
-      m_transformed_position = point3d(x,(uh-1-y)+(lh-1-z)-24,z);
-      break;
-  case(directions::right):
-      x =    m_current_position.y;
-      y = uh-m_current_position.x;
-
-      m_transformed_position = point3d(x,(uh-1-y)+(lh-1-z),z);
-      break;
-  case(directions::back):
-      x =  w-m_current_position.x;
-      y = uh-m_current_position.y;
-
-      m_transformed_position = point3d(x-24,(uh-1-y)+(lh-1-z),z);
-      break;
-  case(directions::left):
-      x = w-m_current_position.y;
-      y =   m_current_position.x;
-
-      m_transformed_position = point3d(x-24,(uh-1-y)+(lh-1-z)-24,z);
-      break;
-    }
-
-
-  m_transformed_dir = m_dir-map_dir;
 }
 
 
@@ -115,9 +65,19 @@ step() noexcept
 
 void
 actor::
-render(const gbstd::canvas&  cv) const noexcept
+transform(const stack_map&  map) noexcept
 {
-  auto  dst_pt = gbstd::point(m_transformed_position.x,m_transformed_position.y);
+  m_transformed_position = map.transform(m_current_position);
+
+  m_transformed_dir = m_dir-map.get_direction();
+}
+
+
+void
+actor::
+render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept
+{
+  auto  dst_pt = m_transformed_position+offset+gbstd::point(cv.get_width()/2,cv.get_height()/2);
 
   gbstd::point  src_pt;
 
@@ -141,7 +101,7 @@ render(const gbstd::canvas&  cv) const noexcept
 
   gbstd::canvas  src_cv(g_image,src_pt.x,src_pt.y,24,24);
 
-  cv.blend_canvas(src_cv,dst_pt.x,dst_pt.y,(m_transformed_position.z+24)*2,-2);
+  cv.blend_canvas(src_cv,dst_pt.x-12,dst_pt.y-12,(m_current_position.z+24)*2,-2);
 }
 
 

@@ -23,26 +23,20 @@ namespace{
 canvas  g_screen_canvas;
 
 
-image    g_bg_image;
-canvas  g_bg_canvas;
-
-
 process  g_base_process;
 
-subiso::space          g_space;
-subiso::space_handler  g_handler;
-subiso::actor          g_actor;
+subiso::space  g_space;
+subiso::actor  g_actors[1];
+
+subiso::stack_mapset
+g_mapset;
+
+subiso::direction
+g_view_dir = subiso::directions::front;
+
+subiso::point3d  g_view_offset;
 
 
-void
-redraw_bg() noexcept
-{
-  g_bg_canvas.fill(color());
-
-  g_space.update();
-
-  g_handler.render(g_bg_canvas);
-}
 
 
 void
@@ -374,9 +368,6 @@ change_front_box(subiso::actor*  actor) noexcept
         {
           front_box->be_null();
         }
-
-
-      redraw_bg();
     }
 }
 
@@ -430,9 +421,6 @@ add_new_box_to_front(subiso::actor*  actor) noexcept
           previous_box->unset_water_source_flag();
           previous_box->unset_water_filled_flag();
         }
-
-
-      redraw_bg();
     }
 }
 
@@ -450,9 +438,9 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
     {
       auto&  pos = actor->m_current_position;
 
-      actor->m_current_step_box = &sv.get_box(pos.x/g_plane_size,
-                                              pos.y/g_plane_size,
-                                              pos.z/g_plane_size);
+      actor->m_current_step_box = &sv.get_box((pos.x)/g_plane_size,
+                                              (pos.y)/g_plane_size,
+                                              (pos.z)/g_plane_size);
     }
 
 
@@ -505,8 +493,6 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
     }
 
 
-  auto  handler_dir = g_handler.get_direction();
-
   direction  dir;
 
     if(gbstd::g_input.test_shift())
@@ -518,7 +504,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
       else{return;}
 
 
-      actor->set_direction(dir+handler_dir);
+      actor->set_direction(dir+g_view_dir);
 
       return;
     }
@@ -530,14 +516,11 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
   else if(gbstd::g_input.test_down() ){dir = directions::front;}
   else if(gbstd::g_input.test_left() ){dir = directions::left ;}
   else if(gbstd::g_input.test_right()){dir = directions::right;}
-  else if(gbstd::g_input.test_start()){redraw_bg();return;}
   else if(gbstd::g_input.test_l())
     {
         if(!lock)
         {
-          g_handler.set_direction(handler_dir-1);
-
-          redraw_bg();
+          g_view_dir -= 1;
 
           lock = true;
         }
@@ -551,9 +534,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
     {
         if(!lock)
         {
-          g_handler.set_direction(handler_dir+1);
-
-          redraw_bg();
+          g_view_dir += 1;
 
           lock = true;
         }
@@ -600,7 +581,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
     }
 
 
-  auto  transformed_dir = dir+handler_dir;
+  auto  transformed_dir = dir+g_view_dir;
 
     if(actor->get_direction() != transformed_dir)
     {
@@ -673,14 +654,30 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 void
 redraw_screen() noexcept
 {
-  auto&  map = g_handler.get_stack_map();
+  g_screen_canvas.fill(color());
 
-  g_actor.transform(map);
+  gbstd::canvas  view_cv(g_screen_canvas,0,0,g_plane_size*6,g_plane_size*6);
+
+  g_space.update();
+
+    for(int  d= 0;  d < 4;  ++d)
+    {
+      auto&  map = g_mapset[d];
+
+      auto  view_center_pos = map.transform(g_actors[0].m_current_position);
+
+      map.render(view_center_pos,view_cv);
+
+        for(auto&  actor: g_actors)
+        {
+          actor.transform(map);
+
+          actor.render(-view_center_pos,view_cv);
+        }
 
 
-  g_screen_canvas.copy_canvas(g_bg_canvas,0,0);
-
-  g_actor.render(g_screen_canvas);
+      view_cv = {view_cv,g_plane_size*6,0,g_plane_size*6,g_plane_size*6};
+    }
 
 }
 
@@ -689,19 +686,6 @@ void
 main_loop() noexcept
 {
   sdl::update_control();
-
-if(0)
-{
-    for(auto pt: gbstd::g_point_buffer)
-    {
-      auto&  map = g_handler.get_stack_map();
-
-      auto&  s = map.get_stack(pt.x/g_plane_size,pt.y/g_plane_size);
-
-      printf("%d\n",s.get_current()->get_image_z_base());
-    }
-}
-
 
   g_base_process.step();
 
@@ -743,32 +727,25 @@ main(int  argc, char**  argv)
 #endif
 
 
-  g_space.resize(80,80,6);
+  g_space.resize(6,6,20);
 
-    for(int  y = 0;  y < g_space.get_y_length();  ++y){
-    for(int  x = 0;  x < g_space.get_x_length();  ++x){
+    for(int  y = 1;  y < g_space.get_y_length();  ++y){
+    for(int  x = 1;  x < g_space.get_x_length();  ++x){
       g_space.get_box(x,y,0).m_kind = subiso::box::kind::earth;
     }}
 
 
-  g_handler.assign(g_space);
+  g_mapset.assign(g_space);
 
-  g_handler.set_view_size(200,200);
+  g_actors[0].set_space(&g_space);
+  g_actors[0].set_current_step_box(&g_space.get_box(1,1,4));
 
-  g_actor.set_space(&g_space);
-  g_actor.set_current_step_box(&g_space.get_box(2,2,4));
-
-  g_base_process.assign("control player",20,control_player,&g_actor);
+  g_base_process.assign("control player",20,control_player,&g_actors[0]);
 
 
-  sdl::init(g_handler.get_view_width(),g_handler.get_view_height());
+  sdl::init(g_plane_size*6*4,g_plane_size*6);
 
   g_screen_canvas = sdl::make_screen_canvas();
-
-  g_bg_image.resize(g_screen_canvas.get_width(),g_screen_canvas.get_height());
-  g_bg_canvas = g_bg_image;
-
-  redraw_bg();
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);

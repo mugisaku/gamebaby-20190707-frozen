@@ -9,7 +9,6 @@ set(SOURCES
   subiso_box_view.cpp
   subiso_space.cpp
   subiso_space_view.cpp
-  subiso_space_handler.cpp
   subiso_actor.cpp
   subiso_flag_timer.cpp
 )

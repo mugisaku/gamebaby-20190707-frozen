@@ -125,11 +125,27 @@ public:
 class
 uniform_rand
 {
-  std::uniform_real_distribution<>  m_dist;
+  std::uniform_int_distribution<>  m_dist;
 
 public:
   uniform_rand() noexcept{}
-  uniform_rand(double  min, double  max) noexcept{reset(min,max);}
+  uniform_rand(int  min, int  max) noexcept{reset(min,max);}
+
+  void  reset(int  min, int  max) noexcept{m_dist = std::uniform_int_distribution<>(min,max);}
+
+  int  operator()() noexcept{return m_dist(random_number_engine);}
+
+};
+
+
+class
+uniform_real_rand
+{
+  std::uniform_real_distribution<>  m_dist;
+
+public:
+  uniform_real_rand() noexcept{}
+  uniform_real_rand(double  min, double  max) noexcept{reset(min,max);}
 
   void  reset(double  min, double  max) noexcept{m_dist = std::uniform_real_distribution<>(min,max);}
 

@@ -59,6 +59,7 @@ add_subdirectory(libgbstd)
 add_subdirectory(libge)
 add_subdirectory(libgbpng)
 add_subdirectory(libsubiso)
+add_subdirectory(libww)
 
 
 include_directories(./)
@@ -74,7 +75,7 @@ add_executable("mkanigra_sdl${EXECUTABLE_EXTENSION}" mkanigra_sdl.cpp ${SDL_SOUR
 add_executable("mkbg_sdl${EXECUTABLE_EXTENSION}" mkbg_sdl.cpp ${SDL_SOURCES})
 add_executable("mkeyesquat${EXECUTABLE_EXTENSION}" mkeyesquat.cpp ${SDL_SOURCES})
 target_link_libraries("png2lit${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
-target_link_libraries("test_sdl${EXECUTABLE_EXTENSION}" "subiso" "gbstd" "gbpng" "z")
+target_link_libraries("test_sdl${EXECUTABLE_EXTENSION}" "ww" "gbstd" "gbpng" "z")
 target_link_libraries("earth_maker_sdl${EXECUTABLE_EXTENSION}" "subiso" "gbstd" "gbpng" "z")
 target_link_libraries("tbgloop_sdl${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
 target_link_libraries("mkeyesquat${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")

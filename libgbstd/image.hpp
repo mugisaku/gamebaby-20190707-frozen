@@ -119,16 +119,6 @@ color_modifier
 };
 
 
-struct
-sprite
-{
-  const gbstd::image*  image;
-
-  gbstd::rectangle  rectangle;
-
-};
-
-
 
 
 class
@@ -238,9 +228,6 @@ public:
   void  draw_string_safely(const character_color&  color, const char16_t*  s, int  x, int  y) const noexcept;
   void  draw_string_safely(const character_color&  color, const char*      s, point  pt) const noexcept{draw_string_safely(color,s,pt.x,pt.y);}
   void  draw_string_safely(const character_color&  color, const char16_t*  s, point  pt) const noexcept{draw_string_safely(color,s,pt.x,pt.y);}
-
-  void  draw_sprite(const sprite&  spr, int  x, int  y) const noexcept;
-  void  draw_sprite(const sprite&  spr, point  pt) const noexcept{draw_sprite(spr,pt.x,pt.y);}
 
   void  draw_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  draw_canvas(const canvas&  cv, point  pt) const noexcept{draw_canvas(cv,pt.x,pt.y);}

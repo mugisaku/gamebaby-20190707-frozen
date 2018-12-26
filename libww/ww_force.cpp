@@ -89,9 +89,9 @@ reset(ww::side  side, const force_initializer&  init) noexcept
 
   m_actor_queue.clear();
 
-  int  y = 0;
+  int  y = g_frame_h;
 
-    for(int  i = 0;  i < 8;  ++i)
+    for(int  i = 0;  i < m_number_of_rows;  ++i)
     {
       auto&  row = m_rows[i];
 
@@ -99,11 +99,24 @@ reset(ww::side  side, const force_initializer&  init) noexcept
 
       auto  pos = row.m_variable.m_pos;
 
-      row.m_rendering_pos.x = g_frame_w*pos;
+      row.m_base_pos.x = g_frame_w*pos;
 
 
-      row.m_rendering_pos.y = y             ;
-                              y += g_frame_h;
+      row.m_base_pos.y = y             ;
+                         y += g_frame_h;
+
+      row.m_current_pos.y = row.m_base_pos.y;
+    }
+}
+
+
+void
+force::
+update() noexcept
+{
+    for(auto&  row: m_rows)
+    {
+      row.m_blink_context.step();
     }
 }
 
@@ -114,7 +127,7 @@ render(const gbstd::canvas&  cv) const noexcept
 {
     for(auto&  row: m_rows)
     {
-      row.render(m_side,m_color,cv);
+      row.render(cv);
     }
 }
 

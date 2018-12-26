@@ -53,11 +53,11 @@ constexpr battle_position  backup_pos(2);
 struct
 company
 {
-  int  m_number_of_soldiers=8000;
+  int  m_hp=6000;
 
   battle_position  m_pos=front_pos;
 
-  int  get_number_of_soldiers() const noexcept{return m_number_of_soldiers;}
+  int  get_hp() const noexcept{return m_hp;}
 
 
   void  render(gbstd::color  force_color, const gbstd::canvas&  cv) const noexcept;
@@ -85,6 +85,23 @@ force_initializer
 };
 
 
+class
+blink_context
+{
+  int  m_state=0;
+
+public:
+  void   enable() noexcept{m_state |= 1;}
+  void  disable() noexcept{m_state  = 0;}
+
+  bool  is_valid()   const noexcept{return m_state&1;}
+  bool  is_visible() const noexcept{return m_state&2;}
+
+  void  step() noexcept{if(is_visible()){m_state &= 1;} else{m_state |= 2;}}
+
+};
+
+
 struct
 row
 {
@@ -97,24 +114,31 @@ row
 
   bool  m_entry_flag=false;
 
+  blink_context  m_blink_context;
+
+  bool  m_white_flag=false;
+
+  gbstd::process  m_process;
+
   int  m_animation_phase;
   int  m_animation_counter;
-  
-  gbstd::point  m_rendering_pos;
 
-  bool  is_surviving() const noexcept{return m_original && m_variable.get_number_of_soldiers();}
+  gbstd::point  m_base_pos;
+  gbstd::point  m_current_pos;
+
+  bool  is_surviving() const noexcept{return m_original && m_variable.get_hp();}
 
   bool  is_left()  const noexcept;
   bool  is_right() const noexcept;
 
-  void  move_to_advance(int  n) noexcept{m_rendering_pos.x += is_left()?  n:-n;}
-  void  move_to_back(   int  n) noexcept{m_rendering_pos.x += is_left()? -n: n;}
+  void  move_to_advance(int  n) noexcept{m_current_pos.x += -n;}
+  void  move_to_back(   int  n) noexcept{m_current_pos.x -= -n;}
 
   void  reset_animation(int  phase=0) noexcept;
 
   void  reset(force&  force, company*  org) noexcept;
 
-  void  render(ww::side  side, gbstd::color  force_color, const gbstd::canvas&  cv) const noexcept;
+  void  render(const gbstd::canvas&  cv) const noexcept;
 
 };
 
@@ -122,13 +146,17 @@ row
 struct
 force
 {
-  row  m_rows[8];
+  static constexpr int  m_number_of_rows = 3;
+
+  row  m_rows[m_number_of_rows];
 
   side  m_side=side::left;
 
   gbstd::color  m_color;
 
   std::list<row*>  m_actor_queue;
+
+  gbstd::process  m_process;
 
   int  get_rows(battle_position  pos, row**  buf, int  n) noexcept;
 
@@ -137,6 +165,8 @@ force
   bool  can_continue_fight() const noexcept;
 
   void  reset(ww::side  side, const force_initializer&  init) noexcept;
+
+  void  update() noexcept;
 
   void  render(const gbstd::canvas&  cv) const noexcept;
 
@@ -186,7 +216,7 @@ battle_context
 
   void  pump_queue() noexcept;
 
-  void  step() noexcept{m_base_process.step();}
+  void  step() noexcept;
 
   void  render(const gbstd::canvas&  cv) const noexcept;
 

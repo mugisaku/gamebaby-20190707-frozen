@@ -10,34 +10,16 @@ namespace gbstd{
 
 process&
 process::
-assign(process&&  rhs) noexcept
+assign(uint32_t  interval, execution_frame&&  frame, stop_sign  stp) noexcept
 {
-    if(this != &rhs)
-    {
-      clear();
+  m_interval = interval;
 
-      m_name = std::move(rhs.m_name);
+  m_next_time = 0;
 
-      m_next_time = rhs.m_next_time;
-      m_interval  = rhs.m_interval;
+  m_main_stack.clear();
+  m_buffer_stack.clear();
 
-      m_execution = std::move(rhs.m_execution);
-    }
-
-
-  return *this;
-}
-
-
-process&
-process::
-assign(const char*  name, uint32_t  intval, execution_frame&&  frame) noexcept
-{
-  clear();
-
-  m_name = name;
-
-  m_execution.push(std::move(frame));
+  m_main_stack.emplace_back(std::move(frame),stp);
 
   return *this;
 }
@@ -47,11 +29,15 @@ assign(const char*  name, uint32_t  intval, execution_frame&&  frame) noexcept
 
 void
 process::
-clear() noexcept
+merge() noexcept
 {
-  m_interval = 0;
+    for(auto&&  frm: m_buffer_stack)
+    {
+      m_main_stack.emplace_back(std::move(frm));
+    }
 
-  m_execution.clear();
+
+  m_buffer_stack.clear();
 }
 
 
@@ -61,9 +47,34 @@ step() noexcept
 {
     if(g_time >= m_next_time)
     {
-        if(m_execution)
+      int  counter = 8;
+
+      merge();
+
+        while(get_number_of_frames())
         {
-          m_execution(8);
+          auto&  top = m_main_stack.back();
+
+          top.get_callback()(*this,top.get_data());
+
+          auto  stop_sign = top.m_stop_sign;
+
+            if(m_pop_flag)
+            {
+              m_main_stack.pop_back();
+
+              m_pop_flag = false;
+            }
+
+
+          merge();
+
+            if(!--counter || stop_sign)
+            {
+              break;
+            }
+
+          
         }
 
 

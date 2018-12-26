@@ -1,5 +1,5 @@
-#ifndef gbstd_job_HPP
-#define gbstd_job_HPP
+#ifndef gbstd_process_HPP
+#define gbstd_process_HPP
 
 
 #include"libgbstd/utility.hpp"
@@ -13,31 +13,43 @@
 namespace gbstd{
 
 
-class  process;
 class  execution;
-
 
 using execution_callback = void(*)(execution&,void*);
 
 
 
-struct
+class
 execution_frame
 {
-  std::string  m_name;
-
   execution_callback  m_callback;
 
   void*  m_data;
 
-  execution_frame(const char*  name, execution_callback  cb=nullptr, void*  data=nullptr) noexcept:
-  m_name(name), m_callback(cb), m_data(data){}
+public:
+  execution_frame(execution_callback  cb=nullptr, void*  data=nullptr) noexcept:
+  m_callback(cb), m_data(data){}
 
   template<typename  T>
-  execution_frame(const char*  name, void(*cb)(execution&,T*), T*  data) noexcept:
-  m_name(name), m_callback(reinterpret_cast<execution_callback>(cb)), m_data(data){}
+  execution_frame(void(*cb)(execution&,T*), T*  data) noexcept:
+  m_callback(reinterpret_cast<execution_callback>(cb)), m_data(data){}
 
-  void  operator()(execution&  exec) const noexcept{m_callback(exec,m_data);}
+  execution_callback  get_callback() const noexcept{return m_callback;}
+
+  void*  get_data() const noexcept{return m_data;}
+
+};
+
+
+class
+stop_sign
+{
+  bool  m_value;
+
+public:
+  constexpr stop_sign(bool  v) noexcept: m_value(v){}
+
+  constexpr operator bool() const noexcept{return m_value;}
 
 };
 
@@ -45,76 +57,165 @@ execution_frame
 class
 execution
 {
-  std::vector<execution_frame>  m_stack;
+protected:
+  using base = execution_frame;
+
+  struct frame: public base{
+    stop_sign  m_stop_sign;
+
+    frame(base&&  bas, stop_sign  stp) noexcept:
+    base(std::move(bas)), m_stop_sign(stp){}
+
+    frame&  assign(base&&  bas, stop_sign  stp) noexcept
+    {
+      static_cast<base&>(*this) = (std::move(bas));
+      m_stop_sign = stp;
+
+      return *this;
+    }
+
+  };
+
+  std::vector<frame>  m_main_stack;
+  std::vector<frame>  m_buffer_stack;
+
+  bool  m_pop_flag=false;
+
+   execution() noexcept=default;
+  ~execution() noexcept=default;
+
+  execution(const execution& ) noexcept=default;
+  execution(      execution&&) noexcept=default;
+
+  execution&  operator=(const execution& ) noexcept=default;
+  execution&  operator=(      execution&&) noexcept=default;
 
 public:
-  operator bool() const noexcept{return m_stack.size();}
+  operator bool() const noexcept{return m_main_stack.size();}
 
-  void     push(execution_frame&&  f) noexcept{m_stack.emplace_back(std::move(f));}
-  void  replace(execution_frame&&  f) noexcept{m_stack.back() = std::move(f);}
+  int  get_number_of_frames() const noexcept{return m_main_stack.size();}
 
-  void    pop() noexcept{m_stack.pop_back();}
-  void  clear() noexcept{m_stack.clear();}
+  void     push(execution_frame&&  f, stop_sign  stp=stop_sign(false)) noexcept{m_buffer_stack.emplace_back(std::move(f),stp);}
+  void  replace(execution_frame&&  f, stop_sign  stp=stop_sign(false)) noexcept{m_main_stack.back().assign(std::move(f),stp);}
 
-  execution_callback  get_top() const noexcept{return m_stack.size()? m_stack.back().m_callback:nullptr;}
 
-  bool  test(execution_callback  cb) const noexcept{return m_stack.size() && (m_stack.back().m_callback == cb);}
-
-  void  operator()(int  n=1) noexcept
+  void  push(std::initializer_list<execution_callback>  ls, void*  data, stop_sign  stp=stop_sign(false)) noexcept
   {
-      while(n--)
+      for(auto  cb: ls)
       {
-        auto&  bk = m_stack.back();
+        push({cb,data},stp);
+      }
+  }
 
-        auto  last = bk.m_callback;
 
-        bk(*this);
+  template<typename  T>
+  void  push(std::initializer_list<void(*)(execution&,T*)>  ls, T*  data, stop_sign  stp=stop_sign(false)) noexcept
+  {
+      for(auto  cb: ls)
+      {
+        push({cb,data},stp);
+      }
+  }
 
-          if(m_stack.empty() || (m_stack.back().m_callback == last))
+
+  void  push_reverse(std::initializer_list<execution_callback>  ls, void*  data, stop_sign  stp=stop_sign(false)) noexcept
+  {
+    auto  end = ls.begin();
+    auto   it = ls.end();
+
+      if(it != end)
+      {
+          for(;;)
           {
-            break;
+            push({*--it,data},stp);
+
+              if(it == end)
+              {
+                break;
+              }
           }
       }
   }
 
+
+  template<typename  T>
+  void  push_reverse(std::initializer_list<void(*)(execution&,T*)>  ls, T*  data, stop_sign  stp=stop_sign(false)) noexcept
+  {
+    auto  end = ls.begin();
+    auto   it = ls.end();
+
+      if(it != end)
+      {
+          for(;;)
+          {
+            push({*--it,data},stp);
+
+              if(it == end)
+              {
+                break;
+              }
+          }
+      }
+  }
+
+
+  void  pop() noexcept{m_pop_flag = true;}
+
 };
 
 
-
-
 class
-process
+process: public execution
 {
-  std::string  m_name;
-
-  uint32_t  m_next_time=0;
   uint32_t  m_interval=0;
 
-  execution  m_execution;
+  uint32_t  m_next_time=0;
+
+  void  merge() noexcept;
 
 public:
-  process() noexcept{}
-  process(const char*  name, uint32_t  intval, execution_frame&&  frame) noexcept{assign(name,intval,std::move(frame));}
-  process(const process&   rhs) noexcept=delete;
-  process(      process&&  rhs) noexcept{assign(std::move(rhs));}
- ~process(){clear();}
+  process(uint32_t  interval=0) noexcept: m_interval(interval){}
+  process(uint32_t  interval, execution_frame&&  frame, stop_sign  stp=stop_sign(false)) noexcept
+  {assign(interval,std::move(frame),stp);}
 
-  process&  operator=(const process&   rhs) noexcept=delete;
-  process&  operator=(      process&&  rhs) noexcept{return assign(std::move(rhs));}
+  bool  is_busy() const noexcept{return m_main_stack.size() || m_buffer_stack.size();}
 
-  process&  assign(process&&  rhs) noexcept;
-  process&  assign(const char*  name, uint32_t  intval, execution_frame&&  frame) noexcept;
+  process&  assign(uint32_t  interval, execution_frame&&  frame, stop_sign  stp=stop_sign(false)) noexcept;
 
-
-  void  clear() noexcept;
-
-  uint32_t  get_interval() const noexcept{return m_interval;}
-
-  const execution&  get_execution() const noexcept{return m_execution;}
+  void      set_interval(uint32_t  v)       noexcept{       m_interval = v;}
+  uint32_t  get_interval(           ) const noexcept{return m_interval    ;}
 
   void  step() noexcept;
 
 };
+
+
+inline
+int
+wait(std::initializer_list<process*>  ls) noexcept
+{
+  int  n = 0;
+
+    for(auto  proc: ls)
+    {
+        if(proc)
+        {
+            if(proc->is_busy())
+            {
+              proc->step();
+            }
+
+
+            if(proc->is_busy())
+            {
+              ++n;
+            }
+        }
+    }
+
+
+  return n;
+}
 
 
 

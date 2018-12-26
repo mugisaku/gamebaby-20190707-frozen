@@ -38,12 +38,13 @@ reset(force&  force, company*  org) noexcept
   m_ap = 0;
 
   m_entry_flag = false;
+  m_white_flag = false;
 }
 
 
 void
 row::
-render(ww::side  side, gbstd::color  force_color, const gbstd::canvas&  cv) const noexcept
+render(const gbstd::canvas&  cv) const noexcept
 {
     if(!m_original)
     {
@@ -51,16 +52,28 @@ render(ww::side  side, gbstd::color  force_color, const gbstd::canvas&  cv) cons
     }
 
 
-  int  x = m_rendering_pos.x;
-  int  y = m_rendering_pos.y;
+  int  bas_x = m_base_pos.x;
+  int  bas_y = m_base_pos.y+16;
 
-    if(side == side::left)
+  int  cur_x = m_current_pos.x;
+  int  cur_y = m_current_pos.y;
+
+    if(is_left())
     {
-      x = cv.get_width()-1-x;
+      bas_x = cv.get_width()-1-bas_x;
+      cur_x = cv.get_width()-1-cur_x;
     }
 
 
-  m_variable.render(force_color,{cv,x,y,g_frame_w,g_frame_h});
+    if(!m_blink_context.is_valid() || m_blink_context.is_visible())
+    {
+      m_variable.render(m_white_flag? gbstd::colors::white:m_force->m_color,{cv,cur_x,cur_y,g_frame_w,g_frame_h});
+    }
+
+
+  gbstd::string_form  sf;
+
+  cv.draw_string(gbstd::colors::white,sf("%6d",m_variable.m_hp),bas_x,bas_y);
 }
 
 

@@ -14,7 +14,7 @@ reset(const force_initializer&  l,
    m_left_force.reset(side::left ,l);
   m_right_force.reset(side::right,r);
 
-  m_base_process.assign("",80,gbstd::execution_frame("judge",judge,this));
+  m_base_process.assign(120,{judge,this});
 }
 
 
@@ -104,6 +104,17 @@ pump_queue() noexcept
 
   pump_queue(l.m_actor_queue);
   pump_queue(r.m_actor_queue);
+}
+
+
+void
+battle_context::
+step() noexcept
+{
+  m_left_force.update();
+  m_right_force.update();
+
+  m_base_process.step();
 }
 
 

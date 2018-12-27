@@ -15,6 +15,10 @@ reset(const force_initializer&  l,
   m_right_force.reset(side::right,r);
 
   m_base_process.assign(120,{judge,this});
+
+  m_text.resize(10,8);
+
+  m_typewriter.assign(m_text);
 }
 
 
@@ -124,6 +128,8 @@ render(const gbstd::canvas&  cv) const noexcept
 {
    m_left_force.render({cv,                             0,0,g_frame_w*3,g_frame_h*8});
   m_right_force.render({cv,cv.get_width()-1-(g_frame_w*3),0,g_frame_w*3,g_frame_h*8});
+
+  cv.draw_typewriter(m_typewriter,{0,0});
 }
 
 

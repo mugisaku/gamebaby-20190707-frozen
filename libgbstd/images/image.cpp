@@ -77,6 +77,20 @@ assign(image&&  rhs) noexcept
 }
 
 
+image&
+image::
+assign(const typewriter&  tw) noexcept
+{
+  resize(tw.get_image_width(),tw.get_image_height());
+
+  canvas  cv(*this);
+
+  cv.draw_typewriter(tw,0,0);
+
+  return *this;
+}
+
+
 
 
 void

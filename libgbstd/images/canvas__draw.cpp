@@ -472,6 +472,38 @@ draw_string_safely(const character_color&  color, const char16_t*  s, int  x, in
 
 
 
+void
+canvas::
+draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept
+{
+  int  w = m_width /g_font_width ;
+  int  h = m_height/g_font_height;
+
+    if(w > tw.get_width() ){w = tw.get_width() ;}
+    if(h > tw.get_height()){h = tw.get_height();}
+
+
+    for(int  yy = 0;  yy < h;  ++yy)
+    {
+      auto  cp = tw.get_character_pointer(0,yy);
+
+      int  dst_x = x;
+
+        for(int  xx = 0;  xx < w;  ++xx)
+        {
+          draw_character(*cp++,dst_x,y);
+
+          dst_x += g_font_width;
+        }
+
+
+      y += g_font_height;
+    }
+}
+
+
+
+
 namespace{
 bool
 correct(canvas&  src_cv, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexcept

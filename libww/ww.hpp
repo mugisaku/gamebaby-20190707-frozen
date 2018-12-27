@@ -50,6 +50,21 @@ constexpr battle_position    back_pos(1);
 constexpr battle_position  backup_pos(2);
 
 
+class
+window
+{
+protected:
+  gbstd::point  m_pos;
+
+  int  m_width =0;
+  int  m_height=0;
+
+public:
+  
+
+};
+
+
 struct
 company
 {
@@ -202,6 +217,10 @@ battle_context
   uint32_t  m_time=0;
 
   std::list<row*>  m_actor_queue;
+
+  gbstd::text  m_text;
+
+  gbstd::typewriter  m_typewriter;
 
   attack_context  m_attack_context;
 

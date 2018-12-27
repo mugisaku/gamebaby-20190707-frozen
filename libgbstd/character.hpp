@@ -147,34 +147,7 @@ std::u16string  make_u16string(const std::string&  s) noexcept;
 
 
 class
-text_buffer
-{
-  static constexpr size_t  m_length_limit = 512;
-
-  character  m_data[m_length_limit];
-
-  int   m_i_pos=0;
-  int   m_o_pos=0;
-
-  int   m_length=0;
-
-public:
-  operator bool() const noexcept{return m_length;}
-
-  int  get_length() const noexcept{return m_length;}
-
-  void  clear() noexcept;
-
-  void  push(const char*      s, bool  with_newline=true);
-  void  push(const char16_t*  s, bool  with_newline=true);
-
-  const character&  pop() noexcept;
-
-};
-
-
-class
-text_screen
+text
 {
   character*  m_data=nullptr;
 
@@ -182,12 +155,15 @@ text_screen
   int  m_height=0;
 
 public:
-  text_screen(              ) noexcept{}
-  text_screen(int  w, int  h) noexcept{resize(w,h);}
- ~text_screen(){resize(0,0);}
+  text(              ) noexcept{}
+  text(int  w, int  h) noexcept{resize(w,h);}
+ ~text(){resize(0,0);}
 
   int  get_width()  const noexcept{return m_width;}
   int  get_height() const noexcept{return m_height;}
+
+  int  get_image_width()  const noexcept{return g_font_width*m_width;}
+  int  get_image_height() const noexcept{return g_font_height*m_height;}
 
   void  resize(int  w, int  h) noexcept;
 
@@ -199,26 +175,40 @@ public:
 
 
 class
-text_cursor
+typewriter
 {
-  text_screen*  m_screen=nullptr;
+  character*  m_base_pointer=nullptr;
 
-  point  m_point;
+  int  m_text_width=0;
+
+  int  m_width =0;
+  int  m_height=0;
 
 public:
-  text_cursor() noexcept{}
-  text_cursor(text_screen&  scr) noexcept: m_screen(&scr){}
+  typewriter() noexcept{}
+  typewriter(const text&  txt) noexcept{assign(txt);}
 
-  operator bool() const noexcept{return (m_point.x < m_screen->get_width()) &&
-                                        (m_point.y < m_screen->get_height());}
+  typewriter&  operator=(const text&  txt) noexcept{return assign(txt);}
+  typewriter&     assign(const text&  txt) noexcept;
 
-  character&  operator*() const noexcept{return *m_screen->get_character_pointer(m_point.x,m_point.y);}
+  int  get_text_width()  const noexcept{return m_text_width;}
 
-  text_cursor&  operator++() noexcept;
-  text_cursor  operator++(int) noexcept;
-  text_cursor&  operator+=(point  pt) noexcept;
+  int  get_width()  const noexcept{return m_width;}
+  int  get_height() const noexcept{return m_height;}
 
-  void  reset(int  x, int  y) noexcept{m_point = point(x,y);}
+  int  get_image_width()  const noexcept{return g_font_width*m_width;}
+  int  get_image_height() const noexcept{return g_font_height*m_height;}
+
+  character*  get_character_pointer(int  x, int  y) const noexcept{return m_base_pointer+(m_text_width*y)+x;}
+
+  void  scroll_up(int  n=1) noexcept;
+
+  point  overwrite(const character*  s, int  l, point  pos) const noexcept;
+
+  point  overwrite(const char*      s, gbstd::color  color, point  pos) const noexcept;
+  point  overwrite(const char16_t*  s, gbstd::color  color, point  pos) const noexcept;
+
+  void  fill(character  c) const noexcept;
 
 };
 

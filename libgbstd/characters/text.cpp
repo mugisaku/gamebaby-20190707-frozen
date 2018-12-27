@@ -9,7 +9,7 @@ namespace gbstd{
 
 
 void
-text_screen::
+text::
 resize(int  w, int  h) noexcept
 {
     if(!w || !h)
@@ -34,9 +34,17 @@ resize(int  w, int  h) noexcept
 
 
 void
-text_screen::
+text::
 fill(const character&  c) noexcept
 {
+  auto  p = m_data;
+
+  auto  end = m_data+(m_width*m_height);
+
+    while(p != end)
+    {
+      *p++ = c;
+    }
 }
 
 

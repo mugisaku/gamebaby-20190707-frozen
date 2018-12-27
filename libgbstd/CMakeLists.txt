@@ -8,9 +8,8 @@ set(SOURCES
   characters/unicode.cpp
   characters/point.cpp
   characters/font.cpp
-  characters/text_screen.cpp
-  characters/text_cursor.cpp
-  characters/text_buffer.cpp
+  characters/text.cpp
+  characters/typewriter.cpp
   images/image.cpp
   images/image__png.cpp
   images/canvas.cpp
@@ -21,7 +20,6 @@ set(SOURCES
   values/value_list.cpp
   values/variable.cpp
   windows/window.cpp
-#  windows/window_manager.cpp
   windows/widget.cpp
   windows/components/frame.cpp
   windows/components/label.cpp
@@ -39,8 +37,6 @@ set(SOURCES
   process.cpp
   utility.cpp
   control.cpp
-#  programs/indication.cpp
-#  programs/chooser.cpp
 )
 
 

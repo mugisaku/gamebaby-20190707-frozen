@@ -1,4 +1,5 @@
 #include"libgbstd/character.hpp"
+#include<cctype>
 
 
 
@@ -18,10 +19,28 @@ assign(const text&  txt) noexcept
   m_width      = txt.get_width();
   m_height     = txt.get_height();
 
+  m_cursor_pos = {0,0};
+
+  clear_queue();
+
+
   return *this;
 }
 
 
+
+
+void
+typewriter::
+newline() noexcept
+{
+  m_cursor_pos.x = 0;
+
+    if(!has_cursor_reached_bottom())
+    {
+      ++m_cursor_pos.y;
+    }
+}
 
 
 void
@@ -47,56 +66,35 @@ scroll_up(int  n) noexcept
 }
 
 
-point
+void
 typewriter::
-overwrite(const character*  s, int  l, point  pos) const noexcept
+clear_line(int  n) noexcept
 {
-  int  x = pos.x;
-  int  y = pos.y;
+  auto  dst = get_character_pointer(0,n);
 
-    while(l--)
+    for(int  x = 0;  x < m_width;  ++x)
     {
-        if(x >= m_width)
-        {
-            if(++y >= m_height)
-            {
-              break;
-            }
-
-
-          x = 0;
-        }
-
-
-      auto  c = *s++;
-
-        if(c.unicode == '\n')
-        {
-            if(++y >= m_height)
-            {
-              break;
-            }
-
-
-          x = 0;
-        }
-
-      else
-        {
-          *get_character_pointer(x,y) = c;
-
-          ++x;
-        }
+      *dst++ = character();
     }
-
-
-  return point(x,y);
 }
 
 
-point
+
+
+void
 typewriter::
-overwrite(const char*  s, gbstd::color  color, point  pos) const noexcept
+push(const character*  s, int  l) noexcept
+{
+    while(l--)
+    {
+      m_queue.emplace(*s++);
+    }
+}
+
+
+void
+typewriter::
+push(const char*  s, gbstd::color  color) noexcept
 {
   auto  l = u8slen(s);
 
@@ -114,13 +112,13 @@ overwrite(const char*  s, gbstd::color  color, point  pos) const noexcept
 
   *p = 0;
 
-  return overwrite(us,color,pos);
+  push(us,color);
 }
 
 
-point
+void
 typewriter::
-overwrite(const char16_t*  s, gbstd::color  color, point  pos) const noexcept
+push(const char16_t*  s, gbstd::color  color) noexcept
 {
     while(*s)
     {
@@ -129,12 +127,36 @@ overwrite(const char16_t*  s, gbstd::color  color, point  pos) const noexcept
       c.unicode =  *s++;
       c.color   = color;
 
-      pos = overwrite(&c,1,pos);
+      push(&c,1);
+    }
+}
+
+
+void
+typewriter::
+pump() noexcept
+{
+  auto  c = m_queue.front();
+
+  m_queue.pop();
+
+    if(c.unicode == '\n')
+    {
+      newline();
     }
 
+  else
+    if(!iscntrl(c.unicode))
+    {
+      *get_character_pointer(m_cursor_pos.x,m_cursor_pos.y) = c;
 
-  return pos;
+        if(!has_cursor_reached_right())
+        {
+          ++m_cursor_pos.x;
+        }
+    }
 }
+
 
 
 

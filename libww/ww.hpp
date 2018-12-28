@@ -68,9 +68,13 @@ public:
 struct
 company
 {
+  const char*  m_name;
+
   int  m_hp=6000;
 
   battle_position  m_pos=front_pos;
+
+  const char*  get_name() const noexcept{return m_name;}
 
   int  get_hp() const noexcept{return m_hp;}
 
@@ -221,6 +225,8 @@ battle_context
   gbstd::text  m_text;
 
   gbstd::typewriter  m_typewriter;
+
+  static constexpr gbstd::point  m_console_pos = gbstd::point(0,0);
 
   attack_context  m_attack_context;
 

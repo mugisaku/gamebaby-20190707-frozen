@@ -4,6 +4,7 @@
 
 #include"libgbstd/control.hpp"
 #include<string>
+#include<queue>
 #include<initializer_list>
 
 
@@ -184,6 +185,10 @@ typewriter
   int  m_width =0;
   int  m_height=0;
 
+  point  m_cursor_pos;
+
+  std::queue<character>  m_queue;
+
 public:
   typewriter() noexcept{}
   typewriter(const text&  txt) noexcept{assign(txt);}
@@ -201,12 +206,33 @@ public:
 
   character*  get_character_pointer(int  x, int  y) const noexcept{return m_base_pointer+(m_text_width*y)+x;}
 
+  bool  has_cursor_reached_right()  const noexcept{return m_cursor_pos.x == (m_width -1);}
+  bool  has_cursor_reached_bottom() const noexcept{return m_cursor_pos.y == (m_height-1);}
+
+  void  newline() noexcept;
+
+  const std::queue<character>&  get_queue() const noexcept{return m_queue;}
+
+  void  clear_queue() noexcept{m_queue = std::queue<character>();}
+
+  point  get_cursor_position() const noexcept{return m_cursor_pos;}
+
+  void  set_cursor_position(point  pos) noexcept{m_cursor_pos  = pos;}
+  void  add_cursor_position(point  pos) noexcept{m_cursor_pos += pos;}
+
+  void  clear_line(      ) noexcept{clear_line(m_cursor_pos.y);}
+  void  clear_line(int  n) noexcept;
+
   void  scroll_up(int  n=1) noexcept;
 
-  point  overwrite(const character*  s, int  l, point  pos) const noexcept;
+  operator bool() const noexcept{return m_queue.size();}
 
-  point  overwrite(const char*      s, gbstd::color  color, point  pos) const noexcept;
-  point  overwrite(const char16_t*  s, gbstd::color  color, point  pos) const noexcept;
+  void  push(const character*  s, int  l) noexcept;
+
+  void  push(const char*      s, gbstd::color  color) noexcept;
+  void  push(const char16_t*  s, gbstd::color  color) noexcept;
+
+  void  pump() noexcept;
 
   void  fill(character  c) const noexcept;
 

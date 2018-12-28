@@ -18,6 +18,8 @@ reset(const force_initializer&  l,
 
   m_text.resize(10,8);
 
+  m_text.fill(gbstd::character());
+
   m_typewriter.assign(m_text);
 }
 
@@ -111,6 +113,8 @@ pump_queue() noexcept
 }
 
 
+
+
 void
 battle_context::
 step() noexcept
@@ -119,6 +123,16 @@ step() noexcept
   m_right_force.update();
 
   m_base_process.step();
+
+    if(m_typewriter)
+    {
+      m_typewriter.pump();
+
+        if(m_typewriter.has_cursor_reached_right())
+        {
+          m_typewriter.newline();
+        }
+    }
 }
 
 
@@ -129,7 +143,7 @@ render(const gbstd::canvas&  cv) const noexcept
    m_left_force.render({cv,                             0,0,g_frame_w*3,g_frame_h*8});
   m_right_force.render({cv,cv.get_width()-1-(g_frame_w*3),0,g_frame_w*3,g_frame_h*8});
 
-  cv.draw_typewriter(m_typewriter,{0,0});
+  cv.draw_typewriter(m_typewriter,m_console_pos);
 }
 
 

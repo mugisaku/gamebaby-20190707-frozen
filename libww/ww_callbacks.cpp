@@ -213,6 +213,8 @@ judge(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
     if(l && r)
     {
+ctx->m_typewriter.push(u"fighting now!",gbstd::colors::white);
+
       exec.push({fight,ctx});
     }
 

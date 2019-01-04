@@ -476,12 +476,8 @@ void
 canvas::
 draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept
 {
-  int  w = m_width /g_font_width ;
-  int  h = m_height/g_font_height;
-
-    if(w > tw.get_width() ){w = tw.get_width() ;}
-    if(h > tw.get_height()){h = tw.get_height();}
-
+  int  w = tw.get_width() ;
+  int  h = tw.get_height();
 
     for(int  yy = 0;  yy < h;  ++yy)
     {

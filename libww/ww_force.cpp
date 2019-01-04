@@ -10,7 +10,7 @@ namespace ww{
 
 int
 force::
-get_rows(battle_position  pos, row**  buf, int  n) noexcept
+get_rows_by_position(battle_position  pos, row**  buf, int  n) noexcept
 {
   int  c = 0;
 
@@ -22,7 +22,7 @@ get_rows(battle_position  pos, row**  buf, int  n) noexcept
         }
 
 
-        if(row.is_surviving() && (row.m_variable.m_pos == pos))
+        if(row.is_surviving() && (row.m_variable.get_position() == pos))
         {
           *buf++ = &row;
 
@@ -33,33 +33,6 @@ get_rows(battle_position  pos, row**  buf, int  n) noexcept
 
 
   return c;
-}
-
-
-void
-force::
-increase_ap() noexcept
-{
-    for(auto&  row: m_rows)
-    {
-        if(!row.m_entry_flag && row.is_surviving())
-        {
-          static gbstd::uniform_rand  rand(1,20);
-
-          constexpr int  max = 200;
-
-          row.m_ap += rand();
-
-            if(row.m_ap >= max)
-            {
-              row.m_ap -= max;
-
-              m_actor_queue.emplace_back(&row);
-
-              row.m_entry_flag = true;
-            }
-        }
-    }
 }
 
 
@@ -87,8 +60,6 @@ reset(ww::side  side, const force_initializer&  init) noexcept
   m_side  = side;
   m_color = init.m_color;
 
-  m_actor_queue.clear();
-
   int  y = g_frame_h;
 
     for(int  i = 0;  i < m_number_of_rows;  ++i)
@@ -97,10 +68,10 @@ reset(ww::side  side, const force_initializer&  init) noexcept
 
       row.reset(*this,(i < init.m_company_list.size())? init.m_company_list[i]:nullptr);
 
-      auto  pos = row.m_variable.m_pos;
+
+      auto  pos = row.m_variable.get_position();
 
       row.m_base_pos.x = g_frame_w*pos;
-
 
       row.m_base_pos.y = y             ;
                          y += g_frame_h;
@@ -112,11 +83,58 @@ reset(ww::side  side, const force_initializer&  init) noexcept
 
 void
 force::
-update() noexcept
+ready() noexcept
+{
+    for(int  i = 0;  i < m_number_of_rows;  ++i)
+    {
+      m_rows[i].ready();
+    }
+}
+
+
+row*
+force::
+get_actor_by_ap() noexcept
+{
+  row*  highest = nullptr;
+
+    for(auto&  row: m_rows)
+    {
+        if(row.is_surviving())
+        {
+            if(!highest || (highest->m_ap < row.m_ap))
+            {
+              highest = &row;
+            }
+        }
+    }
+
+
+  return highest;
+}
+
+
+void
+force::
+distribute_ap(int  v) noexcept
 {
     for(auto&  row: m_rows)
     {
-      row.m_blink_context.step();
+        if(row.is_surviving())
+        {
+          row.m_ap += v;
+        }
+    }
+}
+
+
+void
+force::
+step() noexcept
+{
+    for(auto&  row: m_rows)
+    {
+      row.step();
     }
 }
 

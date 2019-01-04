@@ -13,32 +13,12 @@
 namespace gbstd{
 
 
-class  execution;
+class execution;
+class process;
 
 using execution_callback = void(*)(execution&,void*);
 
 
-
-class
-execution_frame
-{
-  execution_callback  m_callback;
-
-  void*  m_data;
-
-public:
-  execution_frame(execution_callback  cb=nullptr, void*  data=nullptr) noexcept:
-  m_callback(cb), m_data(data){}
-
-  template<typename  T>
-  execution_frame(void(*cb)(execution&,T*), T*  data) noexcept:
-  m_callback(reinterpret_cast<execution_callback>(cb)), m_data(data){}
-
-  execution_callback  get_callback() const noexcept{return m_callback;}
-
-  void*  get_data() const noexcept{return m_data;}
-
-};
 
 
 class
@@ -54,22 +34,77 @@ public:
 };
 
 
+
+struct
+execution_entry
+{
+  execution_callback  m_callback;
+
+  void*  m_data;
+
+  stop_sign  m_stop_sign;
+
+  constexpr execution_entry() noexcept:
+  m_callback(nullptr), m_data(nullptr), m_stop_sign(false){}
+
+  template<typename  T>
+  constexpr execution_entry(void(*cb)(execution&,T*), T*  data, stop_sign  ss=false) noexcept:
+  m_callback(reinterpret_cast<execution_callback>(cb)), m_data(data), m_stop_sign(ss){}
+
+};
+
+
+class
+execution_frame
+{
+  static constexpr int  m_capacity = 12;
+
+  execution_entry  m_entries[m_capacity];
+
+  int  m_length=0;
+
+public:
+  execution_frame(std::initializer_list<execution_entry>  ls={}) noexcept{assign(ls);}
+
+  execution_frame&  operator=(std::initializer_list<execution_entry>  ls) noexcept{return assign(ls);}
+
+  execution_frame&  assign(std::initializer_list<execution_entry>  ls) noexcept
+  {
+    m_length = ls.size();
+
+    auto  it = ls.begin();
+
+      for(int  i = 0;  i < ls.size();  ++i)
+      {
+        m_entries[i] = *it++;
+      }
+
+
+    return *this;
+  }
+
+  int  get_length() const noexcept{return m_length;}
+
+  const execution_entry&  operator[](int  i) const noexcept{return m_entries[i];}
+
+};
+
+
 class
 execution
 {
 protected:
-  using base = execution_frame;
+  struct frame: public execution_frame{
+    uint32_t  m_pc;
 
-  struct frame: public base{
-    stop_sign  m_stop_sign;
+    frame(std::initializer_list<execution_entry>  ls) noexcept:
+    execution_frame(ls), m_pc(0){}
 
-    frame(base&&  bas, stop_sign  stp) noexcept:
-    base(std::move(bas)), m_stop_sign(stp){}
-
-    frame&  assign(base&&  bas, stop_sign  stp) noexcept
+    frame&  assign(std::initializer_list<execution_entry>  ls) noexcept
     {
-      static_cast<base&>(*this) = (std::move(bas));
-      m_stop_sign = stp;
+      execution_frame::assign(ls);
+
+      m_pc = 0;
 
       return *this;
     }
@@ -95,69 +130,19 @@ public:
 
   int  get_number_of_frames() const noexcept{return m_main_stack.size();}
 
-  void     push(execution_frame&&  f, stop_sign  stp=stop_sign(false)) noexcept{m_buffer_stack.emplace_back(std::move(f),stp);}
-  void  replace(execution_frame&&  f, stop_sign  stp=stop_sign(false)) noexcept{m_main_stack.back().assign(std::move(f),stp);}
+  void     push(std::initializer_list<execution_entry>  ls) noexcept{m_buffer_stack.emplace_back(ls);}
+  void  replace(std::initializer_list<execution_entry>  ls) noexcept{m_main_stack.back().assign(ls);}
 
+  uint32_t  get_pc(           ) const noexcept{return m_main_stack.back().m_pc     ;}
+  void      set_pc(uint32_t  v)       noexcept{       m_main_stack.back().m_pc  = v;}
+  void      add_pc(int       v)       noexcept{       m_main_stack.back().m_pc += v;}
 
-  void  push(std::initializer_list<execution_callback>  ls, void*  data, stop_sign  stp=stop_sign(false)) noexcept
+  execution&  operator++() noexcept
   {
-      for(auto  cb: ls)
-      {
-        push({cb,data},stp);
-      }
+    m_main_stack.back().m_pc += 1;
+
+    return *this;
   }
-
-
-  template<typename  T>
-  void  push(std::initializer_list<void(*)(execution&,T*)>  ls, T*  data, stop_sign  stp=stop_sign(false)) noexcept
-  {
-      for(auto  cb: ls)
-      {
-        push({cb,data},stp);
-      }
-  }
-
-
-  void  push_reverse(std::initializer_list<execution_callback>  ls, void*  data, stop_sign  stp=stop_sign(false)) noexcept
-  {
-    auto  end = ls.begin();
-    auto   it = ls.end();
-
-      if(it != end)
-      {
-          for(;;)
-          {
-            push({*--it,data},stp);
-
-              if(it == end)
-              {
-                break;
-              }
-          }
-      }
-  }
-
-
-  template<typename  T>
-  void  push_reverse(std::initializer_list<void(*)(execution&,T*)>  ls, T*  data, stop_sign  stp=stop_sign(false)) noexcept
-  {
-    auto  end = ls.begin();
-    auto   it = ls.end();
-
-      if(it != end)
-      {
-          for(;;)
-          {
-            push({*--it,data},stp);
-
-              if(it == end)
-              {
-                break;
-              }
-          }
-      }
-  }
-
 
   void  pop() noexcept{m_pop_flag = true;}
 
@@ -175,12 +160,12 @@ process: public execution
 
 public:
   process(uint32_t  interval=0) noexcept: m_interval(interval){}
-  process(uint32_t  interval, execution_frame&&  frame, stop_sign  stp=stop_sign(false)) noexcept
-  {assign(interval,std::move(frame),stp);}
+  process(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
+  {assign(interval,ls);}
 
   bool  is_busy() const noexcept{return m_main_stack.size() || m_buffer_stack.size();}
 
-  process&  assign(uint32_t  interval, execution_frame&&  frame, stop_sign  stp=stop_sign(false)) noexcept;
+  process&  assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept;
 
   void      set_interval(uint32_t  v)       noexcept{       m_interval = v;}
   uint32_t  get_interval(           ) const noexcept{return m_interval    ;}
@@ -188,34 +173,6 @@ public:
   void  step() noexcept;
 
 };
-
-
-inline
-int
-wait(std::initializer_list<process*>  ls) noexcept
-{
-  int  n = 0;
-
-    for(auto  proc: ls)
-    {
-        if(proc)
-        {
-            if(proc->is_busy())
-            {
-              proc->step();
-            }
-
-
-            if(proc->is_busy())
-            {
-              ++n;
-            }
-        }
-    }
-
-
-  return n;
-}
 
 
 

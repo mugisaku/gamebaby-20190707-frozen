@@ -10,7 +10,7 @@ namespace gbstd{
 
 process&
 process::
-assign(uint32_t  interval, execution_frame&&  frame, stop_sign  stp) noexcept
+assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
 {
   m_interval = interval;
 
@@ -19,7 +19,7 @@ assign(uint32_t  interval, execution_frame&&  frame, stop_sign  stp) noexcept
   m_main_stack.clear();
   m_buffer_stack.clear();
 
-  m_main_stack.emplace_back(std::move(frame),stp);
+  m_main_stack.emplace_back(ls);
 
   return *this;
 }
@@ -55,29 +55,40 @@ step() noexcept
         {
           auto&  top = m_main_stack.back();
 
-          top.get_callback()(*this,top.get_data());
+            if(top.m_pc < top.get_length())
+            {
+              auto&  ent = top[top.m_pc];
 
-          auto  stop_sign = top.m_stop_sign;
+              ent.m_callback(*this,ent.m_data);
 
-            if(m_pop_flag)
+              auto  stop_sign = ent.m_stop_sign;
+
+                if(m_pop_flag)
+                {
+                  m_main_stack.pop_back();
+
+                  m_pop_flag = false;
+                }
+
+
+              merge();
+
+                if(!--counter || stop_sign)
+                {
+                  goto END;
+                }
+            }
+
+          else
             {
               m_main_stack.pop_back();
 
               m_pop_flag = false;
             }
-
-
-          merge();
-
-            if(!--counter || stop_sign)
-            {
-              break;
-            }
-
-          
         }
 
 
+END:
       m_next_time = g_time+m_interval;
     }
 }

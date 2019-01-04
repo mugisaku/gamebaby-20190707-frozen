@@ -14,10 +14,27 @@ bool  row::is_right() const noexcept{return m_force->m_side == side::right;}
 
 void
 row::
-reset_animation(int  phase) noexcept
+ready() noexcept
 {
-  m_animation_phase   = phase;
-  m_animation_counter = 0;
+    if(m_original)
+    {
+      m_variable = *m_original;
+    }
+
+
+  m_ap = 0;
+
+  m_white_flag = false;
+}
+
+
+void
+row::
+step() noexcept
+{
+  m_process.step();
+
+  m_blink_context.step();
 }
 
 
@@ -26,19 +43,7 @@ row::
 reset(force&  force, company*  org) noexcept
 {
   m_force = &force;
-
   m_original = org;
-
-    if(org)
-    {
-      m_variable = *m_original;
-    }
-
-
-  m_ap = 0;
-
-  m_entry_flag = false;
-  m_white_flag = false;
 }
 
 
@@ -73,7 +78,7 @@ render(const gbstd::canvas&  cv) const noexcept
 
   gbstd::string_form  sf;
 
-  cv.draw_string(gbstd::colors::white,sf("%6d",m_variable.m_hp),bas_x,bas_y);
+  cv.draw_string(gbstd::colors::white,sf("%6d",m_variable.get_hp()),bas_x,bas_y);
 }
 
 

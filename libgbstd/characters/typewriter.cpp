@@ -36,7 +36,12 @@ newline() noexcept
 {
   m_cursor_pos.x = 0;
 
-    if(!has_cursor_reached_bottom())
+    if(has_cursor_reached_bottom())
+    {
+      scroll_up();
+    }
+
+  else
     {
       ++m_cursor_pos.y;
     }
@@ -45,12 +50,14 @@ newline() noexcept
 
 void
 typewriter::
-scroll_up(int  n) noexcept
+scroll_up() noexcept
 {
   auto  dst_base = m_base_pointer;
-  auto  src_base = get_character_pointer(0,n);
+  auto  src_base = get_character_pointer(0,1);
 
-    for(int  y = n;  y < m_height;  ++y)
+  int  count = m_height-1;
+
+    while(count--)
     {
       auto  dst = dst_base                ;
                   dst_base += m_text_width;
@@ -63,6 +70,9 @@ scroll_up(int  n) noexcept
           *dst++ = *src++;
         }
     }
+
+
+  clear_line(m_height-1);
 }
 
 
@@ -146,7 +156,6 @@ pump() noexcept
     }
 
   else
-    if(!iscntrl(c.unicode))
     {
       *get_character_pointer(m_cursor_pos.x,m_cursor_pos.y) = c;
 

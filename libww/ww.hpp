@@ -18,6 +18,7 @@ constexpr int  g_frame_h = gbstd::g_font_height*2;
 
 class force;
 class row;
+class battle_context;
 
 
 enum class
@@ -65,19 +66,28 @@ public:
 };
 
 
-struct
+class
 company
 {
-  const char*  m_name;
+  std::string  m_name;
 
-  int  m_hp=6000;
+  int  m_hp=0;
 
   battle_position  m_pos=front_pos;
 
-  const char*  get_name() const noexcept{return m_name;}
+public:
+  company() noexcept{}
 
-  int  get_hp() const noexcept{return m_hp;}
+  company(const char*  name, int  hp, battle_position  pos) noexcept:
+  m_name(name), m_hp(hp), m_pos(pos){};
 
+  const std::string&  get_name() const noexcept{return m_name;}
+
+  int   get_hp() const noexcept{return m_hp;}
+  void  set_hp(int  v) noexcept{m_hp  = v;}
+  void  add_hp(int  v) noexcept{m_hp += v;}
+
+  battle_position  get_position() const noexcept{return m_pos;}
 
   void  render(gbstd::color  force_color, const gbstd::canvas&  cv) const noexcept;
 
@@ -131,16 +141,11 @@ row
 
   int  m_ap=0;
 
-  bool  m_entry_flag=false;
-
   blink_context  m_blink_context;
 
   bool  m_white_flag=false;
 
   gbstd::process  m_process;
-
-  int  m_animation_phase;
-  int  m_animation_counter;
 
   gbstd::point  m_base_pos;
   gbstd::point  m_current_pos;
@@ -150,12 +155,16 @@ row
   bool  is_left()  const noexcept;
   bool  is_right() const noexcept;
 
+  const gbstd::process&  get_process() const noexcept{return m_process;}
+
   void  move_to_advance(int  n) noexcept{m_current_pos.x += -n;}
   void  move_to_back(   int  n) noexcept{m_current_pos.x -= -n;}
 
-  void  reset_animation(int  phase=0) noexcept;
+  void  ready() noexcept;
 
   void  reset(force&  force, company*  org) noexcept;
+
+  void  step() noexcept;
 
   void  render(const gbstd::canvas&  cv) const noexcept;
 
@@ -173,21 +182,25 @@ force
 
   gbstd::color  m_color;
 
-  std::list<row*>  m_actor_queue;
-
-  gbstd::process  m_process;
-
-  int  get_rows(battle_position  pos, row**  buf, int  n) noexcept;
-
-  void  increase_ap() noexcept;
+public:
+  int  get_rows_by_position(battle_position  pos, row**  buf, int  n) noexcept;
 
   bool  can_continue_fight() const noexcept;
 
   void  reset(ww::side  side, const force_initializer&  init) noexcept;
 
-  void  update() noexcept;
+  void  ready() noexcept;
+
+  row*  get_actor_by_ap() noexcept;
+
+  void  distribute_ap(int  v) noexcept;
+
+  void  step() noexcept;
 
   void  render(const gbstd::canvas&  cv) const noexcept;
+
+  row*  begin() noexcept{return std::begin(m_rows);}
+  row*    end() noexcept{return   std::end(m_rows);}
 
 };
 
@@ -195,8 +208,20 @@ force
 
 
 struct
+act_context
+{
+  battle_context*  m_battle_context;
+
+  row*  m_row;
+
+};
+
+
+struct
 attack_context
 {
+  battle_context*  m_battle_context;
+
   row*  m_actor;
   row*  m_target;
 
@@ -204,15 +229,14 @@ attack_context
   {
     m_actor  = &actor;
     m_target = &target;
-
-     actor.reset_animation();
-    target.reset_animation();
   }
 
 };
 
 
-struct
+
+
+class
 battle_context
 {
   force  m_left_force ;
@@ -220,39 +244,60 @@ battle_context
 
   uint32_t  m_time=0;
 
-  std::list<row*>  m_actor_queue;
-
   gbstd::text  m_text;
 
   gbstd::typewriter  m_typewriter;
 
-  static constexpr gbstd::point  m_console_pos = gbstd::point(0,0);
-
+  act_context  m_act_context;
   attack_context  m_attack_context;
 
-  gbstd::process  m_base_process;
+  gbstd::process  m_process;
+
+  uint32_t  m_display_flags=0;
+
+  int  m_number_of_busy_players;
+
+  struct display_flags{
+    static constexpr int  show_text = 1;
+  };
+
+
+  static void  fight(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  judge(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  wait_for_finish_to_attack(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  start_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+  static void  wait_for_message(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  wait_for_players(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+  static void  wait_for_press_p_key(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  advance_time(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+public:
+  battle_context() noexcept{}
+
+  template<typename...  Args>
+  void  push_message(Args...  args) noexcept{m_typewriter.push(args...);}
+
+  void  clear_message() noexcept{m_typewriter.fill();}
+
+  void    set_display_flag(int  flag) noexcept{m_display_flags |=  flag;}
+  void  unset_display_flag(int  flag) noexcept{m_display_flags &= ~flag;}
+
+  void  show_text() noexcept{  set_display_flag(display_flags::show_text);}
+  void  hide_text() noexcept{unset_display_flag(display_flags::show_text);}
 
   void  reset(const force_initializer&  l,
               const force_initializer&  r) noexcept;
 
-  void  pump_queue(std::list<row*>&  q) noexcept;
-
-  row*  pump(std::list<row*>&  q) noexcept;
-
-  void  pump_queue() noexcept;
+  void  ready() noexcept;
 
   void  step() noexcept;
 
   void  render(const gbstd::canvas&  cv) const noexcept;
 
 };
-
-
-
-
-void  attack(gbstd::execution&  exec, battle_context*  ctx) noexcept;
-void   fight(gbstd::execution&  exec, battle_context*  ctx) noexcept;
-void   judge(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
 
 

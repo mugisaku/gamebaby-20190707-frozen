@@ -104,6 +104,8 @@ character
 
   char16_t  unicode;
 
+  constexpr character() noexcept: unicode(0){}
+
 };
 
 
@@ -170,7 +172,7 @@ public:
 
   character*  get_character_pointer(int  x, int  y) const noexcept{return m_data+(m_width*y)+x;}
 
-  void  fill(const character&  c) noexcept;
+  void  fill(character  c=character()) noexcept;
 
 };
 
@@ -223,7 +225,7 @@ public:
   void  clear_line(      ) noexcept{clear_line(m_cursor_pos.y);}
   void  clear_line(int  n) noexcept;
 
-  void  scroll_up(int  n=1) noexcept;
+  void  scroll_up() noexcept;
 
   operator bool() const noexcept{return m_queue.size();}
 
@@ -234,7 +236,7 @@ public:
 
   void  pump() noexcept;
 
-  void  fill(character  c) const noexcept;
+  void  fill(character  c=character()) const noexcept;
 
 };
 

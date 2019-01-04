@@ -456,7 +456,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 
           actor->m_next_step_box = up_box;
 
-          exec.push({fall_actor,actor});
+          exec.push({{fall_actor,actor}});
 
           return;
         }
@@ -472,7 +472,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 
           actor->m_next_step_box = down_box;
 
-          exec.push({fall_actor,actor});
+          exec.push({{fall_actor,actor}});
 
           return;
         }
@@ -486,7 +486,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
 
           actor->m_next_step_box = &box;
 
-          exec.push({fall_actor,actor});
+          exec.push({{fall_actor,actor}});
 
           return;
         }
@@ -645,7 +645,7 @@ control_player(gbstd::execution&  exec, subiso::actor*  actor) noexcept
   actor->m_first_move_context.assign( x,y, z,g_plane_size/2);
   actor->m_second_move_context.assign(x,y,zz,g_plane_size/2);
 
-  exec.push({move_actor,actor});
+  exec.push({{move_actor,actor}});
 }
 
 
@@ -740,7 +740,7 @@ main(int  argc, char**  argv)
   g_actors[0].set_space(&g_space);
   g_actors[0].set_current_step_box(&g_space.get_box(1,1,4));
 
-  g_base_process.assign(20,{control_player,&g_actors[0]});
+  g_base_process.assign(20,{{control_player,&g_actors[0]}});
 
 
   sdl::init(g_plane_size*6*4,g_plane_size*6);

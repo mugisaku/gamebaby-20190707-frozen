@@ -35,7 +35,7 @@ resize(int  w, int  h) noexcept
 
 void
 text::
-fill(const character&  c) noexcept
+fill(character  c) noexcept
 {
   auto  p = m_data;
 

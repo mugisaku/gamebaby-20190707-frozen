@@ -86,22 +86,20 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
       target.m_variable.add_hp(-damage_amount);
 
+      target.m_process.push({
+        {enable_blink,&target,true},
+        {move_to_back,&target,true},
+        {move_to_back,&target,true},
+        {move_to_advance,&target,true},
+        {move_to_advance,&target,true},
+        {disable_blink,&target,true}});
+
+
         if(target.m_variable.get_hp() <= 0)
         {
           ctx->push_message(sf("%sは　たおれた!\n\n",target.m_variable.get_name().data()),gbstd::colors::white);
 
           target.m_variable.set_hp(0);
-        }
-
-      else
-        {
-          target.m_process.push({
-            {enable_blink,&target,true},
-            {move_to_back,&target,true},
-            {move_to_back,&target,true},
-            {move_to_advance,&target,true},
-            {move_to_advance,&target,true},
-            {disable_blink,&target,true}});
         }
     }
 
@@ -162,7 +160,12 @@ START:
           ctx->m_act_context.m_row = actor;
 
           actor->m_process.push({{  set_white,&ctx->m_act_context,true},
-                                 {unset_white,&ctx->m_act_context     }});
+                                 {unset_white,&ctx->m_act_context,true},
+                                 {move_to_advance,actor,true},
+                                 {move_to_advance,actor,true},
+                                 {move_to_back,actor,true},
+                                 {move_to_back,actor,true},
+                                 });
 
           exec.push({{wait_for_players,ctx,true},
                      {judge_hit,ctx},

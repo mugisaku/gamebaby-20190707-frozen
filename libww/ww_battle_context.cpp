@@ -53,6 +53,15 @@ step() noexcept
     if(m_typewriter)
     {
       m_typewriter.pump();
+
+      int  n = 4;
+
+        if(m_typewriter && gbstd::g_input.test_p() && n)
+        {
+          m_typewriter.pump();
+
+          --n;
+        }
     }
 
 

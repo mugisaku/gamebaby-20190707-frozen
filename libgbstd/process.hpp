@@ -116,14 +116,14 @@ protected:
 
   bool  m_pop_flag=false;
 
-   execution() noexcept=default;
-  ~execution() noexcept=default;
+   execution() noexcept{}
+  ~execution() noexcept{}
 
-  execution(const execution& ) noexcept=default;
-  execution(      execution&&) noexcept=default;
+  execution(const execution& )=default;
+  execution(      execution&&)=default;
 
-  execution&  operator=(const execution& ) noexcept=default;
-  execution&  operator=(      execution&&) noexcept=default;
+  execution&  operator=(const execution& )=default;
+  execution&  operator=(      execution&&)=default;
 
 public:
   operator bool() const noexcept{return m_main_stack.size();}

@@ -29,15 +29,22 @@ g_context;
 void
 main_loop() noexcept
 {
+  static uint32_t  next;
+
   sdl::update_control();
 
-  g_screen_canvas.fill(color());
+    if(gbstd::g_time >= next)
+    {
+      g_screen_canvas.fill(color());
 
-  g_context.step();
+      g_context.step();
 
-  g_context.render(g_screen_canvas);
+      g_context.render(g_screen_canvas);
 
-  sdl::update_screen(g_screen_canvas);
+      sdl::update_screen(g_screen_canvas);
+
+      next = gbstd::g_time+80;
+    }
 }
 
 
@@ -57,7 +64,7 @@ main(int  argc, char**  argv)
 #endif
 
 
-  sdl::init(380,260,1.6);
+  sdl::init(380,260,1.0);
 
   ww::force_initializer  l;
   ww::force_initializer  r;

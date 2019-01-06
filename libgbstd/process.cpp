@@ -12,6 +12,14 @@ process&
 process::
 assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
 {
+    if(!interval)
+    {
+      printf("oops\n");
+
+      interval = 20;
+    }
+
+
   m_interval = interval;
 
   m_next_time = 0;
@@ -45,7 +53,7 @@ void
 process::
 step() noexcept
 {
-    if(g_time >= m_next_time)
+    while(g_time >= m_next_time)
     {
       int  counter = 8;
 
@@ -89,7 +97,15 @@ step() noexcept
 
 
 END:
-      m_next_time = g_time+m_interval;
+        if(!m_interval)
+        {
+          m_interval = g_time;
+        }
+
+      else
+        {
+          m_next_time += m_interval;
+        }
     }
 }
 

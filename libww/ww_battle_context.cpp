@@ -25,6 +25,7 @@ reset(const force_initializer&  l,
   m_attack_context.m_battle_context = this;
 
   m_process.assign(120,{{start_battle,this}});
+//  m_process.set_verbose_flag();
 
   ready();
 }

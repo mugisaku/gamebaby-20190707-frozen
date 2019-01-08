@@ -168,9 +168,8 @@ START:
                                  });
 
           exec.push({{wait_for_players,ctx,true},
-                     {judge_hit,ctx},
-                     {wait_for_message,ctx,true}});
-
+                     {"judge",judge_hit,ctx},
+                     {"wait",wait_for_message,ctx,true}},"debugging...");
         }
     }
 

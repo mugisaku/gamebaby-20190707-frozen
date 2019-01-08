@@ -8,6 +8,120 @@ namespace gbstd{
 
 
 
+namespace{
+constexpr uint32_t  g_offset_of_frame_nameptr = 0;
+constexpr uint32_t  g_offset_of_previous_bp   = 1;
+constexpr uint32_t  g_offset_of_previous_pc   = 2;
+constexpr uint32_t  g_offset_of_entry_array   = 3;
+constexpr uint32_t  g_size_of_entry           = 4;
+}
+
+
+
+execution&
+execution::
+operator++() noexcept
+{
+  m_pc += g_size_of_entry;
+
+  return *this;
+}
+
+
+void
+execution::
+push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
+{
+  auto  prev_pc = m_pc;
+  auto  prev_bp = m_bp;
+
+  m_bp = m_sp                           ;
+         m_sp += g_offset_of_entry_array;
+
+
+  m_pc = m_sp;
+
+  m_memory[m_bp+g_offset_of_frame_nameptr] = name? reinterpret_cast<uintptr_t>(name):0;
+  m_memory[m_bp+g_offset_of_previous_pc]   = prev_pc;
+  m_memory[m_bp+g_offset_of_previous_bp]   = prev_bp;
+
+    for(auto  ent: ls)
+    {
+      m_memory[m_sp++] = ent.m_nameptr;
+      m_memory[m_sp++] = ent.m_callback;
+      m_memory[m_sp++] = ent.m_data;
+      m_memory[m_sp++] = ent.m_stop_sign;
+    }
+
+
+    if(test_verbose_flag())
+    {
+      print();
+
+      printf("\n*frame:\"%s\" pushed\n\n\n",name? name:"-noname-");
+    }
+}
+
+
+void
+execution::
+replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
+{
+  m_memory[m_bp+g_offset_of_frame_nameptr] = name? reinterpret_cast<uintptr_t>(name):0;
+
+         m_pc = m_bp+g_offset_of_entry_array;
+  m_sp = m_pc                               ;
+
+    for(auto  ent: ls)
+    {
+      m_memory[m_sp++] = ent.m_nameptr;
+      m_memory[m_sp++] = ent.m_callback;
+      m_memory[m_sp++] = ent.m_data;
+      m_memory[m_sp++] = ent.m_stop_sign;
+    }
+}
+
+
+void
+execution::
+pop() noexcept
+{
+  auto  name = reinterpret_cast<const char*>(m_memory[m_bp+g_offset_of_frame_nameptr]);
+
+    if(test_verbose_flag())
+    {
+      print();
+
+      printf("\n*frame:\"%s\" popped\n\n\n",name? name:"-noname-");
+    }
+
+
+  m_pc = m_memory[m_bp+g_offset_of_previous_pc];
+
+    if(m_pc)
+    {
+      m_sp = m_bp                                         ;
+             m_bp = m_memory[m_bp+g_offset_of_previous_bp];
+    }
+
+  else
+    {
+      m_bp = 0;
+      m_sp = 0;
+    }
+}
+
+
+void
+execution::
+print() const noexcept
+{
+  printf("[exec:\"%s\"] {pc:%3u}, {bp:%3u}, {sp: %3u}",get_name(),m_pc,m_bp,m_sp);
+}
+
+
+
+
 process&
 process::
 assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
@@ -24,29 +138,21 @@ assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
 
   m_next_time = 0;
 
-  m_main_stack.clear();
-  m_buffer_stack.clear();
+  m_call_counter = 0;
 
-  m_main_stack.emplace_back(ls);
+  m_pc = 0;
+  m_bp = 0;
+  m_sp = 0;
+
+  m_memory[g_offset_of_previous_pc] = 0;
+  m_memory[g_offset_of_previous_bp] = 0;
+
+  push(ls);
 
   return *this;
 }
 
 
-
-
-void
-process::
-merge() noexcept
-{
-    for(auto&&  frm: m_buffer_stack)
-    {
-      m_main_stack.emplace_back(std::move(frm));
-    }
-
-
-  m_buffer_stack.clear();
-}
 
 
 void
@@ -57,29 +163,28 @@ step() noexcept
     {
       int  counter = 8;
 
-      merge();
-
-        while(get_number_of_frames())
+        while(*this)
         {
-          auto&  top = m_main_stack.back();
-
-            if(top.m_pc < top.get_length())
+            if(m_pc < m_sp)
             {
-              auto&  ent = top[top.m_pc];
+              auto&  ent = *reinterpret_cast<const execution_entry*>(&m_memory[m_pc]);
 
-              ent.m_callback(*this,ent.m_data);
+              auto    cb = ent.get_callback();
+              auto  data = ent.get_data();
 
-              auto  stop_sign = ent.m_stop_sign;
-
-                if(m_pop_flag)
+                if(test_verbose_flag())
                 {
-                  m_main_stack.pop_back();
-
-                  m_pop_flag = false;
+                  print();
+                  printf("\n*calback:\"%s\" invoked\n\n",ent.get_name());
                 }
 
 
-              merge();
+              cb(*this,data);
+
+              ++m_call_counter;
+
+
+              auto  stop_sign(ent.m_stop_sign);
 
                 if(!--counter || stop_sign)
                 {
@@ -89,9 +194,7 @@ step() noexcept
 
           else
             {
-              m_main_stack.pop_back();
-
-              m_pop_flag = false;
+              pop();
             }
         }
 

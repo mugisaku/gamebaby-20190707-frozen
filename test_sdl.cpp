@@ -77,7 +77,7 @@ main(int  argc, char**  argv)
 
   static ww::company  r_companies[] = {
     {"みぎぐんA",3000,ww::front_pos},
-    {"みぎぐんB",3000,ww::front_pos},
+    {"みぎぐんB",3000,ww::back_pos},
     {"みぎぐんC",3000,ww::front_pos},
   };
 

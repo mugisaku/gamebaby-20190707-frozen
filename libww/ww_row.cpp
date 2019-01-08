@@ -44,6 +44,9 @@ reset(force&  force, company*  org) noexcept
 {
   m_force = &force;
   m_original = org;
+
+                    m_base_pos.x = 0;
+  m_current_pos.x = m_base_pos.x    ;
 }
 
 

@@ -69,9 +69,7 @@ reset(ww::side  side, const force_initializer&  init) noexcept
       row.reset(*this,(i < init.m_company_list.size())? init.m_company_list[i]:nullptr);
 
 
-      auto  pos = row.m_variable.get_position();
-
-      row.m_base_pos.x = g_frame_w*pos;
+      auto  pos = row.m_original->get_position();
 
       row.m_base_pos.y = y             ;
                          y += g_frame_h;

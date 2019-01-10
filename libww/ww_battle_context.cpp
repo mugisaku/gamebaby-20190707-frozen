@@ -33,11 +33,8 @@ reset(const force_initializer&  l,
 
 void
 battle_context::
-ready() noexcept
+reset_text() noexcept
 {
-   m_left_force.ready();
-  m_right_force.ready();
-
   m_text.fill(gbstd::character());
 
   m_typewriter.set_cursor_position({0,0});
@@ -46,50 +43,24 @@ ready() noexcept
 
 void
 battle_context::
+ready() noexcept
+{
+   m_left_force.ready();
+  m_right_force.ready();
+
+  m_text.fill(gbstd::character());
+
+  m_typewriter.set_cursor_position({0,0});
+
+  m_command_request = true;
+}
+
+
+void
+battle_context::
 step() noexcept
 {
-  m_left_force.step();
-  m_right_force.step();
-
-    if(m_typewriter)
-    {
-      m_typewriter.pump();
-
-      int  n = 4;
-
-        if(m_typewriter && gbstd::g_input.test_p() && n)
-        {
-          m_typewriter.pump();
-
-          --n;
-        }
-    }
-
-
   m_process.step();
-
-  m_number_of_busy_players = 0;
-
-    for(auto&  row: m_left_force)
-    {
-      auto&  proc = row.get_process();
-
-        if(proc.is_busy())
-        {
-          ++m_number_of_busy_players;
-        }
-    }
-
-
-    for(auto&  row: m_right_force)
-    {
-      auto&  proc = row.get_process();
-
-        if(proc.is_busy())
-        {
-          ++m_number_of_busy_players;
-        }
-    }
 }
 
 

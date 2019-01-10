@@ -10,8 +10,8 @@ namespace gbstd{
 
 namespace{
 constexpr uint32_t  g_offset_of_frame_nameptr = 0;
-constexpr uint32_t  g_offset_of_previous_bp   = 1;
-constexpr uint32_t  g_offset_of_previous_pc   = 2;
+constexpr uint32_t  g_offset_of_previous_pc   = 1;
+constexpr uint32_t  g_offset_of_previous_bp   = 2;
 constexpr uint32_t  g_offset_of_entry_array   = 3;
 constexpr uint32_t  g_size_of_entry           = 4;
 }
@@ -126,19 +126,9 @@ process&
 process::
 assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
 {
-    if(!interval)
-    {
-      printf("oops\n");
-
-      interval = 20;
-    }
-
-
   m_interval = interval;
 
   m_next_time = 0;
-
-  m_call_counter = 0;
 
   m_pc = 0;
   m_bp = 0;
@@ -181,8 +171,6 @@ step() noexcept
 
               cb(*this,data);
 
-              ++m_call_counter;
-
 
               auto  stop_sign(ent.m_stop_sign);
 
@@ -202,7 +190,7 @@ step() noexcept
 END:
         if(!m_interval)
         {
-          m_interval = g_time;
+          return;
         }
 
       else

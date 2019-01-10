@@ -178,6 +178,8 @@ force
 
   row  m_rows[m_number_of_rows];
 
+  uint32_t  m_total_hp=0;
+
   side  m_side=side::left;
 
   gbstd::color  m_color;
@@ -188,6 +190,10 @@ public:
   bool  can_continue_fight() const noexcept;
 
   void  reset(ww::side  side, const force_initializer&  init) noexcept;
+
+  void  update_total_hp() noexcept;
+
+  uint32_t  get_total_hp() const noexcept{return m_total_hp;}
 
   void  ready() noexcept;
 
@@ -257,6 +263,8 @@ battle_context
 
   int  m_number_of_busy_players;
 
+  bool  m_command_request;
+
   struct display_flags{
     static constexpr int  show_text = 1;
   };
@@ -274,13 +282,29 @@ battle_context
   static void  wait_for_press_p_key(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  advance_time(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
+  static void  open_command_window(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+  static void  show_message(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  hide_message(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+  static void  step_both_forces(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+  static void  ready_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+  static void  wait_for_all(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
+  void  step_players() noexcept;
+  void  update_number_of_busy_players() noexcept;
+
+  void  pump_text() noexcept;
+  void  pump_text_all() noexcept;
+
 public:
   battle_context() noexcept{}
 
   template<typename...  Args>
   void  push_message(Args...  args) noexcept{m_typewriter.push(args...);}
 
-  void  clear_message() noexcept{m_typewriter.fill();}
+  void  reset_text() noexcept;
 
   void    set_display_flag(int  flag) noexcept{m_display_flags |=  flag;}
   void  unset_display_flag(int  flag) noexcept{m_display_flags &= ~flag;}

@@ -81,6 +81,22 @@ reset(ww::side  side, const force_initializer&  init) noexcept
 
 void
 force::
+update_total_hp() noexcept
+{
+  m_total_hp = 0;
+
+    for(auto&  row: m_rows)
+    {
+        if(row.is_surviving())
+        {
+          m_total_hp += row.m_variable.get_hp();
+        }
+    }
+}
+
+
+void
+force::
 ready() noexcept
 {
     for(int  i = 0;  i < m_number_of_rows;  ++i)

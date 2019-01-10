@@ -119,8 +119,6 @@ process: public execution
 
   uint32_t  m_next_time=0;
 
-  uint32_t  m_call_counter=0;
-
 public:
   process(uint32_t  interval=0) noexcept: m_interval(interval){}
   process(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept

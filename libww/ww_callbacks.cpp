@@ -115,9 +115,54 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
 void
 battle_context::
+open_command_window(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+    if(gbstd::g_input.test_p())
+    {
+      ctx->reset_text();
+
+      ++exec;
+    }
+}
+
+
+void
+battle_context::
+show_message(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->show_text();
+
+  ++exec;
+}
+
+
+void
+battle_context::
+hide_message(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->hide_text();
+
+  ++exec;
+}
+
+
+void
+battle_context::
 fight(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
 START:
+    if(gbstd::g_input.test_n())
+    {
+      exec.push({{wait_for_all,ctx,true},
+                 {hide_message,ctx},
+                 {open_command_window,ctx,true},
+                 {show_message,ctx},
+               });
+
+      return;
+    }
+
+
   auto  l = ctx->m_left_force.get_actor_by_ap();
   auto  r = ctx->m_right_force.get_actor_by_ap();
 
@@ -130,9 +175,6 @@ START:
 
     if(actor && (actor->m_ap >= ap_max))
     {
-      exec.pop();
-
-
       force*       own = actor->m_force;
       force*  opponent = (own->m_side == side::left)? &ctx->m_right_force
                        :                              &ctx->m_left_force;
@@ -153,10 +195,6 @@ START:
 
           ctx->m_attack_context.reset(*actor,*target);
 
-           actor->m_process.set_interval(40);
-          target->m_process.set_interval(40);
-
-
           ctx->m_act_context.m_row = actor;
 
           actor->m_process.push({{  set_white,&ctx->m_act_context,true},
@@ -165,11 +203,12 @@ START:
                                  {move_to_advance,actor,true},
                                  {move_to_back,actor,true},
                                  {move_to_back,actor,true},
-                                 });
+                               });
 
-          exec.push({{wait_for_players,ctx,true},
-                     {"judge",judge_hit,ctx},
-                     {"wait",wait_for_message,ctx,true}},"debugging...");
+          exec.replace({{wait_for_all,ctx,true},
+                        {judge_hit,ctx},
+                        {wait_for_all,ctx,true},
+                      });
         }
     }
 
@@ -232,7 +271,9 @@ judge(gbstd::execution&  exec, battle_context*  ctx) noexcept
     }
 
 
-  exec.replace({{start_battle,ctx,true}});
+  exec.replace({{wait_for_all,ctx,true},
+                {start_battle,ctx,true},
+              });
 
     if(l)
     {
@@ -288,8 +329,30 @@ judge(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
 void
 battle_context::
+wait_for_all(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->step_players();
+
+  ctx->pump_text();
+
+    if(!ctx->m_typewriter)
+    {
+      ctx->update_number_of_busy_players();
+
+        if(!ctx->m_number_of_busy_players)
+        {
+          ++exec;
+        }
+    }
+}
+
+
+void
+battle_context::
 wait_for_message(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
+  ctx->pump_text();
+
     if(!ctx->m_typewriter)
     {
       ++exec;
@@ -301,6 +364,8 @@ void
 battle_context::
 wait_for_players(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
+  ctx->step_players();
+
     if(!ctx->m_number_of_busy_players)
     {
       ++exec;
@@ -314,10 +379,18 @@ wait_for_press_p_key(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
     if(gbstd::g_input.test_p())
     {
-      exec.replace({{judge,ctx,true}});
-
-      ctx->ready();
+      ++exec;
     }
+}
+
+
+void
+battle_context::
+ready_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->ready();
+
+  ++exec;
 }
 
 
@@ -329,10 +402,84 @@ start_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
     if(!gbstd::g_input.test_p())
     {
-      exec.replace({{wait_for_press_p_key,ctx,true}});
+      exec.replace({{wait_for_message,ctx,true},
+                    {wait_for_press_p_key,ctx,true},
+                    {ready_battle,ctx,true},
+                    {judge,ctx,true},
+                  });
 
       ctx->push_message("enterキーをおすと　かいし　します\n",gbstd::colors::white);
-      ctx->push_message("",gbstd::colors::white);
+ 
+      ctx->pump_text_all();
+    }
+}
+
+
+void
+battle_context::
+update_number_of_busy_players() noexcept
+{
+  m_number_of_busy_players = 0;
+
+    for(auto&  row: m_left_force)
+    {
+      auto&  proc = row.get_process();
+
+        if(proc.is_busy())
+        {
+          ++m_number_of_busy_players;
+        }
+    }
+
+
+    for(auto&  row: m_right_force)
+    {
+      auto&  proc = row.get_process();
+
+        if(proc.is_busy())
+        {
+          ++m_number_of_busy_players;
+        }
+    }
+}
+
+
+void
+battle_context::
+step_players() noexcept
+{
+  m_left_force.step();
+  m_right_force.step();
+}
+
+
+void
+battle_context::
+pump_text() noexcept
+{
+    if(m_typewriter)
+    {
+      m_typewriter.pump();
+
+      int  n = 4;
+
+        if(m_typewriter && gbstd::g_input.test_p() && n)
+        {
+          m_typewriter.pump();
+
+          --n;
+        }
+    }
+}
+
+
+void
+battle_context::
+pump_text_all() noexcept
+{
+    while(m_typewriter)
+    {
+      m_typewriter.pump();
     }
 }
 

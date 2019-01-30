@@ -11,7 +11,7 @@ namespace ww{
 void
 enable_blink(gbstd::execution&  exec, ww::row*  row) noexcept
 {
-  row->m_blink_context.enable();
+  row->get_blink_context().enable();
 
   ++exec;
 }
@@ -20,7 +20,7 @@ enable_blink(gbstd::execution&  exec, ww::row*  row) noexcept
 void
 disable_blink(gbstd::execution&  exec, ww::row*  row) noexcept
 {
-  row->m_blink_context.disable();
+  row->get_blink_context().disable();
 
   ++exec;
 }
@@ -47,11 +47,7 @@ move_to_back(gbstd::execution&  exec, ww::row*  row) noexcept
 void
 set_white(gbstd::execution&  exec, act_context*  ctx) noexcept
 {
-  gbstd::string_form  sf;
-
-  ctx->m_battle_context->push_message(sf("%sのこうげき\n",ctx->m_row->m_variable.get_name().data()),gbstd::colors::white);
-
-  ctx->m_row->m_white_flag = true;
+  ctx->m_row->set_white_flag();
 
   ++exec;
 }
@@ -60,7 +56,7 @@ set_white(gbstd::execution&  exec, act_context*  ctx) noexcept
 void
 unset_white(gbstd::execution&  exec, act_context*  ctx) noexcept
 {
-  ctx->m_row->m_white_flag = false;
+  ctx->m_row->unset_white_flag();
 
   ++exec;
 }
@@ -82,11 +78,11 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
     {
       int  damage_amount = damage_rand();
 
-      ctx->push_message(sf("%sへ %4dのダメージ\n",target.m_variable.get_name().data(),damage_amount),gbstd::colors::white);
+      ctx->m_notifiers.emplace_back(target.get_current_position(),sf("%4d",damage_amount));
 
-      target.m_variable.add_hp(-damage_amount);
+      target.get_variable().add_hp(-damage_amount);
 
-      target.m_process.push({
+      target.get_process().push({
         {enable_blink,&target,true},
         {move_to_back,&target,true},
         {move_to_back,&target,true},
@@ -95,17 +91,15 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
         {disable_blink,&target,true}});
 
 
-        if(target.m_variable.get_hp() <= 0)
+        if(target.get_variable().get_hp() <= 0)
         {
-          ctx->push_message(sf("%sは　たおれた!\n\n",target.m_variable.get_name().data()),gbstd::colors::white);
-
-          target.m_variable.set_hp(0);
+          target.get_variable().set_hp(0);
         }
     }
 
   else
     {
-      ctx->push_message(sf("ミス!\n\n"),gbstd::colors::white);
+      ctx->m_notifiers.emplace_back(target.get_current_position(),"ミス!");
     }
 
 
@@ -166,22 +160,22 @@ START:
   auto  l = ctx->m_left_force.get_actor_by_ap();
   auto  r = ctx->m_right_force.get_actor_by_ap();
 
-  auto  actor = (l && r)? (l->m_ap < r->m_ap)? r:l
+  auto  actor = (l && r)? (l->get_ap() < r->get_ap())? r:l
                :(l     )? l
                :(r     )? r
                :nullptr;
 
   constexpr int  ap_max = 80;
 
-    if(actor && (actor->m_ap >= ap_max))
+    if(actor && (actor->get_ap() >= ap_max))
     {
-      force*       own = actor->m_force;
-      force*  opponent = (own->m_side == side::left)? &ctx->m_right_force
+      force*       own = actor->get_force();
+      force*  opponent = (*own == battle_side::left)? &ctx->m_right_force
                        :                              &ctx->m_left_force;
 
       ww::row*  buf[8] = {0};
 
-      actor->m_ap -= ap_max;
+      actor->add_ap(-ap_max);
 
       static gbstd::uniform_rand  rand;
 
@@ -197,7 +191,7 @@ START:
 
           ctx->m_act_context.m_row = actor;
 
-          actor->m_process.push({{  set_white,&ctx->m_act_context,true},
+          actor->get_process().push({{  set_white,&ctx->m_act_context,true},
                                  {unset_white,&ctx->m_act_context,true},
                                  {move_to_advance,actor,true},
                                  {move_to_advance,actor,true},
@@ -227,11 +221,11 @@ START:
 void
 move_to_up(gbstd::execution&  exec, force*  f) noexcept
 {
-    for(auto&  row: f->m_rows)
+    for(auto&  row: *f)
     {
-        if(row.m_variable.get_hp())
+        if(row.get_variable().get_hp())
         {
-          row.m_current_pos.y -= 2;
+          row.add_y_position(-2);
         }
     }
 
@@ -243,11 +237,11 @@ move_to_up(gbstd::execution&  exec, force*  f) noexcept
 void
 move_to_down(gbstd::execution&  exec, force*  f) noexcept
 {
-    for(auto&  row: f->m_rows)
+    for(auto&  row: *f)
     {
-        if(row.m_variable.get_hp())
+        if(row.get_variable().get_hp())
         {
-          row.m_current_pos.y += 2;
+          row.add_y_position(2);
         }
     }
 
@@ -362,9 +356,31 @@ wait_for_message(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
 void
 battle_context::
+start_time(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->m_time_add_amount = ctx->m_time_standard.get();
+
+  ++exec;
+}
+
+
+void
+battle_context::
+stop_time(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->m_time_add_amount = 0;
+
+  ++exec;
+}
+
+
+void
+battle_context::
 wait_for_players(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
   ctx->step_players();
+
+  ctx->update_number_of_busy_players();
 
     if(!ctx->m_number_of_busy_players)
     {
@@ -384,16 +400,6 @@ wait_for_press_p_key(gbstd::execution&  exec, battle_context*  ctx) noexcept
 }
 
 
-void
-battle_context::
-ready_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept
-{
-  ctx->ready();
-
-  ++exec;
-}
-
-
 
 
 void
@@ -404,7 +410,8 @@ start_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept
     {
       exec.replace({{wait_for_message,ctx,true},
                     {wait_for_press_p_key,ctx,true},
-                    {ready_battle,ctx,true},
+                    {start_time,ctx,true},
+                    {wait_for_players,ctx,true},
                     {judge,ctx,true},
                   });
 
@@ -425,7 +432,7 @@ update_number_of_busy_players() noexcept
     {
       auto&  proc = row.get_process();
 
-        if(proc.is_busy())
+        if(proc.is_busy() || !row.is_motion_finished())
         {
           ++m_number_of_busy_players;
         }
@@ -436,7 +443,7 @@ update_number_of_busy_players() noexcept
     {
       auto&  proc = row.get_process();
 
-        if(proc.is_busy())
+        if(proc.is_busy() || !row.is_motion_finished())
         {
           ++m_number_of_busy_players;
         }

@@ -115,21 +115,13 @@ public:
 class
 process: public execution
 {
-  uint32_t  m_interval=0;
-
-  uint32_t  m_next_time=0;
-
 public:
-  process(uint32_t  interval=0) noexcept: m_interval(interval){}
-  process(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
-  {assign(interval,ls);}
+  process() noexcept{}
+  process(std::initializer_list<execution_entry>  ls) noexcept{assign(ls);}
 
   bool  is_busy() const noexcept{return *this;}
 
-  process&  assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept;
-
-  void      set_interval(uint32_t  v)       noexcept{       m_interval = v;}
-  uint32_t  get_interval(           ) const noexcept{return m_interval    ;}
+  process&  assign(std::initializer_list<execution_entry>  ls) noexcept;
 
   void  step() noexcept;
 

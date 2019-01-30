@@ -239,6 +239,22 @@ extern user_input  g_modified_input;
 extern user_input           g_input;
 
 
+bool  is_user_time_flowing() noexcept;
+
+void  start_user_time() noexcept;
+void   stop_user_time() noexcept;
+
+uint32_t    get_user_time() noexcept;
+uint32_t  get_system_time() noexcept;
+
+
+void  add_virtual_time(uint32_t  ms) noexcept;
+
+uint32_t  get_virtual_time() noexcept;
+
+void  print_time_status() noexcept;
+
+
 }
 
 

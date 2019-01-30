@@ -124,12 +124,8 @@ print() const noexcept
 
 process&
 process::
-assign(uint32_t  interval, std::initializer_list<execution_entry>  ls) noexcept
+assign(std::initializer_list<execution_entry>  ls) noexcept
 {
-  m_interval = interval;
-
-  m_next_time = 0;
-
   m_pc = 0;
   m_bp = 0;
   m_sp = 0;
@@ -149,53 +145,38 @@ void
 process::
 step() noexcept
 {
-    while(g_time >= m_next_time)
+  int  counter = 8;
+
+    while(*this)
     {
-      int  counter = 8;
-
-        while(*this)
+        if(m_pc < m_sp)
         {
-            if(m_pc < m_sp)
+          auto&  ent = *reinterpret_cast<const execution_entry*>(&m_memory[m_pc]);
+
+          auto    cb = ent.get_callback();
+          auto  data = ent.get_data();
+
+            if(test_verbose_flag())
             {
-              auto&  ent = *reinterpret_cast<const execution_entry*>(&m_memory[m_pc]);
-
-              auto    cb = ent.get_callback();
-              auto  data = ent.get_data();
-
-                if(test_verbose_flag())
-                {
-                  print();
-                  printf("\n*calback:\"%s\" invoked\n\n",ent.get_name());
-                }
-
-
-              cb(*this,data);
-
-
-              auto  stop_sign(ent.m_stop_sign);
-
-                if(!--counter || stop_sign)
-                {
-                  goto END;
-                }
+              print();
+              printf("\n*calback:\"%s\" invoked\n\n",ent.get_name());
             }
 
-          else
+
+          cb(*this,data);
+
+
+          auto  stop_sign(ent.m_stop_sign);
+
+            if(!--counter || stop_sign)
             {
-              pop();
+              return;
             }
-        }
-
-
-END:
-        if(!m_interval)
-        {
-          return;
         }
 
       else
         {
-          m_next_time += m_interval;
+          pop();
         }
     }
 }

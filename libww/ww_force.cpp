@@ -8,6 +8,22 @@ namespace ww{
 
 
 
+force::
+force(battle_side  side, time_wrapper  tm) noexcept:
+m_side(side),
+m_time(tm)
+{
+    for(int  i = 0;  i < m_number_of_rows;  ++i)
+    {
+      auto&  row = m_rows[i];
+
+      row.set_force(*this,counter(m_moving_row_count),i);
+
+      row.set_time(tm);
+    }
+}
+
+
 int
 force::
 get_rows_by_position(battle_position  pos, row**  buf, int  n) noexcept
@@ -22,7 +38,7 @@ get_rows_by_position(battle_position  pos, row**  buf, int  n) noexcept
         }
 
 
-        if(row.is_surviving() && (row.m_variable.get_position() == pos))
+        if(row.is_surviving() && (row.get_variable().get_position() == pos))
         {
           *buf++ = &row;
 
@@ -53,28 +69,28 @@ can_continue_fight() const noexcept
 }
 
 
+
+
 void
 force::
-reset(ww::side  side, const force_initializer&  init) noexcept
+reset() noexcept
 {
-  m_side  = side;
-  m_color = init.m_color;
+    for(int  i = 0;  i < m_number_of_rows;  ++i)
+    {
+      m_rows[i].reset();
+    }
+}
 
-  int  y = g_frame_h;
+
+void
+force::
+reset(const force_initializer&  init) noexcept
+{
+  m_color = init.m_color;
 
     for(int  i = 0;  i < m_number_of_rows;  ++i)
     {
-      auto&  row = m_rows[i];
-
-      row.reset(*this,(i < init.m_company_list.size())? init.m_company_list[i]:nullptr);
-
-
-      auto  pos = row.m_original->get_position();
-
-      row.m_base_pos.y = y             ;
-                         y += g_frame_h;
-
-      row.m_current_pos.y = row.m_base_pos.y;
+      m_rows[i].reset(*this,(i < init.m_company_list.size())? init.m_company_list[i]:nullptr);
     }
 }
 
@@ -89,19 +105,8 @@ update_total_hp() noexcept
     {
         if(row.is_surviving())
         {
-          m_total_hp += row.m_variable.get_hp();
+          m_total_hp += row.get_variable().get_hp();
         }
-    }
-}
-
-
-void
-force::
-ready() noexcept
-{
-    for(int  i = 0;  i < m_number_of_rows;  ++i)
-    {
-      m_rows[i].ready();
     }
 }
 
@@ -116,7 +121,7 @@ get_actor_by_ap() noexcept
     {
         if(row.is_surviving())
         {
-            if(!highest || (highest->m_ap < row.m_ap))
+            if(!highest || (highest->get_ap() < row.get_ap()))
             {
               highest = &row;
             }
@@ -136,7 +141,7 @@ distribute_ap(int  v) noexcept
     {
         if(row.is_surviving())
         {
-          row.m_ap += v;
+          row.add_ap(v);
         }
     }
 }
@@ -155,13 +160,31 @@ step() noexcept
 
 void
 force::
-render(const gbstd::canvas&  cv) const noexcept
+render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept
 {
     for(auto&  row: m_rows)
     {
-      row.render(cv);
+      row.render(offset,cv);
     }
 }
+
+
+
+
+
+void
+force::callbacks::
+start_motion(gbstd::execution&  exec, ww::force*  force) noexcept
+{
+}
+
+
+void
+force::callbacks::
+wait_for_motion(gbstd::execution&  exec, ww::force*  force) noexcept
+{
+}
+
 
 
 

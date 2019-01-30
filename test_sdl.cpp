@@ -7,6 +7,8 @@
 #include<vector>
 
 
+
+
 #ifdef EMSCRIPTEN
 #include<emscripten.h>
 #endif
@@ -22,8 +24,11 @@ canvas
 g_screen_canvas;
 
 
+constexpr uint32_t  tmstd=80;
+
+
 ww::battle_context
-g_context;
+g_context(tmstd);
 
 
 void
@@ -43,7 +48,7 @@ main_loop() noexcept
 
       sdl::update_screen(g_screen_canvas);
 
-      next = gbstd::g_time+80;
+      next = gbstd::g_time+tmstd;
     }
 }
 
@@ -63,8 +68,10 @@ main(int  argc, char**  argv)
   show_github_link();
 #endif
 
+  constexpr int  screen_w = ww::g_center_space_width+(ww::g_row_width*2);
+  constexpr int  screen_h = (ww::g_column_height);
 
-  sdl::init(380,260,1.0);
+  sdl::init(screen_w,screen_h,1.0);
 
   ww::force_initializer  l;
   ww::force_initializer  r;
@@ -88,11 +95,14 @@ main(int  argc, char**  argv)
   l.add(l_companies,3);
   r.add(r_companies,3);
 
+  g_context.set_field_size(screen_w,screen_h);
+
   g_context.reset(l,r);
 
   g_context.show_text();
 
   g_screen_canvas = sdl::make_screen_canvas();
+
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);

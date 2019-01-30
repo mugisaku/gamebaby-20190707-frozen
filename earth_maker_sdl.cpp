@@ -740,7 +740,7 @@ main(int  argc, char**  argv)
   g_actors[0].set_space(&g_space);
   g_actors[0].set_current_step_box(&g_space.get_box(1,1,4));
 
-  g_base_process.assign(20,{{control_player,&g_actors[0]}});
+  g_base_process.assign({{control_player,&g_actors[0]}});
 
 
   sdl::init(g_plane_size*6*4,g_plane_size*6);

@@ -82,6 +82,8 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
       target.get_variable().add_hp(-damage_amount);
 
+      target.reset_hp_bar();
+
       target.get_process().push({
         {enable_blink,&target,true},
         {move_to_back,&target,true},

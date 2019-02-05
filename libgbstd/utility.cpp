@@ -274,6 +274,39 @@ operator()(const char*  fmt, ...) noexcept
 
 
 
+
+void
+fixed_t::
+print() const noexcept
+{
+  printf("%d.",to_int(m_data));
+
+  int  f = m_data&0xFFFF;
+
+    if(!f)
+    {
+      printf("0");
+    }
+
+  else
+    {
+      int  div_amount = to_fpn(1)/10;
+
+        while(div_amount)
+        {
+          int  i = f/div_amount;
+
+          printf("%d",(i > 9)? 9:i);
+
+          f %= div_amount      ;
+               div_amount /= 10;
+        }
+    }
+}
+
+
+
+
 }
 
 

@@ -10,7 +10,11 @@ namespace ww{
 
 namespace{
 const row*  g_debug_row;
+
+constexpr int  g_bar_length_max = 100;
 }
+
+
 
 
 void
@@ -21,6 +25,24 @@ set_debug() const noexcept
 }
 
 
+
+
+void
+row::
+reset_hp_bar() noexcept
+{
+    if(m_original)
+    {
+      constexpr int  shift_amount = 16;
+
+      auto  hp     = m_variable.get_hp();
+      auto  hp_max = m_variable.get_hp_max();
+
+      auto  l = ((g_bar_length_max<<shift_amount)/hp_max*hp)>>shift_amount;
+
+      m_hp_bar.reset(l,32,1000);
+    }
+}
 
 
 void
@@ -111,6 +133,16 @@ add_motion(gbstd::point  dst, int  number_of_frames, uint32_t  ms) noexcept
 
 void
 row::
+set_time(time_wrapper  tm) noexcept
+{
+  m_time = tm;
+
+  m_hp_bar.set_time(tm);
+}
+
+
+void
+row::
 set_force(force&  f, counter  moving_row_counter, int  i) noexcept
 {
   m_moving_row_counter = moving_row_counter;
@@ -127,7 +159,8 @@ set_force(force&  f, counter  moving_row_counter, int  i) noexcept
   m_back_point   = m_front_point-gbstd::point(g_cell_width,0);
   m_backup_point =  m_back_point-gbstd::point(g_cell_width,0);
   m_name_point   =  m_back_point+gbstd::point(-64,0);
-  m_bar_point    =  m_back_point+gbstd::point(-64,gbstd::g_font_height);
+
+  m_hp_bar.set_position(m_back_point+gbstd::point(-64,gbstd::g_font_height));
 
     if(is_right())
     {
@@ -136,7 +169,8 @@ set_force(force&  f, counter  moving_row_counter, int  i) noexcept
       m_backup_point.x = -m_backup_point.x;
 
       m_name_point.x = -m_name_point.x-name_w;
-      m_bar_point.x  = -m_bar_point.x;
+
+      m_hp_bar.set_position({-m_hp_bar.get_position().x,y+gbstd::g_font_height});
     }
 }
 
@@ -152,6 +186,8 @@ row::
 step() noexcept
 {
   m_process.step();
+
+  m_hp_bar.step();
 
   m_blink_context.step();
 
@@ -198,6 +234,8 @@ reset() noexcept
 
   m_status.clear();
 
+  m_hp_bar.reset(0,0,0);
+
   clear_motion();
 
     if(m_original)
@@ -205,6 +243,12 @@ reset() noexcept
       m_variable = *m_original;
 
       m_current_pos = m_backup_point;
+
+      m_hp_bar.set_mode(is_left()? bar::mode::left_to_right:bar::mode::right_to_left);
+      m_hp_bar.set_thickness(8);
+      m_hp_bar.set_length(   0);
+      m_hp_bar.set_color(gbstd::colors::white);
+      m_hp_bar.reset(g_bar_length_max,16,1000);
 
       auto  pt = m_variable.is_front_position()? m_front_point
                 : m_variable.is_back_position()? m_back_point
@@ -249,17 +293,12 @@ render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept
   gbstd::string_form  sf;
 
   auto  nam_pt = m_name_point+offset;
-  auto  bar_pt =  m_bar_point+offset;
 
   cv.draw_string(gbstd::colors::white,sf("%s",m_variable.get_name().data()),nam_pt.x,nam_pt.y);
 
   cv.draw_string(gbstd::colors::white,sf("%6d",m_variable.get_hp()),nam_pt.x+(gbstd::g_font_width*8),nam_pt.y);
 
-  auto  rect = is_left()? gbstd::rectangle(bar_pt.x,bar_pt.y,100,8)
-                        : gbstd::rectangle(bar_pt.x,bar_pt.y,100,8);
-
-  cv.fill_rectangle(gbstd::colors::white,rect);
-//  cv.draw_string(gbstd::colors::white,sf("%6d",m_variable.get_hp()),car_pos.x,car_pos.y);
+  m_hp_bar.render(offset,cv);
 }
 
 

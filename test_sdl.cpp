@@ -103,7 +103,6 @@ main(int  argc, char**  argv)
 
   g_screen_canvas = sdl::make_screen_canvas();
 
-
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);
 #else

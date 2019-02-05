@@ -221,7 +221,80 @@ public:
 std::string  make_string_from_file(const char*  filepath) noexcept;
 
 
+
+
+class
+fixed_t
+{
+  static constexpr int  m_shift_amount = 16;
+
+  struct raw_value{  int  m_data;  constexpr raw_value(int  v) noexcept: m_data(v){}};
+
+  int  m_data;
+
+  static constexpr int  to_fpn(int  i) noexcept{return i<<m_shift_amount;}
+  static constexpr int  to_int(int  i) noexcept{return i>>m_shift_amount;}
+  static constexpr int  to_int(double  d) noexcept{return static_cast<int>(d);}
+
+  static constexpr int  to_fract(double  d) noexcept{return to_int((d-to_int(d))*65536.0);}
+
+  static constexpr int  to_fpn(double  d) noexcept{return (to_int(d)<<m_shift_amount)|to_fract(d);}
+
+  explicit constexpr fixed_t(raw_value  rv) noexcept: m_data(rv.m_data){}
+
+public:
+  constexpr fixed_t(int  v=0)  noexcept: m_data(to_fpn(v)){}
+  constexpr fixed_t(double  d) noexcept: m_data(to_fpn(d)){}
+
+  constexpr operator int() const noexcept{return to_int(m_data);}
+
+  constexpr bool  operator==(fixed_t  rhs) const noexcept{return m_data == rhs.m_data;}
+  constexpr bool  operator!=(fixed_t  rhs) const noexcept{return m_data != rhs.m_data;}
+  constexpr bool  operator< (fixed_t  rhs) const noexcept{return m_data <  rhs.m_data;}
+  constexpr bool  operator<=(fixed_t  rhs) const noexcept{return m_data <= rhs.m_data;}
+  constexpr bool  operator> (fixed_t  rhs) const noexcept{return m_data >  rhs.m_data;}
+  constexpr bool  operator>=(fixed_t  rhs) const noexcept{return m_data >= rhs.m_data;}
+
+  constexpr bool  operator==(int  i) const noexcept{return m_data == to_fpn(i);}
+  constexpr bool  operator!=(int  i) const noexcept{return m_data != to_fpn(i);}
+  constexpr bool  operator< (int  i) const noexcept{return m_data <  to_fpn(i);}
+  constexpr bool  operator<=(int  i) const noexcept{return m_data <= to_fpn(i);}
+  constexpr bool  operator> (int  i) const noexcept{return m_data >  to_fpn(i);}
+  constexpr bool  operator>=(int  i) const noexcept{return m_data >= to_fpn(i);}
+
+  fixed_t&  operator=(fixed_t  rhs) noexcept{  m_data = rhs.m_data;  return *this;}
+  fixed_t&  operator=(int        i) noexcept{  m_data =  to_fpn(i);  return *this;}
+  fixed_t&  operator=(double     d) noexcept{  m_data =  to_fpn(d);  return *this;}
+
+  fixed_t&  operator+=(fixed_t  rhs) noexcept{  m_data += rhs.m_data;  return *this;}
+  fixed_t&  operator-=(fixed_t  rhs) noexcept{  m_data += rhs.m_data;  return *this;}
+
+  fixed_t&  operator*=(int  i) noexcept{  m_data *= i;  return *this;}
+  fixed_t&  operator/=(int  i) noexcept{  m_data /= i;  return *this;}
+  fixed_t&  operator%=(int  i) noexcept{  m_data %= i;  return *this;}
+
+  constexpr fixed_t  operator+(fixed_t  rhs) const noexcept{return fixed_t(raw_value(m_data+rhs.m_data));}
+  constexpr fixed_t  operator-(fixed_t  rhs) const noexcept{return fixed_t(raw_value(m_data-rhs.m_data));}
+
+  constexpr fixed_t  operator+(int  i) const noexcept{return fixed_t(raw_value(m_data+to_fpn(i)));}
+  constexpr fixed_t  operator-(int  i) const noexcept{return fixed_t(raw_value(m_data-to_fpn(i)));}
+  constexpr fixed_t  operator*(int  i) const noexcept{return fixed_t(raw_value(m_data*i));}
+  constexpr fixed_t  operator/(int  i) const noexcept{return fixed_t(raw_value(m_data/i));}
+  constexpr fixed_t  operator%(int  i) const noexcept{return fixed_t(raw_value(m_data%i));}
+  constexpr fixed_t  operator-() const noexcept{return fixed_t(raw_value(-m_data));}
+
+  constexpr fixed_t  abs() const noexcept{return (m_data < 0)? fixed_t(raw_value(-m_data)):*this;}
+
+  void  print() const noexcept;
+
+};
+
+
+
+
 }
+
+
 
 
 #endif

@@ -70,22 +70,35 @@ company
   std::string  m_name;
 
   int  m_hp=0;
+  int  m_hp_max=0;
 
   battle_position  m_pos=front_pos;
 
 public:
   company() noexcept{}
 
-  company(const char*  name, int  hp, battle_position  pos) noexcept:
-  m_name(name), m_hp(hp), m_pos(pos){};
+  company(const char*  name) noexcept:
+  m_name(name){};
 
-  const std::string&  get_name() const noexcept{return m_name;}
+  company(const char*  name, int  hp, battle_position  pos) noexcept:
+  m_name(name), m_hp(hp), m_hp_max(hp), m_pos(pos){};
+
+  const std::string&  get_name(              ) const noexcept{return m_name    ;}
+  void                set_name(const char*  s)       noexcept{       m_name = s;}
 
   int   get_hp() const noexcept{return m_hp;}
-  void  set_hp(int  v) noexcept{m_hp  = v;}
-  void  add_hp(int  v) noexcept{m_hp += v;}
+  void  set_hp(int  v) noexcept{m_hp = (v > m_hp_max)? m_hp_max:((v < 0)? 0:v);}
+  void  add_hp(int  v) noexcept{set_hp(m_hp+v);}
+
+  void  fillup_hp() noexcept{m_hp = m_hp_max;}
+
+  int   get_hp_max() const noexcept{return m_hp_max;}
+  void  set_hp_max(int  v) noexcept{m_hp_max  = v;}
+  void  add_hp_max(int  v) noexcept{m_hp_max += v;}
 
   battle_position  get_position() const noexcept{return m_pos;}
+
+  void  set_position(battle_position  pos) noexcept{m_pos = pos;}
 
   bool  is_front_position()  const noexcept{return m_pos == front_pos;}
   bool  is_back_position()   const noexcept{return m_pos == back_pos;}
@@ -208,31 +221,66 @@ public:
 class
 bar
 {
+public:
+  enum class mode{
+    left_to_right,
+    right_to_left,
+  };
+
+private:
+  gbstd::fixed_t  m_target_length=0;
+  gbstd::fixed_t  m_length=0;
+
+  gbstd::fixed_t  m_increment=0;
+
+  time_wrapper  m_time;
+
+  uint32_t  m_next_time=0;
+  uint32_t  m_delay=0;
+
   gbstd::point  m_pos;
 
-  int  m_thickness;
-
-  uint32_t  m_max;
-  uint32_t  m_current;
+  int  m_thickness=0;
 
   gbstd::color  m_color;
 
+  bool  m_frozen=false;
+
+  mode  m_mode=mode::left_to_right;
+
 public:
-  bar(gbstd::point  pos, int  thickness, uint32_t  max, uint32_t  cur=0) noexcept:
-  m_pos(pos), m_thickness(thickness), m_max(max), m_current(cur){}
+  bar() noexcept{}
 
-  const gbstd::point&  get_position() const noexcept{return m_pos;}
+  void  set_mode(bar::mode  mode) noexcept{m_mode = mode;}
 
-  const int&  get_thickness() const noexcept{return m_thickness;}
+  bool  is_left_to_right() const noexcept{return m_mode == mode::left_to_right;}
+  bool  is_right_to_left() const noexcept{return m_mode == mode::right_to_left;}
 
-  const uint32_t&  get_current() const noexcept{return m_current;}
-  const uint32_t&  get_max()     const noexcept{return m_max;}
+  void  set_time(time_wrapper  tm) noexcept{m_time = tm;}
 
-  void  set_current(uint32_t  v) noexcept{m_current = v;}
-  void  set_max(    uint32_t  v) noexcept{m_max     = v;}
+  void                 set_position(gbstd::point  pt)       noexcept{       m_pos = pt;}
+  const gbstd::point&  get_position(                ) const noexcept{return m_pos     ;}
+
+  void        set_thickness(int  v)       noexcept{       m_thickness = v;}
+  const int&  get_thickness(      ) const noexcept{return m_thickness    ;}
+
+  int   get_length(      ) const noexcept{return m_length    ;}
+  void  set_length(int  v)       noexcept{       m_length = v;}
 
   const gbstd::color&  get_color(                   ) const noexcept{return m_color        ;}
   void                 set_color(gbstd::color  color)       noexcept{       m_color = color;}
+
+  void    freeze() noexcept{m_frozen =  true;}
+  void  unfreeze() noexcept{m_frozen = false;}
+
+  bool  is_frozen()   const noexcept{return m_frozen;}
+  bool  is_finished() const noexcept{return m_length == m_target_length;}
+
+  void  reset(int  length, int  num_frames, uint32_t  ms) noexcept;
+
+  void  step() noexcept;
+
+  void  render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept;
 
 };
 
@@ -290,12 +338,15 @@ row
  
   gbstd::point  m_name_point;
   gbstd::point  m_hp_point;
-  gbstd::point  m_bar_point;
 
   gbstd::point  m_current_pos;
 
+  bar  m_hp_bar;
+
 public:
   void  set_debug() const noexcept;
+
+  void  reset_hp_bar() noexcept;
 
   void  clear_motion() noexcept{m_motion_frames.clear();}
   void  rewind_motion() noexcept;
@@ -329,7 +380,7 @@ public:
 
   company&  get_variable() noexcept{return m_variable;}
 
-  void  set_time(time_wrapper  tm) noexcept{m_time = tm;}
+  void  set_time(time_wrapper  tm) noexcept;
 
   void  set_force(force&  f, counter  mov_row_counter, int  i) noexcept;
 

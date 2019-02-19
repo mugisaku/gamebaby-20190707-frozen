@@ -24,16 +24,15 @@ canvas
 g_screen_canvas;
 
 
-constexpr uint32_t  tmstd=80;
-
-
-ww::battle_context
-g_context(tmstd);
+ww::executive_context
+g_context;
 
 
 void
 main_loop() noexcept
 {
+  constexpr int  delay = 80;
+
   static uint32_t  next;
 
   sdl::update_control();
@@ -42,13 +41,13 @@ main_loop() noexcept
     {
       g_screen_canvas.fill(color());
 
-      g_context.step();
+      gbstd::process_task_lists();
 
-      g_context.render(g_screen_canvas);
+      gbstd::render_painter_lists(g_screen_canvas);
 
       sdl::update_screen(g_screen_canvas);
 
-      next = gbstd::g_time+tmstd;
+      next = gbstd::g_time+delay;
     }
 }
 
@@ -73,33 +72,9 @@ main(int  argc, char**  argv)
 
   sdl::init(screen_w,screen_h,1.0);
 
-  ww::force_initializer  l;
-  ww::force_initializer  r;
+  g_context.set_screen_size(screen_w,screen_h);
 
-  static ww::company  l_companies[] = {
-    {"ひだりぐんA",3000,ww::front_pos},
-    {"ひだりぐんB",3000,ww::front_pos},
-    {"ひだりぐんC",3000,ww::front_pos},
-  };
-
-  static ww::company  r_companies[] = {
-    {"みぎぐんA",3000,ww::front_pos},
-    {"みぎぐんB",3000,ww::back_pos},
-    {"みぎぐんC",3000,ww::front_pos},
-  };
-
-
-  l.m_color = colors::red;
-  r.m_color = colors::blue;
-
-  l.add(l_companies,3);
-  r.add(r_companies,3);
-
-  g_context.set_field_size(screen_w,screen_h);
-
-  g_context.reset(l,r);
-
-  g_context.show_text();
+  g_context.startup();
 
   g_screen_canvas = sdl::make_screen_canvas();
 

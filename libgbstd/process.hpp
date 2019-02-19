@@ -74,9 +74,10 @@ execution
 protected:
   std::string  m_name;
 
-  uint32_t  m_pc=0;
-  uint32_t  m_sp=0;
-  uint32_t  m_bp=0;
+  uint32_t  m_pc=0;//Program Counter
+  uint32_t  m_lc=0;//Level Counter
+  uint32_t  m_sp=0;//Stack Pointer
+  uint32_t  m_bp=0;//Base Pointer
 
   std::vector<uintptr_t>  m_memory;
 
@@ -92,13 +93,18 @@ protected:
   execution&  operator=(      execution&&)=default;
 
 public:
-  operator bool() const noexcept{return m_pc;}
+  operator bool() const noexcept{return m_lc;}
 
   const char*  get_name() const noexcept{return m_name.size()? m_name.data():"NoName";}
 
   bool  test_verbose_flag() const noexcept{return m_verbose_flag;}
   void    set_verbose_flag() noexcept{m_verbose_flag =  true;}
   void  unset_verbose_flag() noexcept{m_verbose_flag = false;}
+
+  const uint32_t&  get_pc() const noexcept{return m_pc;}
+  const uint32_t&  get_lc() const noexcept{return m_lc;}
+  const uint32_t&  get_sp() const noexcept{return m_sp;}
+  const uint32_t&  get_bp() const noexcept{return m_bp;}
 
   void     push(std::initializer_list<execution_entry>  ls, const char*  name=nullptr) noexcept;
   void  replace(std::initializer_list<execution_entry>  ls, const char*  name=nullptr) noexcept;

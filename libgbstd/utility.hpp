@@ -267,7 +267,7 @@ public:
   fixed_t&  operator=(double     d) noexcept{  m_data =  to_fpn(d);  return *this;}
 
   fixed_t&  operator+=(fixed_t  rhs) noexcept{  m_data += rhs.m_data;  return *this;}
-  fixed_t&  operator-=(fixed_t  rhs) noexcept{  m_data += rhs.m_data;  return *this;}
+  fixed_t&  operator-=(fixed_t  rhs) noexcept{  m_data -= rhs.m_data;  return *this;}
 
   fixed_t&  operator*=(int  i) noexcept{  m_data *= i;  return *this;}
   fixed_t&  operator/=(int  i) noexcept{  m_data /= i;  return *this;}
@@ -276,12 +276,12 @@ public:
   constexpr fixed_t  operator+(fixed_t  rhs) const noexcept{return fixed_t(raw_value(m_data+rhs.m_data));}
   constexpr fixed_t  operator-(fixed_t  rhs) const noexcept{return fixed_t(raw_value(m_data-rhs.m_data));}
 
-  constexpr fixed_t  operator+(int  i) const noexcept{return fixed_t(raw_value(m_data+to_fpn(i)));}
-  constexpr fixed_t  operator-(int  i) const noexcept{return fixed_t(raw_value(m_data-to_fpn(i)));}
-  constexpr fixed_t  operator*(int  i) const noexcept{return fixed_t(raw_value(m_data*i));}
-  constexpr fixed_t  operator/(int  i) const noexcept{return fixed_t(raw_value(m_data/i));}
-  constexpr fixed_t  operator%(int  i) const noexcept{return fixed_t(raw_value(m_data%i));}
-  constexpr fixed_t  operator-() const noexcept{return fixed_t(raw_value(-m_data));}
+  constexpr fixed_t  operator+(int  i) const noexcept{return fixed_t(raw_value( m_data+to_fpn(i)));}
+  constexpr fixed_t  operator-(int  i) const noexcept{return fixed_t(raw_value( m_data-to_fpn(i)));}
+  constexpr fixed_t  operator*(int  i) const noexcept{return fixed_t(raw_value( m_data*i        ));}
+  constexpr fixed_t  operator/(int  i) const noexcept{return fixed_t(raw_value( m_data/i        ));}
+  constexpr fixed_t  operator%(int  i) const noexcept{return fixed_t(raw_value( m_data%i        ));}
+  constexpr fixed_t  operator-(      ) const noexcept{return fixed_t(raw_value(-m_data          ));}
 
   constexpr fixed_t  abs() const noexcept{return (m_data < 0)? fixed_t(raw_value(-m_data)):*this;}
 
@@ -290,6 +290,43 @@ public:
 };
 
 
+template<typename  T>
+class
+pointer
+{
+  T*  m_data;
+
+public:
+  constexpr pointer(T*  ptr=nullptr) noexcept: m_data(ptr){}
+
+  template<typename  U>
+  constexpr pointer(U*  ptr) noexcept: m_data(static_cast<T*>(ptr)){}
+
+  pointer&  operator=(T*  ptr) noexcept{  m_data = ptr;  return *this;}
+
+  template<typename  U>
+  pointer&  operator=(U*  ptr) noexcept{  m_data = static_cast<T*>(ptr);  return *this;}
+
+  constexpr T*  operator->() const noexcept{return  m_data;}
+  constexpr T&  operator *() const noexcept{return *m_data;}
+
+  constexpr operator bool() const noexcept{return m_data;}
+
+  constexpr bool  operator==(const T*  ptr) const noexcept{return m_data == ptr;}
+  constexpr bool  operator!=(const T*  ptr) const noexcept{return m_data != ptr;}
+  constexpr bool  operator< (const T*  ptr) const noexcept{return m_data <  ptr;}
+  constexpr bool  operator<=(const T*  ptr) const noexcept{return m_data <= ptr;}
+  constexpr bool  operator> (const T*  ptr) const noexcept{return m_data >  ptr;}
+  constexpr bool  operator>=(const T*  ptr) const noexcept{return m_data >= ptr;}
+
+  template<typename  U>constexpr bool  operator==(const U*  ptr) const noexcept{return m_data == static_cast<const T*>(ptr);}
+  template<typename  U>constexpr bool  operator!=(const U*  ptr) const noexcept{return m_data != static_cast<const T*>(ptr);}
+  template<typename  U>constexpr bool  operator< (const U*  ptr) const noexcept{return m_data <  static_cast<const T*>(ptr);}
+  template<typename  U>constexpr bool  operator<=(const U*  ptr) const noexcept{return m_data <= static_cast<const T*>(ptr);}
+  template<typename  U>constexpr bool  operator> (const U*  ptr) const noexcept{return m_data >  static_cast<const T*>(ptr);}
+  template<typename  U>constexpr bool  operator>=(const U*  ptr) const noexcept{return m_data >= static_cast<const T*>(ptr);}
+
+};
 
 
 }

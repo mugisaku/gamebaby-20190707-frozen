@@ -54,6 +54,8 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
     }
 
 
+  ++m_lc;
+
     if(test_verbose_flag())
     {
       print();
@@ -86,28 +88,24 @@ void
 execution::
 pop() noexcept
 {
-  auto  name = reinterpret_cast<const char*>(m_memory[m_bp+g_offset_of_frame_nameptr]);
-
-    if(test_verbose_flag())
+    if(m_lc)
     {
-      print();
+      auto  name = reinterpret_cast<const char*>(m_memory[m_bp+g_offset_of_frame_nameptr]);
 
-      printf("\n*frame:\"%s\" popped\n\n\n",name? name:"-noname-");
-    }
+        if(test_verbose_flag())
+        {
+          print();
+
+          printf("\n*frame:\"%s\" popped\n\n\n",name? name:"-noname-");
+        }
 
 
-  m_pc = m_memory[m_bp+g_offset_of_previous_pc];
+      m_pc = m_memory[m_bp+g_offset_of_previous_pc];
 
-    if(m_pc)
-    {
       m_sp = m_bp                                         ;
              m_bp = m_memory[m_bp+g_offset_of_previous_bp];
-    }
 
-  else
-    {
-      m_bp = 0;
-      m_sp = 0;
+      --m_lc;
     }
 }
 
@@ -127,6 +125,7 @@ process::
 assign(std::initializer_list<execution_entry>  ls) noexcept
 {
   m_pc = 0;
+  m_lc = 0;
   m_bp = 0;
   m_sp = 0;
 

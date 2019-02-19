@@ -1,4 +1,4 @@
-#include"libww/ww.hpp"
+#include"libww/ww_bar.hpp"
 
 
 
@@ -10,100 +10,20 @@ namespace ww{
 
 void
 bar::
-reset(int  length, int  num_frames, uint32_t  ms) noexcept
+set_increment(int  length, int  num_frames) noexcept
 {
-    if(m_length == length)
+    if(num_frames > 0)
     {
-      return;
+      m_increment = gbstd::fixed_t(length)/num_frames;
     }
-
-
-    if(num_frames <= 1)
-    {
-      m_length = length;
-
-      return;
-    }
-
-
-  m_delay = ms/num_frames;
-
-    if(!m_delay)
-    {
-      m_length = length;
-
-      return;
-    }
-
-
-  auto  diff = (m_length-length);
-
-  m_increment = diff.abs()/num_frames;
-
-  m_target_length = length;
-
-    if(m_length > m_target_length)
-    {
-      m_increment = -m_increment;
-    }
-
-
-  m_next_time = m_time.get()+m_delay;
 }
 
 
 void
 bar::
-step() noexcept
+set_target_length(int  length) noexcept
 {
-    if(!m_frozen)
-    {
-      auto  tm = m_time.get();
-
-        while(tm >= m_next_time)
-        {
-            if(m_increment < 0)
-            {
-              m_length += m_increment;
-
-                if(m_length <= m_target_length)
-                {
-                  m_length = m_target_length;
-
-                  break;
-                }
-
-              else
-                {
-
-                  m_next_time += m_delay;
-                }
-            }
-
-          else
-            if(m_increment > 0)
-            {
-              m_length += m_increment;
-
-                if(m_length >= m_target_length)
-                {
-                  m_length = m_target_length;
-
-                  break;
-                }
-
-              else
-                {
-                  m_next_time += m_delay;
-                }
-            }
-
-          else
-            {
-              break;
-            }
-        }
-    }
+  m_target_length = length;
 }
 
 
@@ -118,6 +38,36 @@ render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept
       int  x = (is_left_to_right()? pos.x:pos.x-m_length);
 
       cv.fill_rectangle(m_color,x,pos.y,m_length,m_thickness);
+    }
+}
+
+
+void
+bar::
+task_process(uint32_t&  delay, bar*  b) noexcept
+{
+    if(!b->m_frozen)
+    {
+        if(b->m_length < b->m_target_length)
+        {
+          b->m_length += b->m_increment;
+
+            if(b->m_length >= b->m_target_length)
+            {
+              b->m_length = b->m_target_length;
+            }
+        }
+
+      else
+        if(b->m_length > b->m_target_length)
+        {
+          b->m_length -= b->m_increment;
+
+            if(b->m_length <= b->m_target_length)
+            {
+              b->m_length = b->m_target_length;
+            }
+        }
     }
 }
 

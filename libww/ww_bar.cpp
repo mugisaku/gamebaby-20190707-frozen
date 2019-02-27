@@ -27,24 +27,45 @@ set_target_length(int  length) noexcept
 }
 
 
+
+
 void
 bar::
-render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept
+startup() noexcept
 {
-    if(m_length)
+  auto&  tskls = gbstd::g_major_task_list;
+  auto&  pails = gbstd::g_major_painter_list;
+
+  tskls.push(drive,80,this);
+  pails.emplace_back(*this,render);
+}
+
+
+void
+bar::
+cleanup() noexcept
+{
+}
+
+
+void
+bar::
+render(const bar&  b, const gbstd::canvas&  cv) noexcept
+{
+    if(b.m_length)
     {
-      auto  pos = offset+m_pos;
+      auto  pos = b.m_offset+b.m_pos;
 
-      int  x = (is_left_to_right()? pos.x:pos.x-m_length);
+      int  x = (b.is_left_to_right()? pos.x:pos.x-b.m_length);
 
-      cv.fill_rectangle(m_color,x,pos.y,m_length,m_thickness);
+      cv.fill_rectangle(b.m_color,x,pos.y,b.m_length,b.m_thickness);
     }
 }
 
 
 void
 bar::
-task_process(uint32_t&  delay, bar*  b) noexcept
+drive(uint32_t&  delay, bar*  b) noexcept
 {
     if(!b->m_frozen)
     {

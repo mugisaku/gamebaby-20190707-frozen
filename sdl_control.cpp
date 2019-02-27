@@ -1,4 +1,5 @@
 #include"sdl.hpp"
+#include<SDL.h>
 #include"libgbstd/utility.hpp"
 #include"libgbstd/control.hpp"
 
@@ -198,6 +199,13 @@ process_event(const SDL_Event&  evt) noexcept
        break;
     }
 }
+}
+
+
+void
+delay(uint32_t  ms) noexcept
+{
+  SDL_Delay(ms);
 }
 
 

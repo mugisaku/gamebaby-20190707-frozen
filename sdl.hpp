@@ -4,7 +4,6 @@
 
 #include"libgbstd/image.hpp"
 #include"libgbstd/control.hpp"
-#include<SDL.h>
 
 
 namespace sdl{
@@ -12,10 +11,20 @@ namespace sdl{
 
 void  update_screen(const gbstd::canvas&  cv) noexcept;
 
+void  delay(uint32_t  ms) noexcept;
+
 void  quit() noexcept;
 
 void  init(                int  w, int  h, double  scale=1) noexcept;
 void  init(int  x, int  y, int  w, int  h, double  scale=1) noexcept;
+
+void  init_sound() noexcept;
+void  quit_sound() noexcept;
+
+void  start_sound() noexcept;
+void   stop_sound() noexcept;
+
+void  beep(uint32_t  ms) noexcept;
 
 void  resize_screen(int  w, int  h) noexcept;
 

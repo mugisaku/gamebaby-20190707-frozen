@@ -28,6 +28,11 @@ set_screen_size(int  w, int  h) noexcept
 
 
 void
+fn(gbstd::execution&  exec, executive_context*  ctx)
+{report;}
+
+
+void
 executive_context::
 startup() noexcept
 {
@@ -46,14 +51,30 @@ startup() noexcept
 
     for(auto&  e: l_entries)
     {
-      m_battle_context.push_entry(e,battle_sides::left);
+      m_battle_context.push_entry(e,battle_sides::left,gbstd::colors::blue);
     }
 
 
     for(auto&  e: r_entries)
     {
-      m_battle_context.push_entry(e,battle_sides::right);
+      m_battle_context.push_entry(e,battle_sides::right,gbstd::colors::red);
     }
+
+
+  m_process.assign({
+                    {initialize,this},
+                    {loop_battle,this},
+                   });
+
+
+  gbstd::g_major_task_list.push(80,m_process);
+}
+
+
+void
+executive_context::
+cleanup() noexcept
+{
 }
 
 

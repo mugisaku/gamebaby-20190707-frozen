@@ -71,6 +71,10 @@ main(int  argc, char**  argv)
   constexpr int  screen_h = (ww::g_column_height);
 
   sdl::init(screen_w,screen_h,1.0);
+  sdl::init_sound();
+
+  gbstd::go_next_major_task_list();
+  gbstd::go_next_minor_task_list();
 
   g_context.set_screen_size(screen_w,screen_h);
 
@@ -85,10 +89,11 @@ main(int  argc, char**  argv)
     {
       main_loop();
 
-      SDL_Delay(20);
+      sdl::delay(20);
     }
 
 
+  sdl::quit_sound();
   sdl::quit();
 #endif
 

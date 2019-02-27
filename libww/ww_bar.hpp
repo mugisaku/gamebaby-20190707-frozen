@@ -5,6 +5,7 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
+#include"libgbstd/stage.hpp"
 #include<list>
 #include<vector>
 #include<functional>
@@ -30,6 +31,7 @@ private:
 
   gbstd::fixed_t  m_increment=0;
 
+  gbstd::point  m_offset;
   gbstd::point  m_pos;
 
   int  m_thickness=0;
@@ -40,6 +42,9 @@ private:
 
   mode  m_mode=mode::left_to_right;
 
+  static void  render(const bar&  b, const gbstd::canvas&  cv) noexcept;
+  static void   drive(uint32_t&  delay, bar*  b) noexcept;
+
 public:
   bar() noexcept{}
 
@@ -47,6 +52,9 @@ public:
 
   bool  is_left_to_right() const noexcept{return m_mode == mode::left_to_right;}
   bool  is_right_to_left() const noexcept{return m_mode == mode::right_to_left;}
+
+  void                 set_offset(gbstd::point  pt)       noexcept{       m_offset = pt;}
+  const gbstd::point&  get_offset(                ) const noexcept{return m_offset     ;}
 
   void                 set_position(gbstd::point  pt)       noexcept{       m_pos = pt;}
   const gbstd::point&  get_position(                ) const noexcept{return m_pos     ;}
@@ -72,9 +80,8 @@ public:
   void                   set_target_length(int  length)       noexcept;
   const gbstd::fixed_t&  get_target_length(           ) const noexcept{return m_target_length;}
 
-  void  render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept;
-
-  static void  task_process(uint32_t&  delay, bar*  b) noexcept;
+  void  startup() noexcept;
+  void  cleanup() noexcept;
 
 };
 

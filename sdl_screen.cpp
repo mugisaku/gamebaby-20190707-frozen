@@ -1,4 +1,5 @@
 #include"sdl.hpp"
+#include<SDL.h>
 #include"libgbstd/file_op.hpp"
 
 

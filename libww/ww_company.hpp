@@ -18,7 +18,7 @@ battle_side
 
 public:
   static constexpr int   m_left_value = 0;
-  static constexpr int  m_right_value = 0;
+  static constexpr int  m_right_value = 1;
 
   constexpr battle_side(int  v=0) noexcept: m_data(v){}
 
@@ -73,38 +73,10 @@ public:
   play_counter&  operator=(const play_counter& ) noexcept=delete;
   play_counter&  operator=(      play_counter&&) noexcept=delete;
 
-  operator int() const noexcept{return *m_data;}
+  operator bool() const noexcept{return m_flag;}
 
   void   apply() noexcept{if(m_data && !m_flag){  ++*m_data;  m_flag =  true;}}
   void  cancel() noexcept{if(m_data &&  m_flag){  --*m_data;  m_flag = false;}}
-
-};
-
-
-class
-time_wrapper
-{
-  const uint32_t*  m_target=nullptr;
-
-public:
-  time_wrapper() noexcept{}
-  time_wrapper(const uint32_t&  tm) noexcept: m_target(&tm){}
-
-  const uint32_t&  get() const noexcept{return *m_target;}
-
-};
-
-
-class
-time_add_amount_wrapper
-{
-  uint32_t*  m_value;
-
-public:
-  time_add_amount_wrapper(uint32_t&  v) noexcept: m_value(&v){}
-
-  const uint32_t&  get(           ) const noexcept{return *m_value    ;}
-  void             set(uint32_t  v) const noexcept{       *m_value = v;}
 
 };
 
@@ -199,9 +171,9 @@ company
 
   std::vector<motion_frame>  m_motion_frames;
 
-  uint32_t  m_motion_timer=0;
-
   int  m_motion_frame_index=0;
+
+  gbstd::point  m_offset;
 
   gbstd::point  m_backup_point;
   gbstd::point  m_back_point;
@@ -215,6 +187,11 @@ company
   bar  m_hp_bar;
 
   play_counter  m_play_counter;
+
+  static void  step_animation(uint32_t&  delay, company*  c) noexcept;
+
+  static void  render(const company&  c, const gbstd::canvas&  cv) noexcept;
+  static void   drive(uint32_t&  delay, const company*  c) noexcept;
 
 public:
   company(int&  counter) noexcept;
@@ -256,6 +233,9 @@ public:
   void        set_tag(battle_side  side, int  i, gbstd::color  color)       noexcept;
   const tag&  get_tag(                                              ) const noexcept{return m_tag;}
 
+  void                 set_offset(gbstd::point  off)       noexcept{       m_offset = off;}
+  const gbstd::point&  get_offset(                 ) const noexcept{return m_offset      ;}
+
         gbstd::process&  get_process()       noexcept{return m_process;}
   const gbstd::process&  get_process() const noexcept{return m_process;}
 
@@ -267,9 +247,8 @@ public:
   void  reset(           ) noexcept;
   void  reset(entry&  org) noexcept;
 
-  void  step(uint32_t  time) noexcept;
-
-  void  render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept;
+  void  startup() noexcept;
+  void  cleanup() noexcept;
 
 };
 

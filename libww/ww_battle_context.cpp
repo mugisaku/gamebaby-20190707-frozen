@@ -45,6 +45,17 @@ void
 battle_context::
 startup() noexcept
 {
+  auto&  tskls = gbstd::go_next_major_task_list();
+  auto&  pails = gbstd::go_next_major_painter_list();
+
+  pails.emplace_back(*this,render);
+
+    for(auto&  c: m_company_list)
+    {
+      c.startup();
+    }
+
+
   m_text.fill(gbstd::character());
 
   m_typewriter.set_cursor_position({0,0});
@@ -52,6 +63,10 @@ startup() noexcept
   m_command_request = true;
 
   m_result = result::continuing;
+
+  tskls.push(20,m_process);
+  tskls.push(drive,80,this);
+  pails.emplace_back(*this,render);
 
   m_process.assign({{wait_for_players,this,true},
                     {branch_by_judge,this,true},
@@ -63,6 +78,14 @@ void
 battle_context::
 cleanup() noexcept
 {
+    for(auto&  c: m_company_list)
+    {
+      c.cleanup();
+    }
+
+
+  gbstd::go_back_major_task_list();
+  gbstd::go_back_major_painter_list();
 }
 
 
@@ -70,19 +93,25 @@ cleanup() noexcept
 
 void
 battle_context::
-push_entry(entry&  ent, battle_side  side) noexcept
+push_entry(entry&  ent, battle_side  side, gbstd::color  color) noexcept
 {
+  gbstd::point  offset(m_field_width/2,0);
+
   m_company_list.emplace_back(m_number_of_playing_companies);
 
   auto&  c = m_company_list.back();
-
-  c.reset(ent);
 
 
   int&  i = side.is_left()? m_number_of_left_companies
            :                m_number_of_right_companies;
 
-  c.set_tag(side,i++,gbstd::colors::red);
+  c.set_tag(side,i++,color);
+
+  c.set_offset(offset);
+
+  c.reset(ent);
+
+  ++m_number_of_total_companies;
 }
 
 
@@ -205,24 +234,22 @@ pump_text_all() noexcept
 
 void
 battle_context::
-step_notifiers() noexcept
+drive(uint32_t&  delay, battle_context*  ctx) noexcept
 {
-  auto  it = m_notifiers.begin();
+  auto  it = ctx->m_notifiers.begin();
 
-    while(it != m_notifiers.end())
+    while(it != ctx->m_notifiers.end())
     {
-      auto&  n = *it;
-
-        if(!n.is_halted())
+        if(it->is_halted())
         {
-          n.step();
-
-          ++it;
+          it = ctx->m_notifiers.erase(it);
         }
 
       else
         {
-          it = m_notifiers.erase(it);
+          it->step();
+
+          ++it;
         }
     }
 }
@@ -230,37 +257,19 @@ step_notifiers() noexcept
 
 void
 battle_context::
-step() noexcept
+render(const battle_context&  ctx, const gbstd::canvas&  cv) noexcept
 {
-  step_notifiers();
-
-  m_process.step();
-}
-
-
-void
-battle_context::
-render(const gbstd::canvas&  cv) const noexcept
-{
-  gbstd::point  offset(m_field_width/2,0);
-
-    for(auto&  c: m_company_list)
+    if(ctx.m_display_flags&display_flags::show_text)
     {
-      c.render(offset,cv);
+      static constexpr gbstd::point  console_pos = gbstd::point(80,160);
+
+      cv.draw_typewriter(ctx.m_typewriter,console_pos);
     }
 
 
-    if(m_display_flags&display_flags::show_text)
+    for(auto&  nt: ctx.m_notifiers)
     {
-      static constexpr gbstd::point  m_console_pos = gbstd::point(80,160);
-
-      cv.draw_typewriter(m_typewriter,m_console_pos);
-    }
-
-
-    for(auto&  n: m_notifiers)
-    {
-      n.render(offset,cv);
+      nt.render(cv);
     }
 }
 

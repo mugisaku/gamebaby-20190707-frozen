@@ -52,6 +52,7 @@ endif()
 set(SDL_SOURCES
   sdl_screen.cpp
   sdl_control.cpp
+  sdl_sound.cpp
 )
 
 
@@ -65,23 +66,23 @@ add_subdirectory(libww)
 include_directories(./)
 include_directories(/usr/include/SDL2)
 add_executable("test_sdl${EXECUTABLE_EXTENSION}" test_sdl.cpp ${SDL_SOURCES})
-add_executable("earth_maker_sdl${EXECUTABLE_EXTENSION}" earth_maker_sdl.cpp ${SDL_SOURCES})
-add_executable("tbgloop_sdl${EXECUTABLE_EXTENSION}" tbgloop_sdl.cpp ${SDL_SOURCES})
-add_executable("png2lit${EXECUTABLE_EXTENSION}" png2lit.cpp)
+#add_executable("earth_maker_sdl${EXECUTABLE_EXTENSION}" earth_maker_sdl.cpp ${SDL_SOURCES})
+#add_executable("tbgloop_sdl${EXECUTABLE_EXTENSION}" tbgloop_sdl.cpp ${SDL_SOURCES})
+#add_executable("png2lit${EXECUTABLE_EXTENSION}" png2lit.cpp)
 #add_executable("mkfont_sdl${EXECUTABLE_EXTENSION}" mkfont_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkicon_sdl${EXECUTABLE_EXTENSION}" mkicon_sdl.cpp ${SDL_SOURCES})
 #add_executable("mkforest_sdl${EXECUTABLE_EXTENSION}" mkforest_sdl.cpp ${SDL_SOURCES})
-add_executable("mkanigra_sdl${EXECUTABLE_EXTENSION}" mkanigra_sdl.cpp ${SDL_SOURCES})
-add_executable("mkbg_sdl${EXECUTABLE_EXTENSION}" mkbg_sdl.cpp ${SDL_SOURCES})
-add_executable("mkeyesquat${EXECUTABLE_EXTENSION}" mkeyesquat.cpp ${SDL_SOURCES})
-target_link_libraries("png2lit${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
+#add_executable("mkanigra_sdl${EXECUTABLE_EXTENSION}" mkanigra_sdl.cpp ${SDL_SOURCES})
+#add_executable("mkbg_sdl${EXECUTABLE_EXTENSION}" mkbg_sdl.cpp ${SDL_SOURCES})
+#add_executable("mkeyesquat${EXECUTABLE_EXTENSION}" mkeyesquat.cpp ${SDL_SOURCES})
+#target_link_libraries("png2lit${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
 target_link_libraries("test_sdl${EXECUTABLE_EXTENSION}" "ww" "gbstd" "gbpng" "z")
-target_link_libraries("earth_maker_sdl${EXECUTABLE_EXTENSION}" "subiso" "gbstd" "gbpng" "z")
-target_link_libraries("tbgloop_sdl${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
-target_link_libraries("mkeyesquat${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
+#target_link_libraries("earth_maker_sdl${EXECUTABLE_EXTENSION}" "subiso" "gbstd" "gbpng" "z")
+#target_link_libraries("tbgloop_sdl${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
+#target_link_libraries("mkeyesquat${EXECUTABLE_EXTENSION}" "gbstd" "gbpng" "z")
 #target_link_libraries("mkicon_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
-target_link_libraries("mkanigra_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
-target_link_libraries("mkbg_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
+#target_link_libraries("mkanigra_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
+#target_link_libraries("mkbg_sdl${EXECUTABLE_EXTENSION}" "ge" "gbstd" "gbpng" "z")
 
 
 if(EMSC)

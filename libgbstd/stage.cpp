@@ -158,13 +158,6 @@ operator++() noexcept
 
 
 
-task_list  g_major_task_list;
-task_list  g_minor_task_list;
-
-std::vector<painter>  g_major_painter_list;
-std::vector<painter>  g_minor_painter_list;
-
-
 namespace{
 std::vector<task_list>  g_major_task_list_stack;
 std::vector<task_list>  g_minor_task_list_stack;
@@ -174,12 +167,14 @@ std::vector<std::vector<painter>>  g_minor_painter_list_stack;
 
 
 template<typename  T, typename  U>
-void
+U&
 go_next(T&  stack, U&&  element) noexcept
 {
   stack.emplace_back(std::move(element));
 
   element.clear();
+
+  return element;
 }
 
 
@@ -202,25 +197,36 @@ uint32_t  g_default_time_add_amount=80;
 }
 
 
+task_list  g_major_task_list;
+task_list  g_minor_task_list;
+
+std::vector<painter>  g_major_painter_list;
+std::vector<painter>  g_minor_painter_list;
+
+
 void             set_default_time_add_amount(uint32_t  a) noexcept{       g_default_time_add_amount = a;}
 const uint32_t&  get_default_time_add_amount(           ) noexcept{return g_default_time_add_amount    ;}
 
 
-void
+task_list&
 go_next_major_task_list() noexcept
 {
-  go_next(g_major_task_list_stack,std::move(g_major_task_list));
+  auto&  e = go_next(g_major_task_list_stack,std::move(g_major_task_list));
 
   g_major_task_list.set_time_add_amount(g_default_time_add_amount);
+
+  return e;
 }
 
 
-void
+task_list&
 go_next_minor_task_list() noexcept
 {
-  go_next(g_minor_task_list_stack,std::move(g_minor_task_list));
+  auto&  e = go_next(g_minor_task_list_stack,std::move(g_minor_task_list));
 
   g_minor_task_list.set_time_add_amount(g_default_time_add_amount);
+
+  return e;
 }
 
 
@@ -228,8 +234,8 @@ void  go_back_major_task_list() noexcept{go_back(g_major_task_list_stack,g_major
 void  go_back_minor_task_list() noexcept{go_back(g_minor_task_list_stack,g_minor_task_list);}
 
 
-void  go_next_major_painter_list() noexcept{go_next(g_major_painter_list_stack,std::move(g_major_painter_list));}
-void  go_next_minor_painter_list() noexcept{go_next(g_minor_painter_list_stack,std::move(g_minor_painter_list));}
+std::vector<painter>&  go_next_major_painter_list() noexcept{return go_next(g_major_painter_list_stack,std::move(g_major_painter_list));}
+std::vector<painter>&  go_next_minor_painter_list() noexcept{return go_next(g_minor_painter_list_stack,std::move(g_minor_painter_list));}
 
 void  go_back_major_painter_list() noexcept{go_back(g_major_painter_list_stack,g_major_painter_list);}
 void  go_back_minor_painter_list() noexcept{go_back(g_minor_painter_list_stack,g_minor_painter_list);}

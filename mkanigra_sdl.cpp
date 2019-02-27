@@ -150,7 +150,7 @@ main(int  argc, char**  argv)
     {
       main_loop();
 
-      SDL_Delay(20);
+      sdl::delay(20);
     }
 
 

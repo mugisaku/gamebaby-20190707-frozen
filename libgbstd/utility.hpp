@@ -22,6 +22,9 @@ namespace gbstd{
 extern int  reporting_counter;
 
 
+inline void  printnl() noexcept{printf("\n");}
+
+
 template<typename  T>
 inline void
 destruct(T&  t) noexcept

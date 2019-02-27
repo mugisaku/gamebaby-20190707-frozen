@@ -68,6 +68,8 @@ battle_context
   int  m_number_of_left_companies =0;
   int  m_number_of_right_companies=0;
 
+  int  m_number_of_total_companies=0;
+
   int  m_number_of_playing_companies=0;
 
   gbstd::text  m_text;
@@ -93,29 +95,24 @@ battle_context
   static void  fight(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  branch_by_judge(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
   static void  wait_for_finish_to_attack(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
   static void  wait_for_message(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  wait_for_players(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
   static void  wait_for_press_p_key(gbstd::execution&  exec, battle_context*  ctx) noexcept;
-  static void  advance_time(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
   static void  open_command_window(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
   static void  show_message(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  hide_message(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
-  static void  step_both_forces(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  ready_battle(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
   static void  wait_for_all(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
-  static void     start_motion(gbstd::execution&  exec, battle_context*  ctx) noexcept;
   static void  wait_for_motion(gbstd::execution&  exec, battle_context*  ctx) noexcept;
-
-  static void  start_time(gbstd::execution&  exec, battle_context*  ctx) noexcept;
-  static void   stop_time(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
 
   result  judge() const noexcept;
@@ -146,7 +143,7 @@ public:
   company*  get_company_by_ap() noexcept;
   int       get_companies_by_side(battle_side  side, company**  begin, company**  end) noexcept;
 
-  void  push_entry(entry&  ent, battle_side  saide) noexcept;
+  void  push_entry(entry&  ent, battle_side  side, gbstd::color  color) noexcept;
 
   void  distribute_ap(int  v) noexcept;
 
@@ -161,9 +158,8 @@ public:
   void  startup() noexcept;
   void  cleanup() noexcept;
 
-  void  step() noexcept;
-
-  void  render(const gbstd::canvas&  cv) const noexcept;
+  static void  drive(uint32_t&  delay, battle_context*  ctx) noexcept;
+  static void  render(const battle_context&  ctx, const gbstd::canvas&  cv) noexcept;
 
 };
 

@@ -62,13 +62,6 @@ company::
 unpause_motion() noexcept
 {
   m_status.unset(flags::motion_paused);
-
-    if(m_motion_frame_index < m_motion_frames.size())
-    {
-      auto&  frm = m_motion_frames[m_motion_frame_index];
-
-      m_motion_timer = gbstd::get_virtual_time()+frm.m_delay;
-    }
 }
 
 
@@ -77,8 +70,6 @@ company::
 rewind_motion() noexcept
 {
   m_motion_frame_index = 0;
-
-//  m_motion_timer = m_time.get();
 
     if(m_status.test(flags::motion_finished))
     {
@@ -130,6 +121,9 @@ add_motion(gbstd::point  dst, int  number_of_frames, uint32_t  ms) noexcept
 
       m_motion_frames.emplace_back(pt,delay_u);
     }
+
+
+  m_play_counter.apply();
 }
 
 
@@ -163,47 +157,17 @@ set_tag(battle_side  side, int  i, gbstd::color  color) noexcept
       int  x = m_hp_bar.get_position().x;
 
       m_hp_bar.set_position({-x,y+gbstd::g_font_height});
+
+      m_hp_bar.set_mode(bar::mode::right_to_left);
     }
-}
 
-
-
-
-void
-company::
-step(uint32_t  time) noexcept
-{
-  m_process.step();
-
-  m_blink_context.step();
-
-    if( m_status.test(flags::motion_valid ) &&
-       !m_status.test(flags::motion_paused))
+  else
     {
-        while(time >= m_motion_timer)
-        {
-            if(m_motion_frame_index < m_motion_frames.size())
-            {
-              auto&  frm = m_motion_frames[m_motion_frame_index++];
-
-              m_current_pos = frm.m_pos;
-
-              m_motion_timer += frm.m_delay;
-            }
-
-          else
-            {
-                if(!m_status.test(flags::motion_finished))
-                {
-                  m_status.set(flags::motion_finished);
-                }
-
-
-              break;
-            }
-        }
+      m_hp_bar.set_mode(bar::mode::left_to_right);
     }
 }
+
+
 
 
 void
@@ -220,6 +184,8 @@ reset() noexcept
 
   hp_bar.set_target_length(0);
   hp_bar.set_length(       0);
+
+  hp_bar.set_offset(m_offset);
 
   clear_motion();
 
@@ -259,31 +225,55 @@ reset(entry&  org) noexcept
 
 void
 company::
-render(gbstd::point  offset, const gbstd::canvas&  cv) const noexcept
+startup() noexcept
 {
-    if(!m_original)
+  auto&  tskls = gbstd::g_major_task_list;
+  auto&  pails = gbstd::g_major_painter_list;
+
+  tskls.push(step_animation,20,this);
+  pails.emplace_back(*this,render);
+
+  m_hp_bar.startup();
+}
+
+
+void
+company::
+cleanup() noexcept
+{
+  m_hp_bar.cleanup();
+}
+
+
+
+
+void
+company::
+render(const company&  c, const gbstd::canvas&  cv) noexcept
+{
+    if(!c.m_original)
     {
       return;
     }
 
 
-  auto  cur_pos = m_current_pos+offset;
-
-    if(!m_blink_context.is_valid() || m_blink_context.is_visible())
+    if(!c.m_blink_context.is_valid() || c.m_blink_context.is_visible())
     {
-      m_variable.render(m_white_flag? gbstd::colors::white:m_tag.get_color(),{cv,cur_pos.x,cur_pos.y,32,32});
+      auto  color = c.m_white_flag? gbstd::colors::white:c.m_tag.get_color();
+
+      auto  cur_pos = c.m_current_pos+c.m_offset;
+
+      c.m_variable.render(color,{cv,cur_pos.x,cur_pos.y,32,32});
     }
 
 
   gbstd::string_form  sf;
 
-  auto  nam_pt = m_name_point+offset;
+  auto  nam_pt = c.m_name_point+c.m_offset;
 
-  cv.draw_string(gbstd::colors::white,sf("%s",m_variable.get_name().data()),nam_pt.x,nam_pt.y);
+  cv.draw_string(gbstd::colors::white,sf("%s",c.m_variable.get_name().data()),nam_pt.x,nam_pt.y);
 
-  cv.draw_string(gbstd::colors::white,sf("%6d",m_variable.get_hp()),nam_pt.x+(gbstd::g_font_width*8),nam_pt.y);
-
-  m_hp_bar.render(offset,cv);
+  cv.draw_string(gbstd::colors::white,sf("%6d",c.m_variable.get_hp()),nam_pt.x+(gbstd::g_font_width*8),nam_pt.y);
 }
 
 

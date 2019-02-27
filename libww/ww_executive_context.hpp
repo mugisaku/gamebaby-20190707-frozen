@@ -21,6 +21,13 @@ executive_context
 
   battle_context  m_battle_context;
 
+  static void  initialize(gbstd::execution&  exec, executive_context*  ctx) noexcept;
+
+  static void  loop_battle(gbstd::execution&  exec, executive_context*  ctx) noexcept;
+
+  static void  enter_battle(gbstd::execution&  exec, executive_context*  ctx) noexcept;
+  static void   exit_battle(gbstd::execution&  exec, executive_context*  ctx) noexcept;
+
 public:
   executive_context() noexcept;
 
@@ -30,6 +37,7 @@ public:
   int  get_screen_height() const noexcept{return m_screen_height;}
 
   void  startup() noexcept;
+  void  cleanup() noexcept;
 
 };
 

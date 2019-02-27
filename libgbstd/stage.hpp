@@ -62,7 +62,7 @@ public:
   template<typename  T>
   void  push(void  (*callback)(uint32_t&  delay, T*  data), uint32_t  delay, T*  data) noexcept
   {
-    push(static_cast<void(*)(uint32_t&,void*)>(callback),delay,data);
+    push(reinterpret_cast<void(*)(uint32_t&,void*)>(callback),delay,data);
   }
 
   void  process() noexcept;
@@ -119,17 +119,17 @@ extern std::vector<painter>  g_minor_painter_list;
 void             set_default_time_add_amount(uint32_t  a) noexcept;
 const uint32_t&  get_default_time_add_amount(           ) noexcept;
 
-void  go_next_major_task_list() noexcept;
-void  go_back_major_task_list() noexcept;
+task_list&  go_next_major_task_list() noexcept;
+task_list&  go_next_minor_task_list() noexcept;
 
-void  go_next_minor_task_list() noexcept;
+void  go_back_major_task_list() noexcept;
 void  go_back_minor_task_list() noexcept;
 
 
-void  go_next_major_painter_list() noexcept;
-void  go_back_major_painter_list() noexcept;
+std::vector<painter>&  go_next_major_painter_list() noexcept;
+std::vector<painter>&  go_next_minor_painter_list() noexcept;
 
-void  go_next_minor_painter_list() noexcept;
+void  go_back_major_painter_list() noexcept;
 void  go_back_minor_painter_list() noexcept;
 
 void    process_task_lists() noexcept;

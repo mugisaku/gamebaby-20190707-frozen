@@ -1,4 +1,5 @@
 #include"libww/ww_battle_context.hpp"
+#include"sdl.hpp"
 
 
 
@@ -21,24 +22,6 @@ void
 disable_blink(gbstd::execution&  exec, ww::company*  company) noexcept
 {
   company->get_blink_context().disable();
-
-  ++exec;
-}
-
-
-void
-move_to_advance(gbstd::execution&  exec, ww::company*  company) noexcept
-{
-  company->move_to_advance(4);
-
-  ++exec;
-}
-
-
-void
-move_to_back(gbstd::execution&  exec, ww::company*  company) noexcept
-{
-  company->move_to_back(4);
 
   ++exec;
 }
@@ -78,7 +61,7 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
     {
       int  damage_amount = damage_rand();
 
-      ctx->m_notifiers.emplace_back(target.get_current_position(),sf("%4d",damage_amount));
+      ctx->m_notifiers.emplace_back(target.get_offset(),target.get_current_position(),sf("%4d",damage_amount));
 
       target.get_variable().add_hp(-damage_amount);
 
@@ -86,10 +69,6 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
       target.get_process().push({
         {enable_blink,&target,true},
-        {move_to_back,&target,true},
-        {move_to_back,&target,true},
-        {move_to_advance,&target,true},
-        {move_to_advance,&target,true},
         {disable_blink,&target,true}});
 
 
@@ -101,7 +80,7 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
   else
     {
-      ctx->m_notifiers.emplace_back(target.get_current_position(),"ミス!");
+      ctx->m_notifiers.emplace_back(target.get_offset(),target.get_current_position(),"ミス!");
     }
 
 
@@ -147,6 +126,7 @@ battle_context::
 fight(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
 START:
+/*
     if(gbstd::g_input.test_n())
     {
       exec.push({{wait_for_all,ctx,true},
@@ -157,6 +137,7 @@ START:
 
       return;
     }
+*/
 
 
   auto  actor = ctx->get_company_by_ap();
@@ -175,8 +156,6 @@ START:
 
       auto  n = ctx->get_companies_by_side(opposite_side,std::begin(buf),std::end(buf));
 
-//      auto  n = opponent->get_companys_by_position(front_pos,buf,8);
-
         if(n >= 1)
         {
           rand.reset(0,n-1);
@@ -188,12 +167,8 @@ START:
           ctx->m_act_context.m_company = actor;
 
           actor->get_process().push({{  set_white,&ctx->m_act_context,true},
-                                 {unset_white,&ctx->m_act_context,true},
-                                 {move_to_advance,actor,true},
-                                 {move_to_advance,actor,true},
-                                 {move_to_back,actor,true},
-                                 {move_to_back,actor,true},
-                               });
+                                     {unset_white,&ctx->m_act_context,true},
+                                   });
 
           exec.replace({{wait_for_all,ctx,true},
                         {judge_hit,ctx},
@@ -286,30 +261,11 @@ wait_for_message(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
 void
 battle_context::
-start_time(gbstd::execution&  exec, battle_context*  ctx) noexcept
-{
-//  ctx->m_time_add_amount.set(80);
-
-  ++exec;
-}
-
-
-void
-battle_context::
-stop_time(gbstd::execution&  exec, battle_context*  ctx) noexcept
-{
-//  ctx->m_time_add_amount.set(0);
-
-  ++exec;
-}
-
-
-void
-battle_context::
 wait_for_players(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
     if(!ctx->m_number_of_playing_companies)
     {
+report;
       ++exec;
     }
 }

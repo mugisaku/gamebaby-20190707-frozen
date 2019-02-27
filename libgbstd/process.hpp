@@ -60,11 +60,11 @@ execution_entry
   constexpr execution_entry(const char*  name, void(*cb)(execution&,T*), T*  data, stop_sign  ss=false) noexcept:
   m_nameptr(cast(name)), m_callback(cast(cb)), m_data(cast(data)), m_stop_sign(ss? 1:0){}
 
-  constexpr const char*         get_name()      const noexcept{return m_nameptr? reinterpret_cast<const char*>(m_nameptr):"";}
-  constexpr execution_callback  get_callback()  const noexcept{return reinterpret_cast<execution_callback>(m_callback);}
-  constexpr void*               get_data()      const noexcept{return reinterpret_cast<void*>(m_data);}
-  constexpr stop_sign           get_stop_sign() const noexcept{return stop_sign(m_stop_sign);}
+  constexpr const char*  get_name()      const noexcept{return m_nameptr? reinterpret_cast<const char*>(m_nameptr):"";}
+  constexpr stop_sign    get_stop_sign() const noexcept{return stop_sign(m_stop_sign);}
 
+  execution_callback  get_callback()  const noexcept{return reinterpret_cast<execution_callback>(m_callback);}
+  void*               get_data()      const noexcept{return reinterpret_cast<void*>(m_data);}
 };
 
 

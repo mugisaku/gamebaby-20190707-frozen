@@ -4,6 +4,7 @@
 
 #include"libww/ww_entry.hpp"
 #include"libww/ww_bar.hpp"
+#include<cstring>
 
 
 namespace ww{
@@ -134,6 +135,109 @@ constexpr int  g_column_height = g_cell_height*6;
 
 
 
+enum class
+company_event_kind
+{
+  null,
+  stop,
+  move,
+    set_blink,
+  unset_blink,
+    set_white,
+  unset_white,
+
+};
+
+
+namespace company_events{
+struct
+stop
+{
+  uint32_t  m_delay;
+
+  constexpr stop(uint32_t  delay=0) noexcept: m_delay(delay){}
+
+  constexpr uint32_t  get_delay() const noexcept{return m_delay;}
+
+};
+struct   set_blink{};
+struct unset_blink{};
+struct   set_white{};
+struct unset_white{};
+struct
+move
+{
+  uint32_t  m_count;
+  uint32_t  m_delay;
+
+  gbstd::fixed_t  m_x_increment;
+  gbstd::fixed_t  m_y_increment;
+
+  constexpr move(uint32_t  count=0, uint32_t  delay=0, gbstd::fixed_t  x_inc=0, gbstd::fixed_t  y_inc=0) noexcept:
+  m_count(count), m_delay(delay), m_x_increment(x_inc), m_y_increment(y_inc){}
+
+  constexpr const uint32_t&  get_delay() const noexcept{return m_delay;}
+  constexpr const uint32_t&  get_count() const noexcept{return m_count;}
+
+  constexpr const gbstd::fixed_t&  get_x_increment() const noexcept{return m_x_increment;}
+  constexpr const gbstd::fixed_t&  get_y_increment() const noexcept{return m_y_increment;}
+
+};
+}
+
+
+union
+company_event_data
+{
+  company_events::stop  m_stop;
+  company_events::move  m_move;
+
+  company_event_data() noexcept{}
+  constexpr company_event_data(company_events::stop  stp) noexcept: m_stop(stp){}
+  constexpr company_event_data(company_events::move  mov) noexcept: m_move(mov){}
+
+};
+
+
+class
+company_event
+{
+  company_event_kind  m_kind;
+  company_event_data  m_data;
+
+public:
+  company_event() noexcept: m_kind(company_event_kind::null){}
+  constexpr company_event(company_events::stop  stp) noexcept: m_kind(company_event_kind::stop), m_data(stp){}
+  constexpr company_event(company_events::move  mov) noexcept: m_kind(company_event_kind::move), m_data(mov){}
+  company_event(company_events::set_blink)   noexcept: m_kind(company_event_kind::set_blink  ){}
+  company_event(company_events::unset_blink) noexcept: m_kind(company_event_kind::unset_blink){}
+  company_event(company_events::set_white)   noexcept: m_kind(company_event_kind::set_white  ){}
+  company_event(company_events::unset_white) noexcept: m_kind(company_event_kind::unset_white){}
+
+  company_event&  operator=(const company_event&  rhs) noexcept
+  {
+    std::memcpy(this,&rhs,sizeof(*this));
+
+    return *this;
+  }
+
+  const company_event_kind&  get_kind() const noexcept{return m_kind;}
+  const company_event_data&  get_data() const noexcept{return m_data;}
+
+  bool  is_null() const noexcept{return m_kind == company_event_kind::null;}
+  bool  is_stop() const noexcept{return m_kind == company_event_kind::stop;}
+  bool  is_move() const noexcept{return m_kind == company_event_kind::move;}
+  bool  is_set_blink()   const noexcept{return m_kind == company_event_kind::set_blink;}
+  bool  is_unset_blink() const noexcept{return m_kind == company_event_kind::unset_blink;}
+  bool  is_set_white()   const noexcept{return m_kind == company_event_kind::set_white;}
+  bool  is_unset_white() const noexcept{return m_kind == company_event_kind::unset_white;}
+
+};
+
+
+using real_point = gbstd::basic_point<gbstd::fixed_t>;
+
+
 class
 company
 {
@@ -159,39 +263,37 @@ company
 
   gbstd::process  m_process;
 
-  struct motion_frame{
-    gbstd::point  m_pos;
+  std::vector<company_event>  m_event_queue;
 
-    uint32_t  m_delay;
+  int  m_event_index=0;
 
-    constexpr motion_frame(gbstd::point  pos, uint32_t  delay) noexcept:
-    m_pos(pos), m_delay(delay){}
+  company_event  m_current_event;
 
-  };
+  uint32_t  m_event_next_time;
+  uint32_t  m_event_counter;
 
-  std::vector<motion_frame>  m_motion_frames;
 
-  int  m_motion_frame_index=0;
+  real_point  m_offset;
 
-  gbstd::point  m_offset;
-
-  gbstd::point  m_backup_point;
-  gbstd::point  m_back_point;
-  gbstd::point  m_front_point;
+  real_point  m_backup_point;
+  real_point  m_back_point;
+  real_point  m_front_point;
  
-  gbstd::point  m_name_point;
-  gbstd::point  m_hp_point;
+  real_point  m_name_point;
+  real_point  m_hp_point;
 
-  gbstd::point  m_current_pos;
+  real_point  m_current_pos;
 
   bar  m_hp_bar;
 
   play_counter  m_play_counter;
 
-  static void  step_animation(uint32_t&  delay, company*  c) noexcept;
+  int  m_render_counter=0;
+
+  static void  step_animation(gbstd::task_control&  ctrl, company*  c) noexcept;
 
   static void  render(const company&  c, const gbstd::canvas&  cv) noexcept;
-  static void   drive(uint32_t&  delay, const company*  c) noexcept;
+  static void   drive(gbstd::task_control&  ctrl, const company*  c) noexcept;
 
 public:
   company(int&  counter) noexcept;
@@ -201,19 +303,23 @@ public:
   void    set_hp_bar(bar&  hp_bar) noexcept{m_hp_bar = std::ref(hp_bar);}
   void  reset_hp_bar() noexcept;
 
-  void  clear_motion() noexcept{m_motion_frames.clear();}
-  void  rewind_motion() noexcept;
-  void  add_motion(gbstd::point  dst, int  number_of_frames, uint32_t  ms) noexcept;
-  void    pause_motion() noexcept;
-  void  unpause_motion() noexcept;
+  void  add_absolute_motion(real_point  dst, int  number_of_frames, uint32_t  ms) noexcept;
+  void  add_relative_motion(real_point  off, int  number_of_frames, uint32_t  ms) noexcept;
 
-  bool  is_motion_finished() const noexcept{return m_status.test(flags::motion_finished);}
+  void  add_jump_motion() noexcept;
+  void  add_attack_motion() noexcept;
+  void  add_damage_motion() noexcept;
 
-  const gbstd::point&  get_backup_point() const noexcept{return m_backup_point;}
-  const gbstd::point&  get_back_point()   const noexcept{return m_back_point;}
-  const gbstd::point&  get_front_point()  const noexcept{return m_front_point;}
+  void  clear_event_queue() noexcept;
 
-  bool  is_surviving() const noexcept{return m_original && m_variable.get_hp();}
+  template<typename  T>
+  void  push(T  t) noexcept{m_event_queue.emplace_back(t);}
+
+  const real_point&  get_backup_point() const noexcept{return m_backup_point;}
+  const real_point&  get_back_point()   const noexcept{return m_back_point;}
+  const real_point&  get_front_point()  const noexcept{return m_front_point;}
+
+  bool  is_surviving() const noexcept{return m_variable.get_hp();}
 
   void  set_y_position(int  v) noexcept{m_current_pos.y  = v;}
   void  add_y_position(int  v) noexcept{m_current_pos.y += v;}
@@ -228,27 +334,88 @@ public:
   void  set_ap(int  v) noexcept{m_ap  = v;}
   void  add_ap(int  v) noexcept{m_ap += v;}
 
-  entry&  get_variable() noexcept{return m_variable;}
+        entry&  get_variable()       noexcept{return m_variable;}
+  const entry&  get_variable() const noexcept{return m_variable;}
 
   void        set_tag(battle_side  side, int  i, gbstd::color  color)       noexcept;
   const tag&  get_tag(                                              ) const noexcept{return m_tag;}
 
-  void                 set_offset(gbstd::point  off)       noexcept{       m_offset = off;}
-  const gbstd::point&  get_offset(                 ) const noexcept{return m_offset      ;}
+  void               set_offset(real_point  off)       noexcept{       m_offset = off;}
+  const real_point&  get_offset(               ) const noexcept{return m_offset      ;}
 
         gbstd::process&  get_process()       noexcept{return m_process;}
   const gbstd::process&  get_process() const noexcept{return m_process;}
 
-  gbstd::point  get_current_position() const noexcept{return m_current_pos;}
+  const real_point&  get_current_position() const noexcept{return m_current_pos;}
 
   void  move_to_advance(int  n) noexcept{m_current_pos.x += m_tag.is_left()?  n:-n;}
   void  move_to_back(   int  n) noexcept{m_current_pos.x += m_tag.is_left()? -n: n;}
 
-  void  reset(           ) noexcept;
-  void  reset(entry&  org) noexcept;
+  void  reset() noexcept;
+
+  void  set_entry(entry&  org) noexcept;
 
   void  startup() noexcept;
   void  cleanup() noexcept;
+
+};
+
+
+template<typename  T, int  N>
+class
+filtering_table
+{
+  T*  m_buffer[N];
+
+  int  m_number;
+
+public:
+  filtering_table() noexcept: m_number(0){}
+
+  template<typename  IT>
+  filtering_table(IT  begin_, IT  end_) noexcept{assign(begin_,end_);}
+
+  template<typename  IT>
+  filtering_table&  assign(IT  begin_, IT  end_) noexcept
+  {
+    m_number = 0;
+
+      while(begin_ != end_)
+      {
+        push(&*begin_++);
+      }
+
+
+    return *this;
+  }
+
+  template<typename  TESTER>
+  int  filter(TESTER  tester) noexcept
+  {
+    filtering_table  tmp(*this);
+
+    m_number = 0;
+
+      for(auto  ptr: tmp)
+      {
+          if(tester(*ptr))
+          {
+            push(ptr);
+          }
+      }
+
+
+    return m_number;
+  }
+
+  T&  operator[](int  i) const noexcept{return *m_buffer[i];}
+
+  T**  begin() noexcept{return &m_buffer[       0];}
+  T**    end() noexcept{return &m_buffer[m_number];}
+
+  void  push(T*  t) noexcept{m_buffer[m_number++] = t;}
+
+  int  size() const noexcept{return m_number;}
 
 };
 

@@ -8,6 +8,24 @@ namespace gbstd{
 
 
 
+class
+control: public task_control
+{
+public:
+  using task_control::task_control;
+
+  void  set_delay(uint32_t&  delay) noexcept{m_delay = &delay;}
+
+  bool  is_alive() const noexcept{return m_delay;}
+
+};
+
+
+bool
+task_list::
+m_interruption_flag;
+
+
 task_list&
 task_list::
 assign(task_list&&  rhs) noexcept
@@ -42,14 +60,14 @@ clear() noexcept
 
   m_number_of_nodes = 0;
 
-  m_time            = 0;
-  m_time_add_amount = 0;
+  m_time            =                             0;
+  m_time_add_amount = get_default_time_add_amount();
 }
 
 
 void
 task_list::
-push(void  (*callback)(uint32_t&,void*), uint32_t  delay, void*  data) noexcept
+push(void  (*callback)(task_control&,void*), uint32_t  delay, void*  data) noexcept
 {
   auto  nd = new node;
 
@@ -70,7 +88,7 @@ push(void  (*callback)(uint32_t&,void*), uint32_t  delay, void*  data) noexcept
 
 namespace{
 void
-step(uint32_t&  delay, gbstd::process*  proc) noexcept
+step(task_control&  ctrl, gbstd::process*  proc) noexcept
 {
   proc->step();
 }
@@ -81,7 +99,7 @@ void
 task_list::
 push(uint32_t  delay, gbstd::process&  proc) noexcept
 {
-  push(reinterpret_cast<void(*)(uint32_t&,void*)>(step),delay,&proc);
+  push(reinterpret_cast<void(*)(task_control&,void*)>(step),delay,&proc);
 }
 
 
@@ -89,10 +107,14 @@ void
 task_list::
 process() noexcept
 {
+  m_interruption_flag = false;
+
   m_time += m_time_add_amount;
 
   node*     last = nullptr;
   node*  current = m_top;
+
+  control  ctrl(m_time);
 
     while(current)
     {
@@ -100,6 +122,12 @@ process() noexcept
 
         for(;;)
         {
+            if(m_interruption_flag)
+            {
+              goto QUIT;
+            }
+
+
             if(next_time > m_time)
             {
               current->m_next_time = next_time;
@@ -113,9 +141,11 @@ process() noexcept
 
           auto&  delay = current->m_delay;;
 
-          current->m_callback(delay,current->m_data);
+          ctrl.set_delay(delay);
 
-            if(!delay)
+          current->m_callback(ctrl,current->m_data);
+
+            if(!delay || !ctrl.is_alive())
             {
               auto  next = current->m_next_node;
 
@@ -139,6 +169,7 @@ process() noexcept
     }
 
 
+QUIT:
     if(!m_number_of_nodes)
     {
       m_top = nullptr;
@@ -159,108 +190,92 @@ operator++() noexcept
 
 
 namespace{
-std::vector<task_list>  g_major_task_list_stack;
-std::vector<task_list>  g_minor_task_list_stack;
+task_list*  g_major_task_list[16];
+task_list*  g_minor_task_list[16];
 
-std::vector<std::vector<painter>>  g_major_painter_list_stack;
-std::vector<std::vector<painter>>  g_minor_painter_list_stack;
+task_list**  g_major_task_list_ptr = g_major_task_list;
+task_list**  g_minor_task_list_ptr = g_minor_task_list;
 
-
-template<typename  T, typename  U>
-U&
-go_next(T&  stack, U&&  element) noexcept
-{
-  stack.emplace_back(std::move(element));
-
-  element.clear();
-
-  return element;
-}
+painter_list*  g_major_painter_list;
+painter_list*  g_minor_painter_list;
 
 
-template<typename  T, typename  U>
-void
-go_back(T&  stack, U&  element) noexcept
-{
-    if(stack.size())
-    {
-      element = std::move(stack.back());
-
-      stack.pop_back();
-    }
-}
-
-
-uint32_t  g_default_time_add_amount=80;
+uint32_t  g_default_time_add_amount=160;
 
 
 }
-
-
-task_list  g_major_task_list;
-task_list  g_minor_task_list;
-
-std::vector<painter>  g_major_painter_list;
-std::vector<painter>  g_minor_painter_list;
 
 
 void             set_default_time_add_amount(uint32_t  a) noexcept{       g_default_time_add_amount = a;}
 const uint32_t&  get_default_time_add_amount(           ) noexcept{return g_default_time_add_amount    ;}
 
 
-task_list&
-go_next_major_task_list() noexcept
+task_list&  get_major_task_list() noexcept{return **g_major_task_list_ptr;}
+task_list&  get_minor_task_list() noexcept{return **g_minor_task_list_ptr;}
+
+
+void
+push_major_task_list(task_list&  ls) noexcept
 {
-  auto&  e = go_next(g_major_task_list_stack,std::move(g_major_task_list));
+  *++g_major_task_list_ptr = &ls;
 
-  g_major_task_list.set_time_add_amount(g_default_time_add_amount);
-
-  return e;
+  task_list::interrupt();
 }
 
 
-task_list&
-go_next_minor_task_list() noexcept
+void
+push_minor_task_list(task_list&  ls) noexcept
 {
-  auto&  e = go_next(g_minor_task_list_stack,std::move(g_minor_task_list));
+  *++g_minor_task_list_ptr = &ls;
 
-  g_minor_task_list.set_time_add_amount(g_default_time_add_amount);
-
-  return e;
+  task_list::interrupt();
 }
 
 
-void  go_back_major_task_list() noexcept{go_back(g_major_task_list_stack,g_major_task_list);}
-void  go_back_minor_task_list() noexcept{go_back(g_minor_task_list_stack,g_minor_task_list);}
+void  pop_major_task_list() noexcept{--g_major_task_list_ptr;}
+void  pop_minor_task_list() noexcept{--g_minor_task_list_ptr;}
 
+painter_list*  get_major_painter_list() noexcept{return g_major_painter_list;}
+painter_list*  get_minor_painter_list() noexcept{return g_minor_painter_list;}
 
-std::vector<painter>&  go_next_major_painter_list() noexcept{return go_next(g_major_painter_list_stack,std::move(g_major_painter_list));}
-std::vector<painter>&  go_next_minor_painter_list() noexcept{return go_next(g_minor_painter_list_stack,std::move(g_minor_painter_list));}
-
-void  go_back_major_painter_list() noexcept{go_back(g_major_painter_list_stack,g_major_painter_list);}
-void  go_back_minor_painter_list() noexcept{go_back(g_minor_painter_list_stack,g_minor_painter_list);}
+void  set_major_painter_list(painter_list*  ls) noexcept{g_major_painter_list = ls;}
+void  set_minor_painter_list(painter_list*  ls) noexcept{g_minor_painter_list = ls;}
 
 
 void
 process_task_lists() noexcept
 {
-  g_major_task_list.process();
-  g_minor_task_list.process();
+    if(*g_major_task_list_ptr)
+    {
+      (*g_major_task_list_ptr)->process();
+    }
+
+
+    if(*g_minor_task_list_ptr)
+    {
+      (*g_minor_task_list_ptr)->process();
+    }
 }
 
 
 void
 render_painter_lists(const canvas&  cv) noexcept
 {
-    for(auto&  p: g_major_painter_list)
+    if(g_major_painter_list)
     {
-      p(cv);
+        for(auto&  p: *g_major_painter_list)
+        {
+          p(cv);
+        }
     }
 
 
-    for(auto&  p: g_minor_painter_list)
+    if(g_minor_painter_list)
     {
-      p(cv);
+        for(auto&  p: *g_minor_painter_list)
+        {
+          p(cv);
+        }
     }
 }
 

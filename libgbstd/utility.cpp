@@ -214,7 +214,7 @@ random_device;
 
 
 std::default_random_engine
-random_number_engine;
+random_number_engine(random_device());
 
 
 

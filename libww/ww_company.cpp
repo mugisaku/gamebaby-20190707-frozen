@@ -51,36 +51,23 @@ reset_hp_bar() noexcept
 
 void
 company::
-pause_motion() noexcept
+clear_event_queue() noexcept
 {
-  m_status.set(flags::motion_paused);
+  m_play_counter.cancel();
+
+  m_status.set(flags::motion_finished);
+
+  m_event_index = 0;
+
+  m_event_queue.clear();
+
+  m_current_event = company_event();
 }
 
 
 void
 company::
-unpause_motion() noexcept
-{
-  m_status.unset(flags::motion_paused);
-}
-
-
-void
-company::
-rewind_motion() noexcept
-{
-  m_motion_frame_index = 0;
-
-    if(m_status.test(flags::motion_finished))
-    {
-      m_status.unset(flags::motion_finished);
-    }
-}
-
-
-void
-company::
-add_motion(gbstd::point  dst, int  number_of_frames, uint32_t  ms) noexcept
+add_absolute_motion(real_point  dst, int  number_of_frames, uint32_t  ms) noexcept
 {
     if(number_of_frames <= 0)
     {
@@ -99,31 +86,103 @@ add_motion(gbstd::point  dst, int  number_of_frames, uint32_t  ms) noexcept
     }
 
 
-  double  x_diff = std::abs(dst.x-m_current_pos.x);
-  double  y_diff = std::abs(dst.y-m_current_pos.y);
+  auto  x_diff = (dst.x-m_current_pos.x);
+  auto  y_diff = (dst.y-m_current_pos.y);
 
-  auto  x_u = x_diff/number_of_frames;
-  auto  y_u = y_diff/number_of_frames;
+  auto  x_u = x_diff.abs()/number_of_frames;
+  auto  y_u = y_diff.abs()/number_of_frames;
 
     if(m_current_pos.x > dst.x){x_u = -x_u;}
     if(m_current_pos.y > dst.y){y_u = -y_u;}
 
 
-  double  x = m_current_pos.x;
-  double  y = m_current_pos.y;
+  m_event_queue.emplace_back(company_events::move(number_of_frames,delay_u,x_u,y_u));
 
-    while(number_of_frames--)
+  m_play_counter.apply();
+}
+
+
+void
+company::
+add_relative_motion(real_point  off, int  number_of_frames, uint32_t  ms) noexcept
+{
+    if(number_of_frames <= 0)
     {
-      x += x_u;
-      y += y_u;
-
-      gbstd::point  pt(x,y);
-
-      m_motion_frames.emplace_back(pt,delay_u);
+      report;
+      return;
     }
 
 
+  auto  delay_u = ms/number_of_frames;
+
+    if(!delay_u)
+    {
+      m_current_pos += off;
+
+      return;
+    }
+
+
+  auto  x_u = off.x/number_of_frames;
+  auto  y_u = off.y/number_of_frames;
+
+  m_event_queue.emplace_back(company_events::move(number_of_frames,delay_u,x_u,y_u));
+
   m_play_counter.apply();
+}
+
+
+void
+company::
+add_jump_motion() noexcept
+{
+  add_relative_motion({0,-16},8,200);
+  add_relative_motion({0, 16},8,200);
+}
+
+
+void
+company::
+add_attack_motion() noexcept
+{
+  push(company_events::set_white());
+  push(company_events::stop(80));
+  push(company_events::unset_white());
+
+    if(m_tag.is_left())
+    {
+      add_relative_motion({ 16,0},8,200);
+      add_relative_motion({-16,0},8,200);
+    }
+
+  else
+    {
+      add_relative_motion({-16,0},8,200);
+      add_relative_motion({ 16,0},8,200);
+    }
+}
+
+
+void
+company::
+add_damage_motion() noexcept
+{
+  push(company_events::set_blink());
+
+    if(m_tag.is_left())
+    {
+      add_relative_motion({-16,0},8,200);
+      add_relative_motion({ 16,0},8,200);
+    }
+
+  else
+    {
+      add_relative_motion({ 16,0},8,200);
+      add_relative_motion({-16,0},8,200);
+    }
+
+
+  push(company_events::unset_blink());
 }
 
 
@@ -138,12 +197,12 @@ set_tag(battle_side  side, int  i, gbstd::color  color) noexcept
   constexpr int  name_w = (gbstd::g_font_width*(8+6));
   constexpr int   bar_w = 256;
 
-  m_front_point  = gbstd::point(-((g_center_space_width/2)+(g_cell_width/2)),y);
-  m_back_point   = m_front_point-gbstd::point(g_cell_width,0);
-  m_backup_point =  m_back_point-gbstd::point(g_cell_width,0);
-  m_name_point   =  m_back_point+gbstd::point(-64,0);
+  m_front_point  = real_point(-((g_center_space_width/2)+(g_cell_width/2)),y);
+  m_back_point   = m_front_point-real_point(g_cell_width,0);
+  m_backup_point =  m_back_point-real_point(g_cell_width,0);
+  m_name_point   =  m_back_point+real_point(-64,0);
 
-  m_hp_bar.set_position(m_back_point+gbstd::point(-64,gbstd::g_font_height));
+  m_hp_bar.set_position(m_back_point+real_point(-64,gbstd::g_font_height));
 
     if(m_tag.is_right())
     {
@@ -182,12 +241,12 @@ reset() noexcept
 
   m_status.clear();
 
+  clear_event_queue();
+
   hp_bar.set_target_length(0);
   hp_bar.set_length(       0);
 
   hp_bar.set_offset(m_offset);
-
-  clear_motion();
 
     if(m_original)
     {
@@ -206,7 +265,7 @@ reset() noexcept
                 : m_variable.is_back_position()? m_back_point
                 :                                m_backup_point;
 
-      add_motion(pt,32,1000);
+      add_absolute_motion(pt,32,1000);
 
       m_status.set(flags::motion_valid);
     }
@@ -215,11 +274,9 @@ reset() noexcept
 
 void
 company::
-reset(entry&  org) noexcept
+set_entry(entry&  org) noexcept
 {
   m_original = &org;
-
-  reset();
 }
 
 
@@ -227,13 +284,15 @@ void
 company::
 startup() noexcept
 {
-  auto&  tskls = gbstd::g_major_task_list;
-  auto&  pails = gbstd::g_major_painter_list;
+  auto&  tskls = gbstd::get_major_task_list();
+  auto&  pails = *gbstd::get_major_painter_list();
 
   tskls.push(step_animation,20,this);
-  pails.emplace_back(*this,render);
+  pails.emplace_back(*this,render,&m_render_counter);
 
   m_hp_bar.startup();
+
+  reset();
 }
 
 

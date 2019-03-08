@@ -10,42 +10,6 @@ namespace ww{
 
 
 void
-enable_blink(gbstd::execution&  exec, ww::company*  company) noexcept
-{
-  company->get_blink_context().enable();
-
-  ++exec;
-}
-
-
-void
-disable_blink(gbstd::execution&  exec, ww::company*  company) noexcept
-{
-  company->get_blink_context().disable();
-
-  ++exec;
-}
-
-
-void
-set_white(gbstd::execution&  exec, act_context*  ctx) noexcept
-{
-  ctx->m_company->set_white_flag();
-
-  ++exec;
-}
-
-
-void
-unset_white(gbstd::execution&  exec, act_context*  ctx) noexcept
-{
-  ctx->m_company->unset_white_flag();
-
-  ++exec;
-}
-
-
-void
 battle_context::
 judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
@@ -59,22 +23,22 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
     if(hit_rand() <= 8)
     {
+      sdl::beep(40);
+
       int  damage_amount = damage_rand();
 
       ctx->m_notifiers.emplace_back(target.get_offset(),target.get_current_position(),sf("%4d",damage_amount));
+
+      target.add_damage_motion();
 
       target.get_variable().add_hp(-damage_amount);
 
       target.reset_hp_bar();
 
-      target.get_process().push({
-        {enable_blink,&target,true},
-        {disable_blink,&target,true}});
-
-
         if(target.get_variable().get_hp() <= 0)
         {
           target.get_variable().set_hp(0);
+          target.set_ap(0);
         }
     }
 
@@ -125,6 +89,17 @@ void
 battle_context::
 fight(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
+  struct tester{
+    battle_side  m_side;
+
+    bool  operator()(const company&  c) const noexcept
+    {
+      return c.is_surviving() && (c.get_tag() == m_side);
+    }
+
+  };
+
+
 START:
 /*
     if(gbstd::g_input.test_n())
@@ -150,25 +125,23 @@ START:
 
       static gbstd::uniform_rand  rand;
 
-      company*  buf[12];
-
       auto  opposite_side = actor->get_tag().get_opposite();
 
-      auto  n = ctx->get_companies_by_side(opposite_side,std::begin(buf),std::end(buf));
+      auto&  table = ctx->reset_filtering_table();
+
+      auto  n = table.filter(tester{opposite_side});
 
         if(n >= 1)
         {
           rand.reset(0,n-1);
 
-          auto  target = buf[rand()];
+          auto&  target = table[rand()];
 
-          ctx->m_attack_context.reset(*actor,*target);
+          ctx->m_attack_context.reset(*actor,target);
 
           ctx->m_act_context.m_company = actor;
 
-          actor->get_process().push({{  set_white,&ctx->m_act_context,true},
-                                     {unset_white,&ctx->m_act_context,true},
-                                   });
+          actor->add_attack_motion();
 
           exec.replace({{wait_for_all,ctx,true},
                         {judge_hit,ctx},
@@ -192,6 +165,17 @@ void
 battle_context::
 branch_by_judge(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
+  struct tester{
+    battle_side  m_side;
+
+    bool  operator()(const company&  c) const noexcept
+    {
+      return c.is_surviving() && (c.get_tag() == m_side);
+    }
+
+  };
+
+
   auto  res = ctx->judge();
 
     if(res == battle_context::result::continuing)
@@ -202,19 +186,41 @@ branch_by_judge(gbstd::execution&  exec, battle_context*  ctx) noexcept
     }
 
 
-/*
-  exec.replace({{wait_for_all,ctx,true},
-                {start_battle,ctx,true},
+  exec.replace({
+                {wait_for_players,ctx,true},
+                {exit,ctx,true},
                });
-*/
+
     if(res == battle_context::result::left_won)
     {
+      auto&  table = ctx->reset_filtering_table();
+
+      table.filter(tester{battle_sides::left});
+
+        for(auto&  c: table)
+        {
+          c->add_jump_motion();
+          c->add_jump_motion();
+        }
+
+
       ctx->push_message("ひだりぐんの　しょうり\n",gbstd::colors::white);
     }
 
   else
     if(res == battle_context::result::right_won)
     {
+      auto&  table = ctx->reset_filtering_table();
+
+      table.filter(tester{battle_sides::right});
+
+        for(auto&  c: table)
+        {
+          c->add_jump_motion();
+          c->add_jump_motion();
+        }
+
+
       ctx->push_message("みぎぐんの　しょうり\n",gbstd::colors::white);
     }
 
@@ -222,9 +228,6 @@ branch_by_judge(gbstd::execution&  exec, battle_context*  ctx) noexcept
     {
       ctx->push_message("りょうぐん　はいぼく\n",gbstd::colors::white);
     }
-
-
-  ++exec;
 }
 
 
@@ -265,7 +268,6 @@ wait_for_players(gbstd::execution&  exec, battle_context*  ctx) noexcept
 {
     if(!ctx->m_number_of_playing_companies)
     {
-report;
       ++exec;
     }
 }
@@ -279,6 +281,16 @@ wait_for_press_p_key(gbstd::execution&  exec, battle_context*  ctx) noexcept
     {
       ++exec;
     }
+}
+
+
+void
+battle_context::
+exit(gbstd::execution&  exec, battle_context*  ctx) noexcept
+{
+  ctx->cleanup();
+
+  ++exec;
 }
 
 

@@ -6,7 +6,6 @@ set(SOURCES
   parsers/tokenizer__skip.cpp
   parsers/tokenizer__read_number.cpp
   characters/unicode.cpp
-  characters/point.cpp
   characters/font.cpp
   characters/text.cpp
   characters/typewriter.cpp
@@ -34,6 +33,9 @@ set(SOURCES
   file_ops/riff_chunk.cpp
   file_ops/riff_subchunk_view.cpp
   file_ops/wave.cpp
+  sounds/sound_device.cpp
+  sounds/square_wave_device.cpp
+  sounds/noise_device.cpp
   stage.cpp
   process.cpp
   utility.cpp

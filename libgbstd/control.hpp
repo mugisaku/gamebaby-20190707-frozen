@@ -13,47 +13,49 @@ namespace gbstd{
 
 
 
+template<typename  T>
 struct
-point
+basic_point
 {
-  int  x;
-  int  y;
+  T  x;
+  T  y;
 
-  constexpr point(int  x_=0, int  y_=0) noexcept:
+  constexpr basic_point(T  x_=0, T  y_=0) noexcept:
   x(x_),
   y(y_){}
 
 
-  constexpr bool  operator==(point  rhs) const noexcept
+  constexpr bool  operator==(basic_point  rhs) const noexcept
   {
     return(x == rhs.x) &&
           (y == rhs.y);
   }
 
-  constexpr bool  operator!=(point  rhs) const noexcept
+  constexpr bool  operator!=(basic_point  rhs) const noexcept
   {
     return(x != rhs.x) ||
           (y != rhs.y);
   }
 
-  constexpr point  operator+(point  rhs) const noexcept{return point(x+rhs.x,y+rhs.y);}
-  constexpr point  operator-(point  rhs) const noexcept{return point(x-rhs.x,y-rhs.y);}
-  constexpr point  operator*(point  rhs) const noexcept{return point(x*rhs.x,y*rhs.y);}
-  constexpr point  operator/(point  rhs) const noexcept{return point(x/rhs.x,y/rhs.y);}
-  constexpr point  operator%(point  rhs) const noexcept{return point(x%rhs.x,y%rhs.y);}
-  constexpr point  operator-() const noexcept{return point(-x,-y);}
+  constexpr basic_point  operator+(basic_point  rhs) const noexcept{return basic_point(x+rhs.x,y+rhs.y);}
+  constexpr basic_point  operator-(basic_point  rhs) const noexcept{return basic_point(x-rhs.x,y-rhs.y);}
+  constexpr basic_point  operator*(basic_point  rhs) const noexcept{return basic_point(x*rhs.x,y*rhs.y);}
+  constexpr basic_point  operator/(basic_point  rhs) const noexcept{return basic_point(x/rhs.x,y/rhs.y);}
+  constexpr basic_point  operator%(basic_point  rhs) const noexcept{return basic_point(x%rhs.x,y%rhs.y);}
+  constexpr basic_point  operator-() const noexcept{return basic_point(-x,-y);}
 
-  point&  operator+=(point  rhs) noexcept;
-  point&  operator-=(point  rhs) noexcept;
-  point&  operator*=(point  rhs) noexcept;
-  point&  operator/=(point  rhs) noexcept;
-  point&  operator%=(point  rhs) noexcept;
+  basic_point&  operator+=(basic_point  rhs) noexcept{  x += rhs.x;  y += rhs.y;  return *this;}
+  basic_point&  operator-=(basic_point  rhs) noexcept{  x -= rhs.x;  y -= rhs.y;  return *this;}
+  basic_point&  operator*=(basic_point  rhs) noexcept{  x *= rhs.x;  y *= rhs.y;  return *this;}
+  basic_point&  operator/=(basic_point  rhs) noexcept{  x /= rhs.x;  y /= rhs.y;  return *this;}
+  basic_point&  operator%=(basic_point  rhs) noexcept{  x %= rhs.x;  y %= rhs.y;  return *this;}
 
-  void  print() const noexcept{printf("{x:%3d,y:%3d}",x,y);}
+  void  print() const noexcept{printf("{x:%3d,y:%3d}",static_cast<int>(x),static_cast<int>(y));}
 
 };
 
 
+using point = basic_point<int>;
 
 
 struct

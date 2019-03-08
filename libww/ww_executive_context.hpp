@@ -17,7 +17,8 @@ executive_context
   int  m_screen_width =0;
   int  m_screen_height=0;
 
-  gbstd::process  m_process;
+  gbstd::process      m_process;
+  gbstd::task_list  m_task_list;
 
   battle_context  m_battle_context;
 

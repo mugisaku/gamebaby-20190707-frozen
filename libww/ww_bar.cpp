@@ -33,8 +33,8 @@ void
 bar::
 startup() noexcept
 {
-  auto&  tskls = gbstd::g_major_task_list;
-  auto&  pails = gbstd::g_major_painter_list;
+  auto&  tskls =     gbstd::get_major_task_list();
+  auto&  pails = *gbstd::get_major_painter_list();
 
   tskls.push(drive,80,this);
   pails.emplace_back(*this,render);
@@ -65,7 +65,7 @@ render(const bar&  b, const gbstd::canvas&  cv) noexcept
 
 void
 bar::
-drive(uint32_t&  delay, bar*  b) noexcept
+drive(gbstd::task_control&  ctrl, bar*  b) noexcept
 {
     if(!b->m_frozen)
     {

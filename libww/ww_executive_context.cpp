@@ -37,15 +37,15 @@ executive_context::
 startup() noexcept
 {
   static entry  l_entries[] = {
-    {"ひだりぐんA",3000,ww::front_pos},
-    {"ひだりぐんB",3000,ww::front_pos},
-    {"ひだりぐんC",3000,ww::front_pos},
+    {"ひだりぐんA",1000,ww::front_pos},
+    {"ひだりぐんB",1000,ww::front_pos},
+    {"ひだりぐんC",1000,ww::front_pos},
   };
 
   static entry  r_entries[] = {
-    {"みぎぐんA",3000,ww::front_pos},
-    {"みぎぐんB",3000,ww::back_pos},
-    {"みぎぐんC",3000,ww::front_pos},
+    {"みぎぐんA",1000,ww::front_pos},
+    {"みぎぐんB",1000,ww::back_pos},
+    {"みぎぐんC",1000,ww::front_pos},
   };
 
 
@@ -67,7 +67,9 @@ startup() noexcept
                    });
 
 
-  gbstd::g_major_task_list.push(80,m_process);
+  m_task_list.push(80,m_process);
+
+  push_major_task_list(m_task_list);
 }
 
 

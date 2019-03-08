@@ -63,7 +63,12 @@ battle_context
   int  m_field_width =0;
   int  m_field_height=0;
 
+  gbstd::task_list     m_task_list;
+  gbstd::painter_list  m_painter_list;
+
   std::list<company>  m_company_list;
+
+  filtering_table<company,16>  m_filtering_table;
 
   int  m_number_of_left_companies =0;
   int  m_number_of_right_companies=0;
@@ -114,6 +119,8 @@ battle_context
 
   static void  wait_for_motion(gbstd::execution&  exec, battle_context*  ctx) noexcept;
 
+  static void  exit(gbstd::execution&  exec, battle_context*  ctx) noexcept;
+
 
   result  judge() const noexcept;
 
@@ -141,7 +148,8 @@ public:
   int  get_field_height() const noexcept{return m_field_height;}
 
   company*  get_company_by_ap() noexcept;
-  int       get_companies_by_side(battle_side  side, company**  begin, company**  end) noexcept;
+
+  filtering_table<company,16>&  reset_filtering_table() noexcept;
 
   void  push_entry(entry&  ent, battle_side  side, gbstd::color  color) noexcept;
 
@@ -158,7 +166,7 @@ public:
   void  startup() noexcept;
   void  cleanup() noexcept;
 
-  static void  drive(uint32_t&  delay, battle_context*  ctx) noexcept;
+  static void  drive(gbstd::task_control&  delay, battle_context*  ctx) noexcept;
   static void  render(const battle_context&  ctx, const gbstd::canvas&  cv) noexcept;
 
 };

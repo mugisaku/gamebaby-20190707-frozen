@@ -14,18 +14,18 @@ namespace ww{
 class
 notifier
 {
-  double  m_y_vector;
+  gbstd::fixed_t  m_y_vector;
 
-  double  m_x_pos;
-  double  m_y_pos;
+  gbstd::fixed_t  m_x_pos;
+  gbstd::fixed_t  m_y_pos;
 
-  gbstd::point  m_start_pos;
-  gbstd::point  m_offset;
+  real_point  m_start_pos;
+  real_point  m_offset;
 
   std::string  m_text;
 
 public:
-  notifier(gbstd::point  offset, gbstd::point  start_pos, const char*  s) noexcept;
+  notifier(real_point  offset, real_point  start_pos, const char*  s) noexcept;
 
   bool  is_halted() const noexcept{return m_text.empty();}
 

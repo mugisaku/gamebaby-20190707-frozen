@@ -45,8 +45,15 @@ void
 battle_context::
 startup() noexcept
 {
-  auto&  tskls = gbstd::go_next_major_task_list();
-  auto&  pails = gbstd::go_next_major_painter_list();
+  gbstd::push_major_task_list(m_task_list);
+
+  gbstd::set_major_painter_list(&m_painter_list);
+
+  auto&  tskls = m_task_list;
+  auto&  pails = m_painter_list;
+
+  tskls.clear();
+  pails.clear();
 
   pails.emplace_back(*this,render);
 
@@ -64,7 +71,7 @@ startup() noexcept
 
   m_result = result::continuing;
 
-  tskls.push(20,m_process);
+  tskls.push(80,m_process);
   tskls.push(drive,80,this);
   pails.emplace_back(*this,render);
 
@@ -84,8 +91,7 @@ cleanup() noexcept
     }
 
 
-  gbstd::go_back_major_task_list();
-  gbstd::go_back_major_painter_list();
+  gbstd::pop_major_task_list();
 }
 
 
@@ -107,9 +113,9 @@ push_entry(entry&  ent, battle_side  side, gbstd::color  color) noexcept
 
   c.set_tag(side,i++,color);
 
-  c.set_offset(offset);
+  c.set_offset({offset.x,offset.y});
 
-  c.reset(ent);
+  c.set_entry(ent);
 
   ++m_number_of_total_companies;
 }
@@ -145,7 +151,6 @@ judge() const noexcept
         }
     }
 
-
   return (l && r)? result::continuing
         :(l     )? result::left_won
         :(     r)? result::right_won
@@ -172,30 +177,11 @@ get_company_by_ap() noexcept
 }
 
 
-int
+filtering_table<company,16>&
 battle_context::
-get_companies_by_side(battle_side  side, company**  begin, company**  end) noexcept
+reset_filtering_table() noexcept
 {
-  int  n = 0;
-
-    for(auto&  c: m_company_list)
-    {
-        if(c.get_tag() == side)
-        {
-            if(begin >= end)
-            {
-              break;
-            }
-
-
-          *begin++ = &c;
-
-          ++n;
-        }
-    }
-
-
-  return n;
+  return m_filtering_table.assign(m_company_list.begin(),m_company_list.end());
 }
 
 
@@ -234,7 +220,7 @@ pump_text_all() noexcept
 
 void
 battle_context::
-drive(uint32_t&  delay, battle_context*  ctx) noexcept
+drive(gbstd::task_control&  ctrl, battle_context*  ctx) noexcept
 {
   auto  it = ctx->m_notifiers.begin();
 

@@ -9,7 +9,7 @@ namespace ww{
 
 
 notifier::
-notifier(gbstd::point  offset, gbstd::point  start_pos, const char*  s) noexcept:
+notifier(real_point  offset, real_point  start_pos, const char*  s) noexcept:
 m_y_vector(-8),
 m_x_pos(start_pos.x),
 m_y_pos(start_pos.y),
@@ -38,8 +38,8 @@ void
 notifier::
 render(const gbstd::canvas&  cv) const noexcept
 {
-  cv.draw_string(gbstd::colors::white,m_text.data(),m_offset.x+static_cast<int>(m_x_pos),
-                                                    m_offset.y+static_cast<int>(m_y_pos));
+  cv.draw_string(gbstd::colors::white,m_text.data(),m_offset.x+m_x_pos,
+                                                    m_offset.y+m_y_pos);
 }
 
 

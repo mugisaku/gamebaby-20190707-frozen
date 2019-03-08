@@ -73,9 +73,6 @@ main(int  argc, char**  argv)
   sdl::init(screen_w,screen_h,1.0);
   sdl::init_sound();
 
-  gbstd::go_next_major_task_list();
-  gbstd::go_next_minor_task_list();
-
   g_context.set_screen_size(screen_w,screen_h);
 
   g_context.startup();

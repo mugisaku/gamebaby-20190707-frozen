@@ -14,6 +14,7 @@
 namespace ww{
 
 
+using real_point = gbstd::basic_point<gbstd::fixed_t>;
 
 
 class
@@ -31,8 +32,8 @@ private:
 
   gbstd::fixed_t  m_increment=0;
 
-  gbstd::point  m_offset;
-  gbstd::point  m_pos;
+  real_point  m_offset;
+  real_point  m_pos;
 
   int  m_thickness=0;
 
@@ -43,7 +44,7 @@ private:
   mode  m_mode=mode::left_to_right;
 
   static void  render(const bar&  b, const gbstd::canvas&  cv) noexcept;
-  static void   drive(uint32_t&  delay, bar*  b) noexcept;
+  static void   drive(gbstd::task_control&  ctrl, bar*  b) noexcept;
 
 public:
   bar() noexcept{}
@@ -53,11 +54,11 @@ public:
   bool  is_left_to_right() const noexcept{return m_mode == mode::left_to_right;}
   bool  is_right_to_left() const noexcept{return m_mode == mode::right_to_left;}
 
-  void                 set_offset(gbstd::point  pt)       noexcept{       m_offset = pt;}
-  const gbstd::point&  get_offset(                ) const noexcept{return m_offset     ;}
+  void               set_offset(real_point  pt)       noexcept{       m_offset = pt;}
+  const real_point&  get_offset(              ) const noexcept{return m_offset     ;}
 
-  void                 set_position(gbstd::point  pt)       noexcept{       m_pos = pt;}
-  const gbstd::point&  get_position(                ) const noexcept{return m_pos     ;}
+  void               set_position(real_point  pt)       noexcept{       m_pos = pt;}
+  const real_point&  get_position(              ) const noexcept{return m_pos     ;}
 
   void        set_thickness(int  v)       noexcept{       m_thickness = v;}
   const int&  get_thickness(      ) const noexcept{return m_thickness    ;}

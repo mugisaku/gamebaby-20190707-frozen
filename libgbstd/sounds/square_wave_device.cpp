@@ -44,9 +44,22 @@ generate_for_time(uint32_t  milsec, sample_t*  buffer) noexcept
 
 void
 square_wave_device::
+check_frequency() noexcept
+{
+    if(m_status.test(flags::frequency_changed))
+    {
+      m_status.unset(flags::frequency_changed);
+
+      update_parameters();
+    }
+}
+
+
+void
+square_wave_device::
 generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer) noexcept
 {
-    while(num_samples)
+    while(num_samples && !is_slept())
     {
         if(m_low_phase)
         {
@@ -58,15 +71,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer) noexcep
                 {
                   put(-m_volume,*buffer++);
 
-                    if(process_fm())
-                    {
-                      update_parameters();
-                    }
-
-
-                    if(process_vm())
-                    {
-                    }
+                  check_frequency();
                 }
 
 
@@ -83,15 +88,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer) noexcep
                 {
                   put(-m_volume,*buffer++);
 
-                    if(process_fm())
-                    {
-                      update_parameters();
-                    }
-
-
-                    if(process_vm())
-                    {
-                    }
+                  check_frequency();
                 }
 
 
@@ -109,15 +106,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer) noexcep
                 {
                   put(m_volume,*buffer++);
 
-                    if(process_fm())
-                    {
-                      update_parameters();
-                    }
-
-
-                    if(process_vm())
-                    {
-                    }
+                  check_frequency();
                 }
 
 
@@ -134,15 +123,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer) noexcep
                 {
                   put(m_volume,*buffer++);
 
-                    if(process_fm())
-                    {
-                      update_parameters();
-                    }
-
-
-                    if(process_vm())
-                    {
-                    }
+                  check_frequency();
                 }
 
 

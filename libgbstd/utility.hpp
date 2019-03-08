@@ -226,6 +226,32 @@ std::string  make_string_from_file(const char*  filepath) noexcept;
 
 
 
+template<typename  T>
+class
+status_value
+{
+  T  m_data;
+
+public:
+  status_value(T  flag=0) noexcept: m_data(flag){}
+
+  void  clear() noexcept{m_data = 0;}
+
+  void  reverse(T  flag) noexcept
+  {
+      if(test(flag)){unset(flag);}
+    else            {  set(flag);}
+  }
+
+  void    set(T  flag) noexcept{m_data |=  flag;}
+  void  unset(T  flag) noexcept{m_data &= ~flag;}
+  bool   test(T  flag) const noexcept{return m_data&flag;}
+
+};
+
+
+
+
 class
 fixed_t
 {

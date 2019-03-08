@@ -83,29 +83,6 @@ public:
 
 
 class
-status_value
-{
-  uint32_t  m_data;
-
-public:
-  status_value(uint32_t  flag=0) noexcept: m_data(flag){}
-
-  void  clear() noexcept{m_data = 0;}
-
-  void  reverse(uint32_t  flag) noexcept
-  {
-      if(test(flag)){unset(flag);}
-    else            {  set(flag);}
-  }
-
-  void    set(uint32_t  flag) noexcept{m_data |=  flag;}
-  void  unset(uint32_t  flag) noexcept{m_data &= ~flag;}
-  bool   test(uint32_t  flag) const noexcept{return m_data&flag;}
-
-};
-
-
-class
 tag: public battle_side
 {
   int  m_index;
@@ -250,7 +227,7 @@ company
   };
 
 
-  status_value  m_status;
+  gbstd::status_value<int>  m_status;
 
   entry*  m_original;
   entry   m_variable;

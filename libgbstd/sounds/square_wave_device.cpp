@@ -8,16 +8,26 @@ namespace gbstd{
 
 
 
+square_wave_device&
+square_wave_device::
+assign(f32_t  freq, sample_t  vol)
+{
+  set_frequency(freq);
+  set_volume(    vol);
+
+  reset();
+
+  return *this;
+}
+
+
 void
 square_wave_device::
 reset() noexcept
 {
   sound_device::reset();
-
-  m_number_of_samples_per_high = static_cast<uint32_t>(m_number_of_samples_per_cycle/2);
-  m_number_of_samples_per_low  = static_cast<uint32_t>(m_number_of_samples_per_cycle/2);
-
-  m_number_of_remain_samples  = m_number_of_samples_per_high;
+wake();
+  update_parameters();
 
   m_low_phase = false;
 }
@@ -25,18 +35,22 @@ reset() noexcept
 
 void
 square_wave_device::
-update_parameters() noexcept
+update_parameters()
 {
-  m_number_of_samples_per_cycle = g_number_of_samples_per_second/m_frequency;
-
   m_number_of_samples_per_high = static_cast<uint32_t>(m_number_of_samples_per_cycle/2);
   m_number_of_samples_per_low  = static_cast<uint32_t>(m_number_of_samples_per_cycle/2);
+
+    if(!m_number_of_samples_per_high ||
+       !m_number_of_samples_per_low)
+    {
+      throw invalid_number_of_samples_per_cycle();
+    }
 }
 
 
 void
 square_wave_device::
-generate_for_time(uint32_t  milsec, sample_t*  buffer) noexcept
+generate_for_time(uint32_t  milsec, sample_t*  buffer)
 {
   generate_for_time(g_number_of_samples_per_millisecond*milsec,buffer);
 }
@@ -44,7 +58,7 @@ generate_for_time(uint32_t  milsec, sample_t*  buffer) noexcept
 
 void
 square_wave_device::
-check_frequency() noexcept
+check_frequency()
 {
     if(m_status.test(flags::frequency_changed))
     {
@@ -57,7 +71,7 @@ check_frequency() noexcept
 
 void
 square_wave_device::
-generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer) noexcept
+generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer)
 {
     while(num_samples && !is_slept())
     {

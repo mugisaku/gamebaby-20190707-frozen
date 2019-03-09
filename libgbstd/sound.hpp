@@ -24,6 +24,19 @@ get_number_of_samples_by_time(uint32_t  ms) noexcept
 }
 
 
+class invalid_frequency
+{const char*  what() const noexcept{return "invalid frequency";}};
+
+class invalid_volume
+{const char*  what() const noexcept{return "invalid volume";}};
+
+class invalid_number_of_samples_per_cycle
+{const char*  what() const noexcept{return "invalid number of samples per cycle";}};
+
+class invalid_number_of_steps
+{const char*  what() const noexcept{return "invalid number of steps";}};
+
+
 //vm is Volume    Modulation音量変調
 //fm is Frequency Modulation周波数変調
 class
@@ -38,10 +51,10 @@ protected:
 
 
   struct flags{
-    static constexpr int              slept = 1;
-    static constexpr int              muted = 2;
-    static constexpr int  frequency_changed = 4;
-    static constexpr int     volume_changed = 8;
+    static constexpr int              slept =  1;
+    static constexpr int              muted =  2;
+    static constexpr int  frequency_changed =  4;
+    static constexpr int     volume_changed =  8;
   };
 
 
@@ -58,9 +71,9 @@ protected:
 
   f32_t  m_fm_increment=0;
 
-  uint32_t  m_number_of_samples_per_fm_step;
-  uint32_t  m_number_of_remain_samples_for_fm_step;
-  uint32_t  m_number_of_fm_steps;
+  uint32_t  m_number_of_samples_per_fm_step=0;
+  uint32_t  m_number_of_remain_samples_for_fm_step=0;
+  uint32_t  m_number_of_fm_steps=0;
 
   void  process_fm() noexcept;
 
@@ -73,9 +86,9 @@ protected:
 
   sample_t  m_vm_increment=0;
 
-  uint32_t  m_number_of_samples_per_vm_step;
-  uint32_t  m_number_of_remain_samples_for_vm_step;
-  uint32_t  m_number_of_vm_steps;
+  uint32_t  m_number_of_samples_per_vm_step=0;
+  uint32_t  m_number_of_remain_samples_for_vm_step=0;
+  uint32_t  m_number_of_vm_steps=0;
 
   void  process_vm() noexcept;
 
@@ -87,30 +100,35 @@ protected:
   void  put(sample_t  src, sample_t&  dst) noexcept;
 
 public:
+  sound_device() noexcept{sleep();}
+  sound_device(f32_t  freq, sample_t  vol){assign(freq,vol);}
+
+  sound_device&  assign(f32_t  freq, sample_t  vol);
+
   void  reset() noexcept;
 
   bool  is_slept() const noexcept{return m_status.test( flags::slept);}
-  void     sleep()       noexcept{return m_status.set(  flags::slept);}
-  void      wake()       noexcept{return m_status.unset(flags::slept);}
+  void     sleep()       noexcept{m_status.set(  flags::slept);}
+  void      wake()       noexcept{m_status.unset(flags::slept);}
 
   bool  is_muted() const noexcept{return m_status.test( flags::muted);}
-  void      mute()       noexcept{return m_status.set(  flags::muted);}
-  void    unmute()       noexcept{return m_status.unset(flags::muted);}
+  void      mute()       noexcept{m_status.set(  flags::muted);}
+  void    unmute()       noexcept{m_status.unset(flags::muted);}
 
   void  set_timer(uint32_t  ms) noexcept{m_number_of_remain_samples_for_timer = get_number_of_samples_by_time(ms);}
 
-  void  set_absolute_fm(f32_t  target_freq, int  num_steps, uint32_t  ms) noexcept;
-  void  set_relative_fm(f32_t         freq, int  num_steps, uint32_t  ms) noexcept;
+  void  set_absolute_fm(f32_t  target_freq, uint32_t  num_steps, uint32_t  ms);
+  void  set_relative_fm(f32_t         freq, uint32_t  num_steps, uint32_t  ms);
 
-  void  set_absolute_vm(sample_t  target_vol, int  num_steps, uint32_t  ms) noexcept;
-  void  set_relative_vm(sample_t         vol, int  num_steps, uint32_t  ms) noexcept;
+  void  set_absolute_vm(sample_t  target_vol, uint32_t  num_steps, uint32_t  ms);
+  void  set_relative_vm(sample_t         vol, uint32_t  num_steps, uint32_t  ms);
 
   void  set_timer_callback(void(*callback)(sound_device&,void*), void*  data=nullptr) noexcept;
   void     set_fm_callback(void(*callback)(sound_device&,void*), void*  data=nullptr) noexcept;
   void     set_vm_callback(void(*callback)(sound_device&,void*), void*  data=nullptr) noexcept;
 
-  void   set_frequency(f32_t  freq)       noexcept{       m_frequency = freq;}
-  f32_t  get_frequency(           ) const noexcept{return m_frequency       ;}
+  void   set_frequency(f32_t  freq);
+  f32_t  get_frequency(           ) const noexcept{return m_frequency;}
 
   f32_t  get_number_of_samples_per_cycle() const noexcept{return m_number_of_samples_per_cycle;}
 
@@ -126,21 +144,26 @@ square_wave_device: public sound_device
 {
 protected:
   uint32_t  m_number_of_samples_per_high=0;
-  uint32_t  m_number_of_samples_per_low=0;
+  uint32_t  m_number_of_samples_per_low =0;
 
-  uint32_t  m_number_of_remain_samples;
+  uint32_t  m_number_of_remain_samples=0;
 
   bool  m_low_phase=false;
 
-  void  check_frequency() noexcept;
+  void  check_frequency();
 
-  void  update_parameters() noexcept;
+  void  update_parameters();
 
 public:
+  square_wave_device() noexcept{}
+  square_wave_device(f32_t  freq, sample_t  vol){assign(freq,vol);}
+
+  square_wave_device&  assign(f32_t  freq, sample_t  vol);
+
   void  reset() noexcept;
 
-  void  generate_for_time(uint32_t  milsec, sample_t*  buffer) noexcept;
-  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer) noexcept;
+  void  generate_for_time(uint32_t  milsec, sample_t*  buffer);
+  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
 
 };
 

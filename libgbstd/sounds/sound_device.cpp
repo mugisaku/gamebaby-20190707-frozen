@@ -8,13 +8,26 @@ namespace gbstd{
 
 
 
+sound_device&
+sound_device::
+assign(f32_t  freq, sample_t  vol)
+{
+  set_frequency(freq);
+  set_volume(    vol);
+
+  reset();
+
+  return *this;
+}
+
+
 void
 sound_device::
 reset() noexcept
 {
-  m_number_of_samples_per_cycle = g_number_of_samples_per_second/m_frequency;
-
   m_status.clear();
+
+  wake();
 
   m_number_of_remain_samples_for_timer = 0;
 
@@ -152,7 +165,27 @@ put(sample_t  src, sample_t&  dst) noexcept
 
 void
 sound_device::
-set_absolute_fm(f32_t  target_freq, int  num_steps, uint32_t  ms) noexcept
+set_frequency(f32_t  freq)
+{
+    if(freq <= 0.0)
+    {
+      throw invalid_frequency();
+    }
+
+
+  m_frequency                   =                                freq;
+  m_number_of_samples_per_cycle = g_number_of_samples_per_second/freq;
+
+    if(m_number_of_samples_per_cycle <= 0.0)
+    {
+      throw invalid_number_of_samples_per_cycle();
+    }
+}
+
+
+void
+sound_device::
+set_absolute_fm(f32_t  target_freq, uint32_t  num_steps, uint32_t  ms)
 {
   set_relative_fm(target_freq-m_frequency,num_steps,ms);
 }
@@ -160,32 +193,35 @@ set_absolute_fm(f32_t  target_freq, int  num_steps, uint32_t  ms) noexcept
 
 void
 sound_device::
-set_relative_fm(f32_t  freq, int  num_steps, uint32_t  ms) noexcept
+set_relative_fm(f32_t  freq, uint32_t  num_steps, uint32_t  ms)
 {
-    if(num_steps)
+    if(!num_steps)
     {
-      m_fm_increment = std::abs(freq/num_steps);
-
-        if(m_frequency > freq)
-        {
-          m_fm_increment = -m_fm_increment;
-        }
-
-
-      m_number_of_fm_steps = num_steps;
-
-      auto&  num_samples    = m_number_of_samples_per_fm_step;
-      auto&  num_remsamples = m_number_of_remain_samples_for_fm_step;
-
-                       num_samples = g_number_of_samples_per_millisecond*ms/num_steps;
-      num_remsamples = num_samples                                                   ;
+      throw invalid_number_of_steps();
     }
+
+
+  m_fm_increment = std::abs(freq/num_steps);
+
+    if(m_frequency > freq)
+    {
+      m_fm_increment = -m_fm_increment;
+    }
+
+
+  m_number_of_fm_steps = num_steps;
+
+  auto&  num_samples    = m_number_of_samples_per_fm_step;
+  auto&  num_remsamples = m_number_of_remain_samples_for_fm_step;
+
+                   num_samples = g_number_of_samples_per_millisecond*ms/num_steps;
+  num_remsamples = num_samples                                                   ;
 }
 
 
 void
 sound_device::
-set_absolute_vm(sample_t  target_vol, int  num_steps, uint32_t  ms) noexcept
+set_absolute_vm(sample_t  target_vol, uint32_t  num_steps, uint32_t  ms)
 {
   set_relative_vm(target_vol-m_volume,num_steps,ms);
 }
@@ -193,26 +229,29 @@ set_absolute_vm(sample_t  target_vol, int  num_steps, uint32_t  ms) noexcept
 
 void
 sound_device::
-set_relative_vm(sample_t  vol, int  num_steps, uint32_t  ms) noexcept
+set_relative_vm(sample_t  vol, uint32_t  num_steps, uint32_t  ms)
 {
-    if(num_steps)
+    if(!num_steps)
     {
-      m_vm_increment = std::abs(vol/num_steps);
-
-        if(m_volume > vol)
-        {
-          m_vm_increment = -m_vm_increment;
-        }
-
-
-      m_number_of_vm_steps = num_steps;
-
-      auto&  num_samples    = m_number_of_samples_per_vm_step;
-      auto&  num_remsamples = m_number_of_remain_samples_for_vm_step;
-
-                       num_samples = g_number_of_samples_per_millisecond*ms/num_steps;
-      num_remsamples = num_samples                                                   ;
+      throw invalid_number_of_steps();
     }
+
+
+  m_vm_increment = std::abs(vol/num_steps);
+
+    if(m_volume > vol)
+    {
+      m_vm_increment = -m_vm_increment;
+    }
+
+
+  m_number_of_vm_steps = num_steps;
+
+  auto&  num_samples    = m_number_of_samples_per_vm_step;
+  auto&  num_remsamples = m_number_of_remain_samples_for_vm_step;
+
+                   num_samples = g_number_of_samples_per_millisecond*ms/num_steps;
+  num_remsamples = num_samples                                                   ;
 }
 
 

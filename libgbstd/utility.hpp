@@ -7,6 +7,7 @@
 #include<cstdio>
 #include<cstdint>
 #include<random>
+#include<stdexcept>
 
 
 #ifndef report

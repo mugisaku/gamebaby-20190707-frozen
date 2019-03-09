@@ -36,6 +36,7 @@ set(SOURCES
   sounds/sound_device.cpp
   sounds/square_wave_device.cpp
   sounds/noise_device.cpp
+  sounds/short_noise_device.cpp
   stage.cpp
   process.cpp
   utility.cpp

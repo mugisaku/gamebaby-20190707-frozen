@@ -132,8 +132,8 @@ public:
 
   f32_t  get_number_of_samples_per_cycle() const noexcept{return m_number_of_samples_per_cycle;}
 
-  void      set_volume(sample_t  v)       noexcept{       m_volume  = v;}
-  void      add_volume(sample_t  v)       noexcept{       m_volume += v;}
+  void      set_volume(sample_t  v);
+  void      add_volume(sample_t  v){set_volume(m_volume+v);}
   sample_t  get_volume(           ) const noexcept{return m_volume     ;}
 
 };
@@ -162,7 +162,6 @@ public:
 
   void  reset() noexcept;
 
-  void  generate_for_time(uint32_t  milsec, sample_t*  buffer);
   void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
 
 };
@@ -171,21 +170,30 @@ public:
 class
 noise_device: public sound_device
 {
+protected:
   uint16_t  m_seed=0xFFFF;
 
-  uint16_t  m_result=1;
-
-  bool  m_shortspan_flag=false;
-
 public:
-  bool   test_shortspan_flag() const noexcept{return m_shortspan_flag;}
-  void    set_shortspan_flag() noexcept{m_shortspan_flag =  true;}
-  void  unset_shortspan_flag() noexcept{m_shortspan_flag = false;}
+  noise_device() noexcept{}
+  noise_device(sample_t  vol){assign(vol);}
+
+  noise_device&  assign(sample_t  vol);
 
   void  reset() noexcept;
 
-  void  generate_for_time(uint32_t  milsec, sample_t*  buffer) noexcept;
-  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer) noexcept;
+  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
+
+};
+
+
+class
+short_noise_device: public noise_device
+{
+public:
+  short_noise_device() noexcept{}
+  short_noise_device(sample_t  vol){assign(vol);}
+
+  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
 
 };
 

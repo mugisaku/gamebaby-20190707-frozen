@@ -185,6 +185,20 @@ set_frequency(f32_t  freq)
 
 void
 sound_device::
+set_volume(sample_t  v)
+{
+    if((v < 0.0) || (v > 1.0))
+    {
+      throw invalid_volume();
+    }
+
+
+  m_volume = v;
+}
+
+
+void
+sound_device::
 set_absolute_fm(f32_t  target_freq, uint32_t  num_steps, uint32_t  ms)
 {
   set_relative_fm(target_freq-m_frequency,num_steps,ms);

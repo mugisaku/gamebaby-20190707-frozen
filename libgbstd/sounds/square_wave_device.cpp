@@ -26,7 +26,7 @@ square_wave_device::
 reset() noexcept
 {
   sound_device::reset();
-wake();
+
   update_parameters();
 
   m_low_phase = false;
@@ -45,14 +45,6 @@ update_parameters()
     {
       throw invalid_number_of_samples_per_cycle();
     }
-}
-
-
-void
-square_wave_device::
-generate_for_time(uint32_t  milsec, sample_t*  buffer)
-{
-  generate_for_time(g_number_of_samples_per_millisecond*milsec,buffer);
 }
 
 

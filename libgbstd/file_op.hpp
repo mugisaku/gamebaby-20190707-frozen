@@ -6,6 +6,7 @@
 #include<cstdint>
 #include<cstdlib>
 #include<utility>
+#include<vector>
 
 
 namespace gbstd{
@@ -39,6 +40,26 @@ bget_le16(const uint8_t*  p) noexcept
   i |= (p[1]<<8);
 
   return i;
+}
+
+
+inline
+void
+fput_le32(uint32_t  i, FILE*  f) noexcept
+{
+  fputc((i    )&0xFF,f);
+  fputc((i>> 8)&0xFF,f);
+  fputc((i>>16)&0xFF,f);
+  fputc((i>>24)&0xFF,f);
+}
+
+
+inline
+void
+fput_le16(uint16_t  i, FILE*  f) noexcept
+{
+  fputc((i    )&0xFF,f);
+  fputc((i>> 8)&0xFF,f);
 }
 
 
@@ -148,15 +169,37 @@ public:
 
 
 
-struct
+class
 wave_format
 {
-  uint16_t  id;
-  uint16_t  number_of_channels;
-  uint32_t  sampling_rate;
-  uint32_t  byte_rate;
-  uint16_t  block_align;
-  uint16_t  number_of_bits_per_sample;
+  uint16_t  m_id=0;
+  uint16_t  m_number_of_channels=0;
+  uint32_t  m_sampling_rate=0;
+  uint32_t  m_data_rate=0;
+  uint16_t  m_block_size=0;
+  uint16_t  m_number_of_bits_per_sample=0;
+
+public:
+  constexpr wave_format() noexcept{}
+
+  const uint16_t&  get_id() const noexcept{return m_id;}
+
+  void             set_sampling_rate(int  v)       noexcept{       m_sampling_rate = v;}
+  const uint32_t&  get_sampling_rate(      ) const noexcept{return m_sampling_rate    ;}
+
+  void             set_number_of_bits_per_sample(int  v)       noexcept{       m_number_of_bits_per_sample = v;}
+  const uint16_t&  get_number_of_bits_per_sample(      ) const noexcept{return m_number_of_bits_per_sample    ;}
+
+  void             set_number_of_channels(int  v)       noexcept{       m_number_of_channels = v;}
+  const uint16_t&  get_number_of_channels(      ) const noexcept{return m_number_of_channels    ;}
+
+  void  update();
+
+  void  read_from(const riff_subchunk_view&  rv) noexcept;
+
+  void  save_to_file(FILE*  f) const noexcept;
+
+  void  print() const noexcept;
 
 };
 
@@ -178,7 +221,7 @@ public:
   wave(const riff_subchunk_view&  rv) noexcept{assign(rv);}
 
   void  assign(const riff_subchunk_view&  rv) noexcept;
-  void  assign(const uint8_t*  data, size_t  length, const wave_format&  fmt) noexcept;
+  void  assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept;
 
   const wave_format&  get_format() const noexcept{return m_format;}
 
@@ -187,6 +230,8 @@ public:
   const uint8_t*  data() const noexcept{return m_data;}
 
   void  save_to_file(FILE*  f) const noexcept;
+
+  std::vector<uint8_t>  to_binary() const noexcept;
 
   void  print() const noexcept;
 

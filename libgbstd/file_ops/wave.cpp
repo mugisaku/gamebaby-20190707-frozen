@@ -5,43 +5,6 @@
 namespace gbstd{
 
 
-void
-wave::
-read_fmt( const riff_subchunk_view&  rv) noexcept
-{
-  auto  p = rv.data();
-
-  m_format.id = bget_le16(p);
-
-    if(m_format.id != 1)
-    {
-      printf("リニアPCMではない\n");
-      return;
-    }
-
-
-  p += 2;
-
-  m_format.number_of_channels = bget_le16(p);
-
-  p += 2;
-
-  m_format.sampling_rate = bget_le32(p);
-
-  p += 4;
-
-  m_format.byte_rate = bget_le32(p);
-
-  p += 4;
-
-  m_format.block_align = bget_le16(p);
-
-  p += 2;
-
-  m_format.number_of_bits_per_sample = bget_le16(p);
-
-  p += 2;
-}
 
 
 void
@@ -73,7 +36,7 @@ assign(const riff_subchunk_view&  rv) noexcept
 
         if(child_rv.id() == riff_id('f','m','t',' '))
         {
-          read_fmt(child_rv);
+          m_format.read_from(child_rv);
         }
 
       else
@@ -104,33 +67,15 @@ assign(const riff_subchunk_view&  rv) noexcept
 
 void
 wave::
-assign(const uint8_t*  data, size_t  length, const wave_format&  fmt) noexcept
+assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept
 {
   m_format = fmt;
 
   m_length = length;
-  m_data   =   data;
+  m_data   = static_cast<const uint8_t*>(data);
 }
 
 
-
-
-namespace{
-void
-fput_le32(uint32_t  i, FILE*  f) noexcept
-{
-  fputc((i    )&0xFF,f);
-  fputc((i>> 8)&0xFF,f);
-  fputc((i>>16)&0xFF,f);
-  fputc((i>>24)&0xFF,f);
-}
-void
-fput_le16(uint16_t  i, FILE*  f) noexcept
-{
-  fputc((i    )&0xFF,f);
-  fputc((i>> 8)&0xFF,f);
-}
-}
 
 
 void
@@ -148,12 +93,7 @@ save_to_file(FILE*  f) const noexcept
 
   fput_le32(16,f);
 
-  fput_le16( 1,f);//format_id
-  fput_le16( m_format.number_of_channels,f);
-  fput_le32(m_format.sampling_rate,f);
-  fput_le32(m_format.byte_rate,f);
-  fput_le16(m_format.block_align,f);
-  fput_le16(m_format.number_of_bits_per_sample,f);
+  m_format.save_to_file(f);
 
   fwrite("data",1,4,f);
 
@@ -163,16 +103,49 @@ save_to_file(FILE*  f) const noexcept
 }
 
 
+std::vector<uint8_t>
+wave::
+to_binary() const noexcept
+{
+  std::vector<uint8_t>  bin;
+
+  auto  f = tmpfile();
+
+    if(f)
+    {
+      save_to_file(f);
+
+      rewind(f);
+
+        for(;;)
+        {
+          auto  c = fgetc(f);
+
+            if(feof(f))
+            {
+              break;
+            }
+
+
+          bin.emplace_back(c);
+        }
+
+
+      fclose(f);
+    }
+
+
+  return std::move(bin);
+}
+
+
 void
 wave::
 print() const noexcept
 {
-  printf("       number of channels: %8d\n",m_format.number_of_channels);
-  printf("            sampling rate: %8d\n",m_format.sampling_rate);
-  printf("                byte rate: %8d\n",m_format.byte_rate);
-  printf("              block align: %8d\n",m_format.block_align);
-  printf("number of bits per sample: %8d\n",m_format.number_of_bits_per_sample);
-  printf("              data length: %8d\n",m_length);
+  m_format.print();
+
+  printf("data length: %8d\n",m_length);
 }
 
 

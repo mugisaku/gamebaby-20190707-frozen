@@ -33,6 +33,7 @@ set(SOURCES
   file_ops/riff_chunk.cpp
   file_ops/riff_subchunk_view.cpp
   file_ops/wave.cpp
+  file_ops/wave_format.cpp
   sounds/sound_device.cpp
   sounds/square_wave_device.cpp
   sounds/noise_device.cpp

@@ -21,8 +21,15 @@ void  init(int  x, int  y, int  w, int  h, double  scale=1) noexcept;
 void  init_sound() noexcept;
 void  quit_sound() noexcept;
 
-void  start_sound() noexcept;
-void   stop_sound() noexcept;
+void  start_sound_recording() noexcept;
+void  clear_sound_recording() noexcept;
+void   stop_sound_recording() noexcept;
+bool   test_sound_recording() noexcept;
+
+std::vector<uint8_t>  get_sound_wave_binary() noexcept;
+
+void  start_sound_playing() noexcept;
+void   stop_sound_playing() noexcept;
 
 void  beep(uint32_t  ms) noexcept;
 

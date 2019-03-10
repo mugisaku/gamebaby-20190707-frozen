@@ -79,6 +79,14 @@ update_screen(const gbstd::canvas&  cv) noexcept
 void
 quit() noexcept
 {
+    if(test_sound_recording())
+    {
+      auto  bin = get_sound_wave_binary();
+
+      gbstd::write_to_file(bin.data(),bin.size(),"__mksnd.wav");
+    }
+
+
   SDL_DestroyTexture(g_texture);
   SDL_DestroyRenderer(g_renderer);
   SDL_DestroyWindow(g_window);

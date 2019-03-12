@@ -8,26 +8,11 @@ namespace gbstd{
 
 
 
-square_wave_device&
-square_wave_device::
-assign(f32_t  freq, sample_t  vol)
-{
-  set_frequency(freq);
-  set_volume(    vol);
-
-  reset();
-
-  return *this;
-}
-
-
 void
 square_wave_device::
 reset() noexcept
 {
   sound_device::reset();
-
-  update_parameters();
 
   m_low_phase = false;
 }
@@ -35,10 +20,18 @@ reset() noexcept
 
 void
 square_wave_device::
-update_parameters()
+on_frequency_changed()
 {
-  m_number_of_samples_per_high = static_cast<uint32_t>(m_number_of_samples_per_cycle/2);
-  m_number_of_samples_per_low  = static_cast<uint32_t>(m_number_of_samples_per_cycle/2);
+  auto  number_of_samples_per_cycle = g_number_of_samples_per_second/get_frequency();
+
+    if(number_of_samples_per_cycle <= 0.0)
+    {
+      throw invalid_number_of_samples_per_cycle();
+    }
+
+
+  m_number_of_samples_per_high = static_cast<uint32_t>(number_of_samples_per_cycle/2);
+  m_number_of_samples_per_low  = static_cast<uint32_t>(number_of_samples_per_cycle/2);
 
     if(!m_number_of_samples_per_high ||
        !m_number_of_samples_per_low)
@@ -50,21 +43,10 @@ update_parameters()
 
 void
 square_wave_device::
-check_frequency()
-{
-    if(m_status.test(flags::frequency_changed))
-    {
-      m_status.unset(flags::frequency_changed);
-
-      update_parameters();
-    }
-}
-
-
-void
-square_wave_device::
 generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer)
 {
+  check_frequency();
+
     while(num_samples && !is_slept())
     {
         if(m_low_phase)
@@ -75,9 +57,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer)
 
                 while(m_number_of_remain_samples--)
                 {
-                  put(-m_volume,*buffer++);
-
-                  check_frequency();
+                  put(-get_volume(),*buffer++);
                 }
 
 
@@ -92,9 +72,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer)
 
                 while(num_samples--)
                 {
-                  put(-m_volume,*buffer++);
-
-                  check_frequency();
+                  put(-get_volume(),*buffer++);
                 }
 
 
@@ -110,9 +88,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer)
 
                 while(m_number_of_remain_samples--)
                 {
-                  put(m_volume,*buffer++);
-
-                  check_frequency();
+                  put(get_volume(),*buffer++);
                 }
 
 
@@ -127,9 +103,7 @@ generate_for_number_of_samples(uint32_t  num_samples, sample_t*  buffer)
 
                 while(num_samples--)
                 {
-                  put(m_volume,*buffer++);
-
-                  check_frequency();
+                  put(get_volume(),*buffer++);
                 }
 
 

@@ -8,16 +8,18 @@ namespace gbstd{
 
 
 
-sound_device&
+void
 sound_device::
-assign(f32_t  freq, sample_t  vol)
+input(const sound_event&  evt) noexcept
 {
-  set_frequency(freq);
-  set_volume(    vol);
+  auto  l = evt.get_length();
 
-  reset();
+  m_vm_status.set(   evt.get_start_volume(),   evt.get_end_volume(),evt.get_number_of_vm_steps(),l);
+  m_fm_status.set(evt.get_start_frequency(),evt.get_end_frequency(),evt.get_number_of_fm_steps(),l);
 
-  return *this;
+  m_number_of_remain_samples_for_timer = get_number_of_samples_by_time(l);
+
+  wake();
 }
 
 
@@ -27,46 +29,12 @@ reset() noexcept
 {
   m_status.clear();
 
-  wake();
+  m_fm_status.clear();
+  m_vm_status.clear();
 
-  m_number_of_remain_samples_for_timer = 0;
+  m_event_queue.clear();
 
-  m_number_of_samples_per_vm_step        = 0;
-  m_number_of_remain_samples_for_vm_step = 0;
-  m_number_of_vm_steps                   = 0;
-
-  m_number_of_samples_per_fm_step        = 0;
-  m_number_of_remain_samples_for_fm_step = 0;
-  m_number_of_fm_steps                   = 0;
-}
-
-
-
-
-void
-sound_device::
-set_timer_callback(void(*callback)(sound_device&,void*), void*  data) noexcept
-{
-  m_timer_callback      = callback;
-  m_timer_callback_data = data;
-}
-
-
-void
-sound_device::
-set_fm_callback(void(*callback)(sound_device&,void*), void*  data) noexcept
-{
-  m_fm_callback      = callback;
-  m_fm_callback_data = data;
-}
-
-
-void
-sound_device::
-set_vm_callback(void(*callback)(sound_device&,void*), void*  data) noexcept
-{
-  m_vm_callback      = callback;
-  m_vm_callback_data = data;
+  m_event_index = 0;
 }
 
 
@@ -80,12 +48,7 @@ process_timer() noexcept
     {
         if(!--m_number_of_remain_samples_for_timer)
         {
-          sleep();
-
-            if(m_timer_callback)
-            {
-              m_timer_callback(*this,m_timer_callback_data);
-            }
+          pump_event();
         }
     }
 }
@@ -93,71 +56,48 @@ process_timer() noexcept
 
 void
 sound_device::
-process_fm() noexcept
+pump_event() noexcept
 {
-    if(m_number_of_fm_steps)
+    if(m_event_index < m_event_queue.size())
     {
-        if(!--m_number_of_remain_samples_for_fm_step)
-        {
-            if(!--m_number_of_fm_steps)
-            {
-                if(m_fm_callback)
-                {
-                  m_fm_callback(*this,m_fm_callback_data);
-                }
-            }
-
-
-          m_number_of_remain_samples_for_fm_step = m_number_of_samples_per_fm_step;
-
-          m_frequency += m_fm_increment;
-
-          m_status.set(flags::frequency_changed);
-        }
+      input(m_event_queue[m_event_index++]);
     }
-}
 
-
-void
-sound_device::
-process_vm() noexcept
-{
-    if(m_number_of_vm_steps)
+  else
     {
-        if(!--m_number_of_remain_samples_for_vm_step)
-        {
-            if(!--m_number_of_vm_steps)
-            {
-                if(m_vm_callback)
-                {
-                  m_vm_callback(*this,m_vm_callback_data);
-                }
-            }
-
-
-          m_number_of_remain_samples_for_vm_step = m_number_of_samples_per_vm_step;
-
-          m_volume += m_vm_increment;
-
-          m_status.set(flags::volume_changed);
-        }
+      sleep();
     }
 }
 
 
 void
 sound_device::
-put(sample_t  src, sample_t&  dst) noexcept
+check_frequency()
 {
-    if(!is_muted())
+    if(m_fm_status.m_changed)
+    {
+      m_fm_status.m_changed = false;
+
+      on_frequency_changed();
+    }
+}
+
+
+void
+sound_device::
+put(sample_t  src, sample_t&  dst)
+{
+  process_timer();
+
+  m_vm_status.step();
+  m_fm_status.step();
+
+  check_frequency();
+
+    if(!is_slept() || !is_muted())
     {
       dst += src;
     }
-
-
-  process_fm();
-  process_vm();
-  process_timer();
 }
 
 
@@ -165,110 +105,16 @@ put(sample_t  src, sample_t&  dst) noexcept
 
 void
 sound_device::
-set_frequency(f32_t  freq)
+push(std::initializer_list<sound_event>  ls)
 {
-    if(freq <= 0.0)
-    {
-      throw invalid_frequency();
-    }
+  m_event_queue = ls;
 
+  m_event_index = 0;
 
-  m_frequency                   =                                freq;
-  m_number_of_samples_per_cycle = g_number_of_samples_per_second/freq;
+  m_event_queue = ls;
 
-    if(m_number_of_samples_per_cycle <= 0.0)
-    {
-      throw invalid_number_of_samples_per_cycle();
-    }
+  pump_event();
 }
-
-
-void
-sound_device::
-set_volume(sample_t  v)
-{
-    if((v < 0.0) || (v > 1.0))
-    {
-      throw invalid_volume();
-    }
-
-
-  m_volume = v;
-}
-
-
-void
-sound_device::
-set_absolute_fm(f32_t  target_freq, uint32_t  num_steps, uint32_t  ms)
-{
-  set_relative_fm(target_freq-m_frequency,num_steps,ms);
-}
-
-
-void
-sound_device::
-set_relative_fm(f32_t  freq, uint32_t  num_steps, uint32_t  ms)
-{
-    if(!num_steps)
-    {
-      throw invalid_number_of_steps();
-    }
-
-
-  m_fm_increment = std::abs(freq/num_steps);
-
-    if(m_frequency > freq)
-    {
-      m_fm_increment = -m_fm_increment;
-    }
-
-
-  m_number_of_fm_steps = num_steps;
-
-  auto&  num_samples    = m_number_of_samples_per_fm_step;
-  auto&  num_remsamples = m_number_of_remain_samples_for_fm_step;
-
-                   num_samples = g_number_of_samples_per_millisecond*ms/num_steps;
-  num_remsamples = num_samples                                                   ;
-}
-
-
-void
-sound_device::
-set_absolute_vm(sample_t  target_vol, uint32_t  num_steps, uint32_t  ms)
-{
-  set_relative_vm(target_vol-m_volume,num_steps,ms);
-}
-
-
-void
-sound_device::
-set_relative_vm(sample_t  vol, uint32_t  num_steps, uint32_t  ms)
-{
-    if(!num_steps)
-    {
-      throw invalid_number_of_steps();
-    }
-
-
-  m_vm_increment = std::abs(vol/num_steps);
-
-    if(m_volume > vol)
-    {
-      m_vm_increment = -m_vm_increment;
-    }
-
-
-  m_number_of_vm_steps = num_steps;
-
-  auto&  num_samples    = m_number_of_samples_per_vm_step;
-  auto&  num_remsamples = m_number_of_remain_samples_for_vm_step;
-
-                   num_samples = g_number_of_samples_per_millisecond*ms/num_steps;
-  num_remsamples = num_samples                                                   ;
-}
-
-
 
 
 }

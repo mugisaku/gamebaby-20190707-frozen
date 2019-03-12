@@ -79,6 +79,8 @@ update_screen(const gbstd::canvas&  cv) noexcept
 void
 quit() noexcept
 {
+  quit_sound();
+
     if(test_sound_recording())
     {
       auto  bin = get_sound_wave_binary();

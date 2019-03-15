@@ -370,7 +370,7 @@ START:
 }
 
 
-std::vector<token>
+token_block
 tokenizer::
 operator()(const char*  p)
 {
@@ -396,7 +396,7 @@ operator()(const char*  p)
     }
 
 
-  return std::move(toks);
+  return token_block(std::move(toks),"","");
 }
 
 

@@ -68,13 +68,9 @@ main(int  argc, char**  argv)
 
   gbstd::tokenizer  tknz;
 
-  auto  tokls = tknz(s.data());
+  auto  blk = tknz(s.data());
 
-  for(auto&  tok: tokls)
-  {
-    tok.print();
-printf("\n");
-  }
+  blk.print();
 fflush(stdout);
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);

@@ -103,6 +103,38 @@ read_decimal_number() noexcept
     }
 
 
+    if(*m_pointer == '.')
+    {
+      ++m_pointer;
+
+      auto  i = static_cast<double>(n);
+
+      double  f = 0.1;
+
+        for(;;)
+        {
+          auto  c = *m_pointer;
+
+            if((c >= '0') &&
+               (c <= '9'))
+            {
+              i += f*(c-'0');
+              f /= 10;
+
+              ++m_pointer;
+            }
+
+          else
+            {
+              break;
+            }
+        }
+
+
+      return token(m_info,i);
+    }
+
+
   return token(m_info,n,'d');
 }
 

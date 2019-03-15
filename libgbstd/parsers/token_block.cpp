@@ -11,6 +11,11 @@ namespace gbstd{
 
 
 
+const token
+token_block_view::
+m_null;
+
+
 token_block::
 token_block(std::vector<token>&&  c, operator_code  open, operator_code  close):
 m_container(std::move(c)),

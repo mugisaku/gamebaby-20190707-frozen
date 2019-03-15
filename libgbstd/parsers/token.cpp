@@ -227,6 +227,14 @@ clear() noexcept
 
 
 
+bool
+token::
+is_block(operator_code  open, operator_code  close) const noexcept
+{
+  return (m_kind == kind::block) && m_data.blk.test(open,close);
+}
+
+
 void
 token::
 print_string(const std::string&  s, char  punct) noexcept

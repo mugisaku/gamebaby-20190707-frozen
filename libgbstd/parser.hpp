@@ -90,6 +90,10 @@ public:
 
   void  clear() noexcept;
 
+  bool  test(operator_code  open, operator_code  close) const noexcept{return (m_open == open) && (m_close == close);}
+
+  const std::vector<token>*  operator->()const noexcept{return &m_container;}
+
   void  print() const noexcept;
 
 };
@@ -118,7 +122,6 @@ token
   union data{
     uint64_t     n;
     std::string  s;
-    char         c;
     double       f;
 
     operator_code  opco;
@@ -164,15 +167,19 @@ public:
   bool  is_decimal_number() const noexcept{return m_kind == kind::decimal_number;}
   bool  is_hexadecimal_number() const noexcept{return m_kind == kind::hexadecimal_number;}
   bool  is_identifier() const noexcept{return m_kind == kind::identifier;}
+  bool  is_keyword(const char*  s) const noexcept{return (m_kind == kind::identifier) && (m_data.s == s);}
   bool  is_single_quoted() const noexcept{return m_kind == kind::single_quoted;}
   bool  is_double_quoted() const noexcept{return m_kind == kind::double_quoted;}
   bool  is_operator_code() const noexcept{return m_kind == kind::operator_code;}
   bool  is_floating_point_number() const noexcept{return m_kind == kind::floating_point_number;}
+  bool  is_block() const noexcept{return m_kind == kind::block;}
+  bool  is_block(operator_code  open, operator_code  close) const noexcept;
 
   uint64_t            get_number()                const noexcept{return m_data.n;}
   double              get_floating_point_number() const noexcept{return m_data.f;}
   const std::string&  get_string()                const noexcept{return m_data.s;}
   operator_code       get_operator_code()         const noexcept{return m_data.opco;}
+  const token_block&  get_block()                 const noexcept{return m_data.blk;}
 
   void  print() const noexcept;
 
@@ -214,7 +221,26 @@ tokenizer
   void  update_info() noexcept{m_info = token_info(m_pointer,m_line_counter);}
 
 public:
-  std::vector<token>  operator()(const char*  p);
+  token_block  operator()(const char*  p);
+
+};
+
+
+
+
+class
+token_block_view
+{
+  const token*  m_begin;
+  const token*  m_end;
+
+  static const token  m_null;
+
+public:
+  token_block_view(const token_block&  blk) noexcept:
+  m_begin(blk->data()), m_end(blk->data()+blk->size()){}
+
+  const token&  operator[](int  i) const noexcept{return ((m_begin+i) >= m_end)? m_begin[i]:m_null;}
 
 };
 

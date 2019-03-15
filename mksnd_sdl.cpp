@@ -1,6 +1,7 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
+#include"libgbstd/parser.hpp"
 #include"sdl.hpp"
 #include<list>
 #include<vector>
@@ -63,6 +64,18 @@ main(int  argc, char**  argv)
 
   g_screen_canvas = sdl::make_screen_canvas();
 
+  auto  s = gbstd::make_string_from_file("../music.txt");
+
+  gbstd::tokenizer  tknz;
+
+  auto  tokls = tknz(s.data());
+
+  for(auto&  tok: tokls)
+  {
+    tok.print();
+printf("\n");
+  }
+fflush(stdout);
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);
 #else

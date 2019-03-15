@@ -2,6 +2,7 @@
 
 set(SOURCES
   parsers/token.cpp
+  parsers/token_block.cpp
   parsers/tokenizer.cpp
   parsers/tokenizer__skip.cpp
   parsers/tokenizer__read_number.cpp
@@ -34,6 +35,7 @@ set(SOURCES
   file_ops/riff_subchunk_view.cpp
   file_ops/wave.cpp
   file_ops/wave_format.cpp
+  sounds/music.cpp
   sounds/modulation_status.cpp
   sounds/sound_device.cpp
   sounds/square_wave_device.cpp

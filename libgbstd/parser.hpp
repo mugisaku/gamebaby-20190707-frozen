@@ -109,10 +109,7 @@ token
     identifier,
     single_quoted,
     double_quoted,
-    binary_number,
-    octal_number,
-    decimal_number,
-    hexadecimal_number,
+    integer,
     floating_point_number,
     operator_code,
     block,
@@ -139,7 +136,7 @@ public:
   token() noexcept{}
   token(const token&   rhs) noexcept{assign(rhs);}
   token(      token&&  rhs) noexcept{assign(std::move(rhs));}
-  token(token_info  info, uint64_t  n, int  sym)      noexcept{assign(info,n,sym);}
+  token(token_info  info, uint64_t  n)                noexcept{assign(info,n);}
   token(token_info  info, double  f)                  noexcept{assign(info,f);}
   token(token_info  info, std::string&&  s, int  sym) noexcept{assign(info,std::move(s),sym);}
   token(token_info  info, operator_code  opco)        noexcept{assign(info,opco);}
@@ -151,7 +148,7 @@ public:
 
   token&  assign(const token&   rhs) noexcept;
   token&  assign(      token&&  rhs) noexcept;
-  token&  assign(token_info  info, uint64_t  n, int  sym) noexcept;
+  token&  assign(token_info  info, uint64_t  n) noexcept;
   token&  assign(token_info  info, double  f) noexcept;
   token&  assign(token_info  info, std::string&&  s, int  sym) noexcept;
   token&  assign(token_info  info, operator_code  opco) noexcept;
@@ -162,20 +159,18 @@ public:
   const token_info&  get_info() const noexcept{return m_info;}
 
   bool  is_null() const noexcept{return m_kind == kind::null;}
-  bool  is_binary_number() const noexcept{return m_kind == kind::binary_number;}
-  bool  is_octal_number() const noexcept{return m_kind == kind::octal_number;}
-  bool  is_decimal_number() const noexcept{return m_kind == kind::decimal_number;}
-  bool  is_hexadecimal_number() const noexcept{return m_kind == kind::hexadecimal_number;}
+  bool  is_integer() const noexcept{return m_kind == kind::integer;}
   bool  is_identifier() const noexcept{return m_kind == kind::identifier;}
-  bool  is_keyword(const char*  s) const noexcept{return (m_kind == kind::identifier) && (m_data.s == s);}
+  bool  is_keyword(const char*  s) const noexcept{return is_identifier() && (m_data.s == s);}
   bool  is_single_quoted() const noexcept{return m_kind == kind::single_quoted;}
   bool  is_double_quoted() const noexcept{return m_kind == kind::double_quoted;}
   bool  is_operator_code() const noexcept{return m_kind == kind::operator_code;}
+  bool  is_operator_code(operator_code  opco) const noexcept{return is_operator_code() && (m_data.opco == opco);}
   bool  is_floating_point_number() const noexcept{return m_kind == kind::floating_point_number;}
   bool  is_block() const noexcept{return m_kind == kind::block;}
   bool  is_block(operator_code  open, operator_code  close) const noexcept;
 
-  uint64_t            get_number()                const noexcept{return m_data.n;}
+  uint64_t            get_integer()               const noexcept{return m_data.n;}
   double              get_floating_point_number() const noexcept{return m_data.f;}
   const std::string&  get_string()                const noexcept{return m_data.s;}
   operator_code       get_operator_code()         const noexcept{return m_data.opco;}
@@ -199,6 +194,7 @@ tokenizer
   token        read_octal_number() noexcept;
   token      read_decimal_number() noexcept;
   token  read_hexadecimal_number() noexcept;
+  token  read_floating_point_number(uint64_t  i) noexcept;
 
   token  read_number_that_begins_by_zero() noexcept;
   token  read_number() noexcept;
@@ -236,11 +232,32 @@ token_block_view
 
   static const token  m_null;
 
+  token_block_view(const token*  begin, const token*  end) noexcept:
+  m_begin(begin), m_end(end){}
+
 public:
   token_block_view(const token_block&  blk) noexcept:
   m_begin(blk->data()), m_end(blk->data()+blk->size()){}
 
-  const token&  operator[](int  i) const noexcept{return ((m_begin+i) >= m_end)? m_begin[i]:m_null;}
+  operator bool() const noexcept{return m_begin < m_end;}
+
+  const token&  operator[](int  i) const noexcept{return ((m_begin+i) < m_end)? m_begin[i]:m_null;}
+
+  const token&  operator*() const noexcept{return (m_begin < m_end)? *m_begin:m_null;}
+
+  token_block_view&  operator++(   ) noexcept{  ++m_begin;  return *this;}
+  token_block_view   operator++(int) noexcept{  auto  ret = *this;  ++m_begin;  return ret;}
+
+  token_block_view&  operator--(   ) noexcept{  --m_begin;  return *this;}
+  token_block_view   operator--(int) noexcept{  auto  ret = *this;  --m_begin;  return ret;}
+
+  token_block_view&  operator+=(int  n) noexcept{  m_begin += n;  return *this;}
+  token_block_view&  operator-=(int  n) noexcept{  m_begin -= n;  return *this;}
+
+  token_block_view  operator+(int  n) const noexcept{return token_block_view(m_begin+n,m_end);}
+  token_block_view  operator-(int  n) const noexcept{return token_block_view(m_begin-n,m_end);}
+
+  int  size() const noexcept{return m_end-m_begin;}
 
 };
 

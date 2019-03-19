@@ -117,6 +117,20 @@ push(std::initializer_list<sound_event>  ls)
 }
 
 
+
+
+void
+sound_device::
+print() const noexcept
+{
+  printf("volume: %f\n",m_vm_status.m_current);
+  printf("frequency: %f\n",m_fm_status.m_current);
+  printf("num remain samples for timer: %d\n",m_number_of_remain_samples_for_timer);
+}
+
+
+
+
 }
 
 

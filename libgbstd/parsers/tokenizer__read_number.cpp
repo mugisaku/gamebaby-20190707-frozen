@@ -41,7 +41,7 @@ read_binary_number() noexcept
     }
 
 
-  return token(m_info,n,'b');
+  return token(m_info,n);
 }
 
 
@@ -73,7 +73,7 @@ read_octal_number() noexcept
     }
 
 
-  return token(m_info,n,'o');
+  return token(m_info,n);
 }
 
 
@@ -107,35 +107,11 @@ read_decimal_number() noexcept
     {
       ++m_pointer;
 
-      auto  i = static_cast<double>(n);
-
-      double  f = 0.1;
-
-        for(;;)
-        {
-          auto  c = *m_pointer;
-
-            if((c >= '0') &&
-               (c <= '9'))
-            {
-              i += f*(c-'0');
-              f /= 10;
-
-              ++m_pointer;
-            }
-
-          else
-            {
-              break;
-            }
-        }
-
-
-      return token(m_info,i);
+      return read_floating_point_number(n);
     }
 
 
-  return token(m_info,n,'d');
+  return token(m_info,n);
 }
 
 
@@ -208,7 +184,39 @@ read_hexadecimal_number() noexcept
     }
 
 
-  return token(m_info,n,'x');
+  return token(m_info,n);
+}
+
+
+token
+tokenizer::
+read_floating_point_number(uint64_t  i) noexcept
+{
+  auto  fpn = static_cast<double>(i);
+
+  double  fra = 0.1;
+
+    for(;;)
+    {
+      auto  c = *m_pointer;
+
+        if((c >= '0') &&
+           (c <= '9'))
+        {
+          fpn += fra*(c-'0');
+          fra /= 10;
+
+          ++m_pointer;
+        }
+
+      else
+        {
+          break;
+        }
+    }
+
+
+  return token(m_info,fpn);
 }
 
 
@@ -216,12 +224,15 @@ token
 tokenizer::
 read_number_that_begins_by_zero() noexcept
 {
-  auto  c = *m_pointer++;
+  auto  c = *++m_pointer;
+
+  ++m_pointer;
 
   return ((c == 'b') || (c == 'B'))?      read_binary_number()
         :((c == 'o') || (c == 'O'))?       read_octal_number()
         :((c == 'x') || (c == 'X'))? read_hexadecimal_number()
-        : token(m_info,0,'d');
+        :((c == '.')              )? read_floating_point_number(0)
+        : token(m_info,static_cast<uint64_t>(0));
 }
 
 

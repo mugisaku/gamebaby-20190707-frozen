@@ -32,10 +32,7 @@ assign(const token&  rhs) noexcept
       case(kind::operator_code):
           m_data.opco = rhs.m_data.opco;
           break;
-      case(kind::binary_number):
-      case(kind::octal_number):
-      case(kind::decimal_number):
-      case(kind::hexadecimal_number):
+      case(kind::integer):
           m_data.n = rhs.m_data.n;
           break;
       case(kind::identifier):
@@ -75,10 +72,7 @@ assign(token&&  rhs) noexcept
       case(kind::operator_code):
           m_data.opco = rhs.m_data.opco;
           break;
-      case(kind::binary_number):
-      case(kind::octal_number):
-      case(kind::decimal_number):
-      case(kind::hexadecimal_number):
+      case(kind::integer):
           m_data.n = rhs.m_data.n;
           break;
       case(kind::identifier):
@@ -99,7 +93,7 @@ assign(token&&  rhs) noexcept
 
 token&
 token::
-assign(token_info  info, uint64_t  n, int  sym) noexcept
+assign(token_info  info, uint64_t  n) noexcept
 {
   clear();
 
@@ -107,13 +101,7 @@ assign(token_info  info, uint64_t  n, int  sym) noexcept
 
   m_data.n = n;
 
-    switch(sym)
-    {
-  case('b'): m_kind = kind::binary_number     ;break;
-  case('o'): m_kind = kind::octal_number      ;break;
-  case('d'): m_kind = kind::decimal_number    ;break;
-  case('x'): m_kind = kind::hexadecimal_number;break;
-    }
+  m_kind = kind::integer;
 
 
   return *this;
@@ -202,10 +190,7 @@ clear() noexcept
     switch(m_kind)
     {
   case(kind::null):
-  case(kind::binary_number):
-  case(kind::octal_number):
-  case(kind::decimal_number):
-  case(kind::hexadecimal_number):
+  case(kind::integer):
   case(kind::floating_point_number):
   case(kind::operator_code):
       break;
@@ -273,10 +258,7 @@ print() const noexcept
     switch(m_kind)
     {
   case(kind::null): ;break;
-  case(kind::binary_number): printf("0b%llu",m_data.n);break;
-  case(kind::octal_number): printf("0o%llu",m_data.n);break;
-  case(kind::decimal_number): printf("%llu",m_data.n);break;
-  case(kind::hexadecimal_number): printf("0x%llX",m_data.n);break;
+  case(kind::integer): printf("%llu",m_data.n);break;
   case(kind::identifier): printf("%s ",m_data.s.data());break;
   case(kind::single_quoted): print_string(m_data.s,'\'');break;
   case(kind::double_quoted): print_string(m_data.s,'\"');break;

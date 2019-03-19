@@ -8,18 +8,6 @@ namespace gbstd{
 
 
 
-noise_device&
-noise_device::
-assign(sample_t  vol)
-{
-  m_vm_status.change_current(vol);
-
-  reset();
-
-  return *this;
-}
-
-
 void
 noise_device::
 reset() noexcept

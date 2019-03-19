@@ -42,6 +42,16 @@ class invalid_number_of_steps
 
 
 
+enum class
+sound_kind
+{
+  null,
+  square_wave,
+  noise,
+  short_noise,
+};
+
+
 struct
 sound_event
 {
@@ -172,6 +182,8 @@ public:
 
   void  push(std::initializer_list<sound_event>  ls);
 
+  void  print() const noexcept;
+
 };
 
 
@@ -189,11 +201,6 @@ protected:
   void  on_frequency_changed() override;
 
 public:
-  square_wave_device() noexcept{}
-  square_wave_device(f32_t  freq, sample_t  vol){assign(freq,vol);}
-
-  square_wave_device&  assign(f32_t  freq, sample_t  vol);
-
   void  reset() noexcept override;
 
   void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
@@ -208,11 +215,6 @@ protected:
   uint16_t  m_seed=0xFFFF;
 
 public:
-  noise_device() noexcept{}
-  noise_device(sample_t  vol){assign(vol);}
-
-  noise_device&  assign(sample_t  vol);
-
   void  reset() noexcept;
 
   void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
@@ -224,9 +226,6 @@ class
 short_noise_device: public noise_device
 {
 public:
-  short_noise_device() noexcept{}
-  short_noise_device(sample_t  vol){assign(vol);}
-
   void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
 
 };

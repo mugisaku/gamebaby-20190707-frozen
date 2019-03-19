@@ -16,14 +16,14 @@ read_data(const riff_subchunk_view&  rv) noexcept
 }
 
 
-void
+wave&
 wave::
 assign(const riff_subchunk_view&  rv) noexcept
 {
     if(rv.id() != riff_id('W','A','V','E'))
     {
       printf("無効なWAVE\n");
-      return;
+      return *this;
     }
 
 
@@ -62,10 +62,13 @@ assign(const riff_subchunk_view&  rv) noexcept
 
       p = child_rv.data()+child_rv.size();
     }
+
+
+  return *this;
 }
 
 
-void
+wave&
 wave::
 assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept
 {
@@ -73,6 +76,8 @@ assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept
 
   m_length = length;
   m_data   = static_cast<const uint8_t*>(data);
+
+  return *this;
 }
 
 
@@ -101,6 +106,23 @@ save_to_file(FILE*  f) const noexcept
 
   fwrite(m_data,1,length(),f);
 }
+
+
+void
+wave::
+save_to_file(const char*  filepath) const noexcept
+{
+  auto  f = fopen(filepath,"wb");
+
+    if(f)
+    {
+      save_to_file(f);
+
+      fclose(f);
+    }
+}
+
+
 
 
 std::vector<uint8_t>

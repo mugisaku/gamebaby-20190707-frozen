@@ -279,11 +279,32 @@ START:
     }
 
   else
+    if(std::memcmp(m_pointer,"/*",2) == 0)
+    {
+      m_pointer += 2;
+
+      skip_blockstyle_comment();
+
+      goto START;
+    }
+
+  else
+    if(std::memcmp(m_pointer,"//",2) == 0)
+    {
+      m_pointer += 2;
+
+      skip_linestyle_comment();
+
+      goto START;
+    }
+
+  else
     if((c == '<') ||
        (c == '>') ||
        (c == '+') ||
        (c == '-') ||
        (c == '*') ||
+       (c == '/') ||
        (c == '%') ||
        (c == '&') ||
        (c == '|') ||
@@ -303,33 +324,6 @@ START:
       toks.emplace_back(read_operator_code());
 
       return true;
-    }
-
-  else
-    if(c == '/')
-    {
-        if(m_pointer[1] == '*')
-        {
-          m_pointer += 2;
-
-          skip_blockstyle_comment();
-        }
-
-      else
-        if(m_pointer[1] == '/')
-        {
-          m_pointer += 2;
-
-          skip_linestyle_comment();
-        }
-
-      else
-        {
-          return false;
-        }
-
-
-      goto START;
     }
 
   else

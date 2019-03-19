@@ -2,6 +2,8 @@
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
 #include"libgbstd/parser.hpp"
+#include"libgbstd/file_op.hpp"
+#include"libonch/onch.hpp"
 #include"sdl.hpp"
 #include<list>
 #include<vector>
@@ -59,19 +61,52 @@ main(int  argc, char**  argv)
   show_github_link();
 #endif
 
+/*
   sdl::init(200,100,1.0);
   sdl::init_sound();
 
   g_screen_canvas = sdl::make_screen_canvas();
+*/
 
-  auto  s = gbstd::make_string_from_file("../music.txt");
+  onch_space  sp;
 
-  gbstd::tokenizer  tknz;
+  sp.load_from_file("../music.txt");
 
-  auto  blk = tknz(s.data());
+  auto  def = sp.find("main");
 
-  blk.print();
-fflush(stdout);
+    if(def && def->is_table())
+    {
+      auto  bin = def->get_table().generate_wave();
+
+      std::vector<int16_t>  wavbin(bin.size());
+
+      auto  src     =    bin.data();
+      auto  src_end =    bin.data()+bin.size();
+      auto  dst     = wavbin.data();
+
+        while(src != src_end)
+        {
+          auto  v = (*src++)*32767.0;
+
+          *dst++ = static_cast<int16_t>(v);
+        }
+
+
+      gbstd::wave_format  fmt;
+
+      fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
+      fmt.set_number_of_bits_per_sample(16);
+      fmt.set_number_of_channels(1);
+
+      fmt.update();
+
+      gbstd::wave  wav(wavbin.data(),2*wavbin.size(),fmt);
+
+      wav.save_to_file("../__output.wav");
+    }
+
+
+/*
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);
 #else
@@ -86,6 +121,7 @@ fflush(stdout);
   sdl::quit_sound();
   sdl::quit();
 #endif
+*/
 
 
   return 0;

@@ -219,9 +219,10 @@ wave
 public:
   wave() noexcept{}
   wave(const riff_subchunk_view&  rv) noexcept{assign(rv);}
+  wave(const void*  data, size_t  length, const wave_format&  fmt) noexcept{assign(data,length,fmt);}
 
-  void  assign(const riff_subchunk_view&  rv) noexcept;
-  void  assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept;
+  wave&  assign(const riff_subchunk_view&  rv) noexcept;
+  wave&  assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept;
 
   const wave_format&  get_format() const noexcept{return m_format;}
 
@@ -230,6 +231,7 @@ public:
   const uint8_t*  data() const noexcept{return m_data;}
 
   void  save_to_file(FILE*  f) const noexcept;
+  void  save_to_file(const char*  filepath) const noexcept;
 
   std::vector<uint8_t>  to_binary() const noexcept;
 

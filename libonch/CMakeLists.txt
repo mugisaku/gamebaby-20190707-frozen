@@ -1,9 +1,11 @@
 
 
 set(SOURCES
-  onch_sound.cpp
-  onch_definition.cpp
+  onch_word.cpp
+  onch_text.cpp
+  onch_cell.cpp
   onch_table.cpp
+  onch_element.cpp
   onch_space.cpp
 )
 

@@ -46,6 +46,39 @@ main_loop() noexcept
 }
 
 
+void
+output(const onch_element&  e, const onch_space&  sp) noexcept
+{
+  auto  bin = e.generate_wave(sp);
+
+  std::vector<int16_t>  wavbin(bin.size());
+
+  auto  src     =    bin.data();
+  auto  src_end =    bin.data()+bin.size();
+  auto  dst     = wavbin.data();
+
+    while(src != src_end)
+    {
+      auto  v = (*src++)*32767.0;
+
+      *dst++ = static_cast<int16_t>(v);
+    }
+
+
+  gbstd::wave_format  fmt;
+
+  fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
+  fmt.set_number_of_bits_per_sample(16);
+  fmt.set_number_of_channels(1);
+
+  fmt.update();
+
+  gbstd::wave  wav(wavbin.data(),2*wavbin.size(),fmt);
+
+  wav.save_to_file("../__output.wav");
+}
+
+
 }
 
 
@@ -68,41 +101,26 @@ main(int  argc, char**  argv)
   g_screen_canvas = sdl::make_screen_canvas();
 */
 
-  onch_space  sp;
+  onch_parameter  pr = {
+    {100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,},
+    {0.01,0.02,0.04,0.08,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65},
+    {20.0,40.0,80.0,160.0,320.0,400.0,600.0,800.0,1000.0,1200.0,1400.0,1600.0,1800.0,2000.0,2400.0,2800.0}
+  };
+
+
+  onch_space  sp(pr);
 
   sp.load_from_file("../music.txt");
 
   auto  def = sp.find("main");
 
-    if(def && def->is_table())
+    if(def && def->get_element())
     {
-      auto  bin = def->get_table().generate_wave();
+      auto&  e = def->get_element();
 
-      std::vector<int16_t>  wavbin(bin.size());
+      e.print();
 
-      auto  src     =    bin.data();
-      auto  src_end =    bin.data()+bin.size();
-      auto  dst     = wavbin.data();
-
-        while(src != src_end)
-        {
-          auto  v = (*src++)*32767.0;
-
-          *dst++ = static_cast<int16_t>(v);
-        }
-
-
-      gbstd::wave_format  fmt;
-
-      fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
-      fmt.set_number_of_bits_per_sample(16);
-      fmt.set_number_of_channels(1);
-
-      fmt.update();
-
-      gbstd::wave  wav(wavbin.data(),2*wavbin.size(),fmt);
-
-      wav.save_to_file("../__output.wav");
+      output(e,sp);
     }
 
 

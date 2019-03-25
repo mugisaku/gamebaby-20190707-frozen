@@ -47,7 +47,7 @@ public:
   constexpr int  get_volume_index() const noexcept{return (m_data>>4)&15;}
   constexpr int  get_frequency_index() const noexcept{return (m_data&15);}
 
-  uint32_t  get_length(const onch_space&  sp) const noexcept;
+  uint32_t  get_length() const noexcept;
 
   void  output(sound_kind  k, onch_output_context&  ctx) const noexcept;
 
@@ -66,7 +66,7 @@ public:
 
   void  push(onch_word  w) noexcept{m_words.emplace_back(w);}
 
-  uint32_t  get_length(const onch_space&  sp) const noexcept;
+  uint32_t  get_length() const noexcept;
 
   void  output(sound_kind  k, onch_output_context&  ctx) const noexcept;
 
@@ -87,7 +87,7 @@ public:
 
   void  push(const onch_text&  txt) noexcept{m_texts.emplace_back(txt);}
 
-  uint32_t  get_length(const onch_space&  sp) const noexcept;
+  uint32_t  get_length() const noexcept;
 
   void  output(onch_output_context&  ctx) const noexcept;
 
@@ -119,7 +119,7 @@ public:
 
   void  push(onch_element&&  e) noexcept;
 
-  uint32_t  get_length(const onch_space&  sp) const noexcept;
+  uint32_t  get_length() const noexcept;
 
   void  output(onch_output_context&  ctx) const noexcept;
 
@@ -180,7 +180,7 @@ public:
   const onch_cell&    get_cell()  const noexcept{return m_data.cel;}
   const onch_table&   get_table() const noexcept{return m_data.tbl;}
 
-  uint32_t  get_length(const onch_space&  sp) const noexcept;
+  uint32_t  get_length() const noexcept;
 
   std::vector<f32_t>  generate_wave(const onch_space&  sp) const noexcept;
 
@@ -217,21 +217,9 @@ public:
 };
 
 
-struct
-onch_parameter
-{
-  uint32_t  m_length_table[16];
-  double    m_volume_table[16];
-  double    m_frequency_table[16];
-
-};
-
-
 class
 onch_space
 {
-  onch_parameter  m_parameter;
-
   std::vector<onch_definition>  m_definition_table;
 
   onch_element  read_text(token_block_view  tbv) noexcept;
@@ -243,9 +231,6 @@ onch_space
 
 public:
   onch_space() noexcept{}
-  onch_space(const onch_parameter&  pr) noexcept: m_parameter(pr){}
-
-  const onch_parameter&  get_parameter() const noexcept{return m_parameter;}
 
   const onch_definition*  find(const std::string&  name) const noexcept;
 

@@ -14,9 +14,21 @@ namespace gbstd{
 
 uint32_t
 onch_word::
-get_length(const onch_space&  sp) const noexcept
+get_length() const noexcept
 {
-  return sp.get_parameter().m_length_table[get_length_index()];
+  constexpr uint32_t  length_table[] = {
+      40,
+      80,
+     160,
+     320,
+     640,
+    1280,
+    2560,
+    5120,
+  };
+
+
+  return length_table[get_length_index()];
 }
 
 
@@ -24,17 +36,28 @@ void
 onch_word::
 output(sound_kind  k, onch_output_context&  ctx) const noexcept
 {
-  auto  length = get_length(*ctx.m_space);
+  constexpr double  volume_max = 0.1;
+
+  constexpr double  frequency_table[] = {
+      80.0,
+     120.0,
+     180.0,
+     270.0,
+     405.0,
+     607.5,
+     911.25,
+    1366.875,
+  };
+
+
+  auto  length = get_length();
 
   auto  num_samples = gbstd::get_number_of_samples_by_time(length);
 
-  auto&  pr = ctx.m_space->get_parameter();
+  auto  v = volume_max/8*(1+get_volume_index());
+  auto  f = frequency_table[get_frequency_index()];
 
-  auto  v = pr.m_volume_table[get_volume_index()];
-  auto  f = pr.m_frequency_table[get_frequency_index()];
-
-
-  gbstd::sound_event  evt(length,v,f);
+  gbstd::sound_event  evt(f,v,length);
 
     switch(k)
     {
@@ -76,7 +99,9 @@ void
 onch_word::
 print() const noexcept
 {
-  printf("l%dv%df%d",get_length_index(),get_volume_index(),get_frequency_index());
+  printf("l%dv%df%d",1+get_length_index(),
+                     1+get_volume_index(),
+                     1+get_frequency_index());
 }
 
 

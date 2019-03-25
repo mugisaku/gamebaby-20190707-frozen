@@ -26,7 +26,7 @@ on_frequency_changed()
 
     if(number_of_samples_per_cycle <= 0.0)
     {
-      throw invalid_number_of_samples_per_cycle();
+      number_of_samples_per_cycle = 2;
     }
 
 
@@ -36,7 +36,8 @@ on_frequency_changed()
     if(!m_number_of_samples_per_high ||
        !m_number_of_samples_per_low)
     {
-      throw invalid_number_of_samples_per_cycle();
+      m_number_of_samples_per_high = 1;
+      m_number_of_samples_per_low  = 1;
     }
 }
 

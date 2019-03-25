@@ -46,9 +46,9 @@ read_text(token_block_view  tbv) noexcept
 
               c = *p++;
 
-                if((c >= '0') && (c <= '7'))
+                if((c >= '1') && (c <= '8'))
                 {
-                  *ip = c-'0';
+                  *ip = c-'1';
                 }
 
               else

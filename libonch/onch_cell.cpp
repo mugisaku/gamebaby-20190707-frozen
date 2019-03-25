@@ -13,13 +13,13 @@ namespace gbstd{
 
 uint32_t
 onch_cell::
-get_length(const onch_space&  sp) const noexcept
+get_length() const noexcept
 {
   uint32_t  l = 0;
 
     for(auto&  txt: m_texts)
     {
-      l += txt.get_length(sp);
+      l += txt.get_length();
     }
 
 

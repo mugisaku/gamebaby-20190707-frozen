@@ -19,35 +19,12 @@
 using namespace gbstd;
 
 
-gbstd::canvas
-g_screen_canvas;
-
-
 namespace{
 
 
-void
-main_loop() noexcept
-{
-  constexpr int  delay = 80;
 
-  static uint32_t  next;
-
-  sdl::update_control();
-
-    if(gbstd::g_time >= next)
-    {
-      g_screen_canvas.fill(color());
-
-      sdl::update_screen(g_screen_canvas);
-
-      next = gbstd::g_time+delay;
-    }
-}
-
-
-void
-output(const onch_element&  e, const onch_space&  sp) noexcept
+gbstd::wave
+make_wave(const onch_element&  e, const onch_space&  sp) noexcept
 {
   auto  bin = e.generate_wave(sp);
 
@@ -73,12 +50,44 @@ output(const onch_element&  e, const onch_space&  sp) noexcept
 
   fmt.update();
 
-  gbstd::wave  wav(wavbin.data(),2*wavbin.size(),fmt);
-
-  wav.save_to_file("../__output.wav");
+  return gbstd::wave(wavbin.data(),2*wavbin.size(),fmt);
 }
 
 
+#ifdef __EMSCRIPTEN__
+void
+main_loop() noexcept
+{
+  sdl::update_control();
+
+    if(gbstd::g_dropped_file.size())
+    {
+      gbstd::g_dropped_file.emplace_back(0);
+
+      onch_space  sp;
+
+      auto  p = reinterpret_cast<const char*>(gbstd::g_dropped_file.data());
+
+      sp.load_from_string(p);
+
+      auto  def = sp.find("main");
+
+        if(def && def->get_element())
+        {
+          auto&  e = def->get_element();
+
+          auto  wav = make_wave(e,sp);
+
+          auto  bin = wav.to_binary();
+
+          gbstd::download(bin.data(),bin.size(),"new.wav");
+        }
+
+
+      gbstd::g_dropped_file.clear();
+    }
+}
+#endif
 }
 
 
@@ -92,48 +101,87 @@ main(int  argc, char**  argv)
                   "</pre>");
 
   show_github_link();
-#endif
 
-/*
-  sdl::init(200,100,1.0);
-  sdl::init_sound();
+EM_ASM(
+  var  free = document.getElementById('free');
 
-  g_screen_canvas = sdl::make_screen_canvas();
-*/
+  var  button = document.createElement('button');
+
+  button.innerText = 'compile';
+  button.onclick = function()
+  {
+    var  src = document.getElementById('source');
+
+    var  arr = new Uint8Array(src.value.length);
+
+    var  dst_i = 0;
+
+      for(var  src_i = 0;  src_i < src.value.length;  ++src_i)
+      {
+        var  c = src.value.charCodeAt(src_i);
+
+          if(c <= 0x7F)
+          {
+            arr[dst_i++] = c;
+          }
+      }
 
 
-  onch_space  sp;
-
-  sp.load_from_file("../music.txt");
-
-  auto  def = sp.find("main");
-
-    if(def && def->get_element())
-    {
-      auto&  e = def->get_element();
-
-      e.print();
-
-      output(e,sp);
-    }
+    g_dropped_file_list.push(arr);
+  };
 
 
-/*
-#ifdef __EMSCRIPTEN__
+  var  textarea = document.createElement('textarea');
+
+  textarea.id = 'source';
+  textarea.cols = 60;
+  textarea.rows = 24;
+  textarea.value = 'txt = text{l5v4f1 l5v4f2 l5v4f1 l5v4f2 l5v4f1 l5v4f2}\n sq = square{txt}\n main = column{sq}';
+
+  free.appendChild(textarea);
+  free.appendChild(button);
+);
+
+
   emscripten_set_main_loop(main_loop,0,false);
 #else
-    for(;;)
-    {
-      main_loop();
+report;
+  --argc;
+  ++argv;
 
-      sdl::delay(20);
+  int  n = 0;
+
+    while(argc--)
+    {
+      onch_space  sp;
+
+      auto  path = *argv++;
+
+      sp.load_from_file(path);
+
+      auto  def = sp.find("main");
+
+        if(def && def->get_element())
+        {
+          auto&  e = def->get_element();
+
+          std::string  s(path);
+
+          s += ".wav";
+
+          auto  wav = make_wave(e,sp);
+
+          wav.save_to_file(s.data());
+
+          ++n;
+
+          printf("%s -> %s\n",path,s.data());
+        }
     }
 
 
-  sdl::quit_sound();
-  sdl::quit();
+  printf("%d files were processed\n",n);
 #endif
-*/
 
 
   return 0;

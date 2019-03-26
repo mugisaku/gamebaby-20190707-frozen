@@ -247,9 +247,17 @@ load_from_file(const char*  filepath) noexcept
 {
   auto  s = make_string_from_file(filepath);
 
+  load_from_string(s.data());
+}
+
+
+void
+onch_space::
+load_from_string(const char*  s) noexcept
+{
   tokenizer  tknzr;
 
-  auto  blk = tknzr(s.data());
+  auto  blk = tknzr(s);
 
   token_block_view  tbv(blk);
 

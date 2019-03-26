@@ -232,9 +232,12 @@ onch_space
 public:
   onch_space() noexcept{}
 
+  void  clear() noexcept{m_definition_table.clear();}
+
   const onch_definition*  find(const std::string&  name) const noexcept;
 
   void  load_from_file(const char*  filepath) noexcept;
+  void  load_from_string(const char*  s) noexcept;
 
   void  print() const noexcept;
 

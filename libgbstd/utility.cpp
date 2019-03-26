@@ -3,7 +3,7 @@
 #include<cstring>
 
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 #include<emscripten.h>
 #endif
 
@@ -83,7 +83,7 @@ printf_with_indent(int  indent, const char*  fmt, ...) noexcept
 
 
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 #include<emscripten.h>
 EM_JS(void,js_set_caption,(const char*  s),{
   var  cap = document.getElementById("caption");
@@ -107,20 +107,16 @@ EM_JS(void,js_download,(const uint8_t*  ptr, size_t  size, const char*  filename
 
   var  target = base.slice(ptr,ptr+size);
 
-  var  a = document.createElement("a");
+  g_download_anchor = document.getElementById("ln");
 
-  a.download = UTF8ToString(filename);
+  g_download_anchor.download = UTF8ToString(filename);
 
   var  fr = new FileReader();
 
-  fr.anchor = a;
-
   fr.onload = function(e){
-    var  a = this.anchor;
+    g_download_anchor.href = this.result;
 
-    a.href = this.result;
-
-    a.click();
+    g_download_anchor.click();
   };
 
 

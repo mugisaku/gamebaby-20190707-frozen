@@ -130,7 +130,7 @@ process_mouse_motion(const SDL_MouseMotionEvent&  evt) noexcept
 }
 
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 void
 try_read_dropped_file() noexcept
 {
@@ -187,7 +187,7 @@ process_event(const SDL_Event&  evt) noexcept
            break;
          }
        break;
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   case(SDL_DROPFILE):
         read_dropped_file(evt.drop.file);
 
@@ -219,7 +219,7 @@ update_control() noexcept
 
   gbstd::g_time = SDL_GetTicks();
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
   try_read_dropped_file();
 #endif
 

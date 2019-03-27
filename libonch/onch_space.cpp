@@ -11,6 +11,54 @@ namespace gbstd{
 
 
 
+onch_word
+read_word(const char*  s) noexcept
+{
+  int  li = 0;
+  int  vi = 0;
+  int  fi = 0;
+
+  const char*  cp = s;
+  const char*  np = s;
+
+    for(;;)
+    {
+      int*  ip = nullptr;
+
+        while(!ip)
+        {
+          auto  c = *cp++;
+
+               if(!c){goto QUIT;}
+          else if(c == 'l'){ip = &li;}
+          else if(c == 'v'){ip = &vi;}
+          else if(c == 'f'){ip = &fi;}
+        }
+
+
+        for(;;)
+        {
+          auto  c = *np++;
+
+            if(!c)
+            {goto QUIT;}
+
+          else
+            if((c >= '1') && (c <= '8'))
+            {
+              *ip = c-'1';
+
+              break;
+            }
+        }
+    }
+
+
+QUIT:
+  return onch_word(li,vi,fi);
+}
+
+
 onch_element
 onch_space::
 read_text(token_block_view  tbv) noexcept
@@ -23,42 +71,7 @@ read_text(token_block_view  tbv) noexcept
 
         if(tok.is_identifier())
         {
-          auto  p = tok.get_string().data();
-
-          int  li = 0;
-          int  vi = 0;
-          int  fi = 0;
-
-            for(;;)
-            {
-              auto  c = *p++;
-
-              int*  ip = (c == 'l')? &li
-                        :(c == 'v')? &vi
-                        :(c == 'f')? &fi
-                        :nullptr;
-
-                if(!ip)
-                {
-                  break;
-                }
-
-
-              c = *p++;
-
-                if((c >= '1') && (c <= '8'))
-                {
-                  *ip = c-'1';
-                }
-
-              else
-                {
-                  break;
-                }
-            }
-
-
-          txt.push({li,vi,fi});
+          txt.push(read_word(tok.get_string().data()));
         }
     }
 
@@ -275,6 +288,7 @@ load_from_string(const char*  s) noexcept
           break;
         }
     }
+report;
 }
 
 

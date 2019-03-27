@@ -23,8 +23,8 @@ namespace{
 
 
 
-gbstd::wave
-make_wave(const onch_element&  e, const onch_space&  sp) noexcept
+std::vector<int16_t>
+make_wave_data(const onch_element&  e, const onch_space&  sp) noexcept
 {
   auto  bin = e.generate_wave(sp);
 
@@ -42,6 +42,13 @@ make_wave(const onch_element&  e, const onch_space&  sp) noexcept
     }
 
 
+  return std::move(wavbin);
+}
+
+
+gbstd::wave
+make_wave(const std::vector<int16_t>&  bin) noexcept
+{
   gbstd::wave_format  fmt;
 
   fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
@@ -50,7 +57,7 @@ make_wave(const onch_element&  e, const onch_space&  sp) noexcept
 
   fmt.update();
 
-  return gbstd::wave(wavbin.data(),2*wavbin.size(),fmt);
+  return gbstd::wave(bin.data(),2*bin.size(),fmt);
 }
 
 
@@ -76,7 +83,9 @@ main_loop() noexcept
         {
           auto&  e = def->get_element();
 
-          auto  wav = make_wave(e,sp);
+          auto  wavdat = make_wave_data(e,sp);
+
+          auto  wav = make_wave(wavdat);
 
           auto  bin = wav.to_binary();
 
@@ -136,7 +145,20 @@ EM_ASM(
   textarea.id = 'source';
   textarea.cols = 60;
   textarea.rows = 24;
-  textarea.value = 'txt = text{l5v4f1 l5v4f2 l5v4f1 l5v4f2 l5v4f1 l5v4f2}\n sq = square{txt}\n main = column{sq}';
+  textarea.value =
+   "/*この間がコメント*/"+"\n"
+  +"//行末までコメント"+"\n"
+  +""+"\n"
+  +"//lNvNfN というのが演奏指示の最小単位でword要素と呼びます"+"\n"
+  +"//Nの部分に、1から8まで数字を指定します"+"\n"
+  +""+"\n"
+  +"//wordの列をtext要素を呼びます"+"\n"
+  +"//下記の構文は、txtと言う名前とtext要素とを結びつけます"+"\n"
+  +"txt = text{l5v4f1 l5v4f2 l5v4f1 l5v4f2 l5v4f1 l5v4f2}"+"\n"
+  +""+"\n"
+  +"//square,noise,short_noise"+"\n"
+  +""+"\n"
+  +"sq = square{txt}\n main = column{sq}"+"\n";
 
   free.appendChild(textarea);
   free.appendChild(button);
@@ -145,7 +167,6 @@ EM_ASM(
 
   emscripten_set_main_loop(main_loop,0,false);
 #else
-report;
   --argc;
   ++argv;
 
@@ -169,7 +190,9 @@ report;
 
           s += ".wav";
 
-          auto  wav = make_wave(e,sp);
+          auto  wavdat = make_wave_data(e,sp);
+
+          auto  wav = make_wave(wavdat);
 
           wav.save_to_file(s.data());
 

@@ -152,7 +152,8 @@ context2() noexcept
         constexpr const char*  filepath = "noName.png";
 
 #ifdef __EMSCRIPTEN__
-        download(bin.data(),bin.size(),filepath);
+        update_common_blob(bin.data(),bin.size());
+        download_common_blob(filepath);
 #else
         write_to_file(bin.data(),bin.size(),filepath);
 #endif
@@ -172,7 +173,8 @@ context2() noexcept
         constexpr const char*  filepath = "noName_result.png";
 
 #ifdef __EMSCRIPTEN__
-        download(bin.data(),bin.size(),filepath);
+        update_common_blob(bin.data(),bin.size());
+        download_common_blob(filepath);
 #else
         write_to_file(bin.data(),bin.size(),filepath);
 #endif
@@ -192,7 +194,8 @@ context2() noexcept
         constexpr const char*  filepath = "noName.txt";
 
 #ifdef __EMSCRIPTEN__
-        download(txt.data(),txt.size(),filepath);
+        update_common_blob(txt.data(),txt.size());
+        download_common_blob(filepath);
 #else
         write_to_file(txt.data(),txt.size(),filepath);
 #endif

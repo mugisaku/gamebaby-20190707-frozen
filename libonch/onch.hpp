@@ -5,6 +5,7 @@
 #include"libgbstd/utility.hpp"
 #include"libgbstd/sound.hpp"
 #include"libgbstd/parser.hpp"
+#include"libgbstd/file_op.hpp"
 #include<memory>
 
 
@@ -65,6 +66,7 @@ public:
   onch_text() noexcept{}
 
   void  push(onch_word  w) noexcept{m_words.emplace_back(w);}
+  void  push(const onch_text&  txt) noexcept;
 
   uint32_t  get_length() const noexcept;
 
@@ -239,6 +241,9 @@ public:
   void  load_from_file(const char*  filepath) noexcept;
   void  load_from_string(const char*  s) noexcept;
 
+  std::vector<int16_t>  make_raw_binary() const noexcept;
+
+  std::vector<uint8_t>  make_wave_format_binary() const noexcept;
   void  print() const noexcept;
 
 };

@@ -11,6 +11,17 @@ namespace gbstd{
 
 
 
+void
+onch_text::
+push(const onch_text&  txt) noexcept
+{
+    for(auto  w: txt.m_words)
+    {
+      m_words.emplace_back(w);
+    }
+}
+
+
 uint32_t
 onch_text::
 get_length() const noexcept

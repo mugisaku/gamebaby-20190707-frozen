@@ -23,42 +23,35 @@ namespace{
 
 
 
-std::vector<int16_t>
-make_wave_data(const onch_element&  e, const onch_space&  sp) noexcept
+std::vector<uint8_t>
+g_source_code;
+
+std::vector<uint8_t>
+g_wave_bin;
+
+onch_space
+g_space;
+
+
+void
+update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
 {
-  auto  bin = e.generate_wave(sp);
-
-  std::vector<int16_t>  wavbin(bin.size());
-
-  auto  src     =    bin.data();
-  auto  src_end =    bin.data()+bin.size();
-  auto  dst     = wavbin.data();
-
-    while(src != src_end)
+    if(g_source_code != new_code)
     {
-      auto  v = (*src++)*32767.0;
+      g_source_code = std::move(new_code);
 
-      *dst++ = static_cast<int16_t>(v);
+      g_space.clear();
+
+      g_space.load_from_string(reinterpret_cast<const char*>(g_source_code.data()));
+
+      g_wave_bin = g_space.make_wave_format_binary();
+#ifdef __EMSCRIPTEN__
+      gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
+#endif
     }
-
-
-  return std::move(wavbin);
 }
 
 
-gbstd::wave
-make_wave(const std::vector<int16_t>&  bin) noexcept
-{
-  gbstd::wave_format  fmt;
-
-  fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
-  fmt.set_number_of_bits_per_sample(16);
-  fmt.set_number_of_channels(1);
-
-  fmt.update();
-
-  return gbstd::wave(bin.data(),2*bin.size(),fmt);
-}
 
 
 #ifdef __EMSCRIPTEN__
@@ -69,27 +62,32 @@ main_loop() noexcept
 
     if(gbstd::g_dropped_file.size())
     {
-      gbstd::g_dropped_file.emplace_back(0);
+      auto&  back = gbstd::g_dropped_file.back();
 
-      onch_space  sp;
+      auto  o = back    ;
+                back = 0;
 
-      auto  p = reinterpret_cast<const char*>(gbstd::g_dropped_file.data());
-
-      sp.load_from_string(p);
-
-      auto  def = sp.find("main");
-
-        if(def && def->get_element())
+        if(g_source_code != gbstd::g_dropped_file)
         {
-          auto&  e = def->get_element();
+          update_wave_binary(std::move(gbstd::g_dropped_file));
+        }
 
-          auto  wavdat = make_wave_data(e,sp);
 
-          auto  wav = make_wave(wavdat);
+        if(o == 'p')
+        {
+        EM_ASM(
+          g_object.audio = new Audio();
 
-          auto  bin = wav.to_binary();
+          g_object.audio.src = URL.createObjectURL(g_object.common_blob);
 
-          gbstd::download(bin.data(),bin.size(),"new.wav");
+          g_object.audio.play();
+        );
+        }
+
+      else
+        if(o == 's')
+        {
+          gbstd::download_common_blob("new.wav");
         }
 
 
@@ -110,58 +108,81 @@ main(int  argc, char**  argv)
                   "</pre>");
 
   show_github_link();
+  show_twitter_link();
 
 EM_ASM(
-  var  free = document.getElementById('free');
-
-  var  button = document.createElement('button');
-
-  button.innerText = 'compile';
-  button.onclick = function()
+  g_object.transfer = function(o)
   {
-    var  src = document.getElementById('source');
+    var  src = g_object.textarea.value;
 
-    var  arr = new Uint8Array(src.value.length);
+    var  arr = new Uint8Array(src.length+1);
 
     var  dst_i = 0;
 
-      for(var  src_i = 0;  src_i < src.value.length;  ++src_i)
+      for(var  src_i = 0;  src_i < src.length;  ++src_i)
       {
-        var  c = src.value.charCodeAt(src_i);
+        var  c = src.charCodeAt(src_i);
 
-          if(c <= 0x7F)
-          {
-            arr[dst_i++] = c;
-          }
+        arr[dst_i++] = (c <= 0x7F)? c:' '.charCodeAt(0);
       }
 
 
+    arr[dst_i++] = o;
+
     g_dropped_file_list.push(arr);
   };
+
+  var  free = document.getElementById('free');
+
+  var  play_button = document.createElement('button');
+  var  save_button = document.createElement('button');
+
+  play_button.innerText = 'play';
+  play_button.onclick = function(){g_object.transfer('p'.charCodeAt(0));};
+
+  save_button.innerText = 'save';
+  save_button.onclick = function(){g_object.transfer('s'.charCodeAt(0));};
 
 
   var  textarea = document.createElement('textarea');
 
   textarea.id = 'source';
-  textarea.cols = 60;
-  textarea.rows = 24;
+  textarea.cols = 100;
+  textarea.rows =  28;
   textarea.value =
    "/*この間がコメント*/"+"\n"
   +"//行末までコメント"+"\n"
   +""+"\n"
-  +"//lNvNfN というのが演奏指示の最小単位でword要素と呼びます"+"\n"
-  +"//Nの部分に、1から8まで数字を指定します"+"\n"
+  +"//lvfNNN というのが演奏指示の最小単位でword要素と呼びます"+"\n"
+  +"//Nの部分に、1から8までの数字を指定します"+"\n"
+  +"//lは演奏時間、vは音量、fは音の高低を意味し"+"\n"
+  +"//lvf123と書くと、演奏時間1、音量2、音の高低3という指示になります"+"\n"
   +""+"\n"
-  +"//wordの列をtext要素を呼びます"+"\n"
-  +"//下記の構文は、txtと言う名前とtext要素とを結びつけます"+"\n"
-  +"txt = text{l5v4f1 l5v4f2 l5v4f1 l5v4f2 l5v4f1 l5v4f2}"+"\n"
+  +"//word要素の列をtext要素と呼びます"+"\n"
+  +"//下記の構文は、txt1と言う名前とtext要素とを結びつけます"+"\n"
+  +"txt1 = text{lvf445 lvf443 lvf443 lvf444 lvf445}"+"\n"
   +""+"\n"
-  +"//square,noise,short_noise"+"\n"
+  +"//下記のように、名前と結びつけた要素は再利用することができ"+"\n"
+  +"//繰り返しを表すのに便利です"+"\n"
+  +"txt2 = text{lvf545 txt1 txt1}"+"\n"
   +""+"\n"
-  +"sq = square{txt}\n main = column{sq}"+"\n";
+  +"//square,noise,short_noiseは、cell要素と呼びます"+"\n"
+  +"//text要素を内容とし、その音色を指示します"+"\n"
+  +"sq = square{txt2}"+"\n"
+  +""+"\n"
+  +"//column,rowは、table要素と呼びます"+"\n"
+  +"//columnは内容を同時に演奏し、rowは内容を順番に演奏します"+"\n"
+  +"//table要素の内容となるのは、table要素とcell要素です"+"\n"
+  +"main = column{sq}"+"\n"
+  +""+"\n"
+  +"//mainという名前と結びついた要素が、最終結果として"+"\n"
+  +"//WAVE形式で出力されます"+"\n";
+
+  g_object.textarea = textarea;
 
   free.appendChild(textarea);
-  free.appendChild(button);
+  free.appendChild(play_button);
+  free.appendChild(save_button);
 );
 
 
@@ -180,21 +201,15 @@ EM_ASM(
 
       sp.load_from_file(path);
 
-      auto  def = sp.find("main");
+      auto  wave_bin = sp.make_wave_format_binary();
 
-        if(def && def->get_element())
+        if(wave_bin.size())
         {
-          auto&  e = def->get_element();
-
           std::string  s(path);
 
           s += ".wav";
 
-          auto  wavdat = make_wave_data(e,sp);
-
-          auto  wav = make_wave(wavdat);
-
-          wav.save_to_file(s.data());
+          gbstd::wtite_to_file(wave_bin.data(),wave_bin.size(),s.data());
 
           ++n;
 

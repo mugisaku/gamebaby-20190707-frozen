@@ -96,16 +96,17 @@ EM_JS(void,js_set_description,(const char*  s),{
 EM_JS(int,js_get_from_front_dropped_file,(int  i),{
   return g_dropped_file_list[0][i];
 });
-EM_JS(void,js_download,(const uint8_t*  ptr, size_t  size, const char*  filename),{
-    if(!window.FileReader)
+EM_JS(void,js_update_common_blob,(const uint8_t*  ptr, size_t  size),{
+  var  base = new Blob([HEAP8],{type:"application/octet-stream"});
+
+  g_object.common_blob = base.slice(ptr,ptr+size);
+});
+EM_JS(void,js_download_common_blob,(const char*  filename),{
+    if(!window.FileReader || !g_object.common_blob)
     {
       console.log("error");
     }
 
-
-  var  base = new Blob([HEAP8],{type:"application/octet-stream"});
-
-  var  target = base.slice(ptr,ptr+size);
 
   g_download_anchor = document.getElementById("ln");
 
@@ -120,7 +121,7 @@ EM_JS(void,js_download,(const uint8_t*  ptr, size_t  size, const char*  filename
   };
 
 
-  fr.readAsDataURL(target);
+  fr.readAsDataURL(g_object.common_blob);
 });
 
 
@@ -153,9 +154,14 @@ set_description(const char*  s) noexcept
   js_set_description(s);
 }
 void
-download(const uint8_t*  ptr, size_t  size, const char*  filename) noexcept
+update_common_blob(const uint8_t*  ptr, size_t  size) noexcept
 {
-  js_download(ptr,size,filename);
+  js_update_common_blob(ptr,size);
+}
+void
+download_common_blob(const char*  filename) noexcept
+{
+  js_download_common_blob(filename);
 }
 int
 get_number_of_dropped_files() noexcept

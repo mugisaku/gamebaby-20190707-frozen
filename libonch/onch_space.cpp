@@ -71,7 +71,24 @@ read_text(token_block_view  tbv) noexcept
 
         if(tok.is_identifier())
         {
-          txt.push(read_word(tok.get_string().data()));
+          auto&  id = tok.get_string();
+
+          auto  def = find(id);
+
+            if(def)
+            {
+              auto&  e = def->get_element();
+
+                if(e.is_text())
+                {
+                  txt.push(e.get_text());
+                }
+            }
+
+          else
+            {
+              txt.push(read_word(id.data()));
+            }
         }
     }
 
@@ -288,10 +305,66 @@ load_from_string(const char*  s) noexcept
           break;
         }
     }
-report;
 }
 
 
+std::vector<int16_t>
+onch_space::
+make_raw_binary() const noexcept
+{
+  std::vector<int16_t>  buf;
+
+  auto  def = find("main");
+
+    if(def && def->get_element())
+    {
+      auto&  e = def->get_element();
+
+      auto  wave_data = e.generate_wave(*this);
+
+      buf.resize(wave_data.size());
+
+      auto  src     = wave_data.data();
+      auto  src_end = wave_data.data()+wave_data.size();
+      auto  dst     = buf.data();
+
+        while(src != src_end)
+        {
+          auto  v = (*src++)*32767.0;
+
+          *dst++ = static_cast<int16_t>(v);
+        }
+    }
+
+
+  return std::move(buf);
+}
+
+
+std::vector<uint8_t>
+onch_space::
+make_wave_format_binary() const noexcept
+{
+  auto  raw_bin = make_raw_binary();
+
+    if(raw_bin.size())
+    {
+      gbstd::wave_format  fmt;
+
+      fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
+      fmt.set_number_of_bits_per_sample(16);
+      fmt.set_number_of_channels(1);
+
+      fmt.update();
+
+      gbstd::wave  wav(raw_bin.data(),2*raw_bin.size(),fmt);
+
+      return wav.to_binary();
+    }
+
+
+  return {};
+}
 
 
 void

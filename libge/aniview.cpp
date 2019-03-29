@@ -234,7 +234,8 @@ save_as_apng(const char*  filepath) const noexcept
 
 
 #ifdef __EMSCRIPTEN__
-      download(buf.data(),buf.size(),filepath);
+      update_common_blob(buf.data(),buf.size());
+      download_common_blob(filepath);
 #else
       write_to_file(buf.data(),buf.size(),filepath);
 #endif

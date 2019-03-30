@@ -241,9 +241,11 @@ public:
   void  load_from_file(const char*  filepath) noexcept;
   void  load_from_string(const char*  s) noexcept;
 
-  std::vector<int16_t>  make_raw_binary() const noexcept;
+  std::vector<int16_t>  make_16bit_raw_binary() const noexcept;
+  std::vector<uint8_t>   make_8bit_raw_binary() const noexcept;
 
-  std::vector<uint8_t>  make_wave_format_binary() const noexcept;
+  std::vector<uint8_t>  make_wave_format_binary(int  number_of_bits_per_sample) const noexcept;
+
   void  print() const noexcept;
 
 };

@@ -63,6 +63,17 @@ fput_le16(uint16_t  i, FILE*  f) noexcept
 }
 
 
+inline
+void
+fwrite_le16(const uint16_t*  ptr, size_t  n, FILE*  f) noexcept
+{
+    while(n--)
+    {
+      fput_le16(*ptr++,f);
+    }
+}
+
+
 class riff_chunk;
 
 
@@ -224,9 +235,16 @@ public:
   wave&  assign(const riff_subchunk_view&  rv) noexcept;
   wave&  assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept;
 
+  template<typename  T>
+  wave&  assign(const T*  data, size_t  length, const wave_format&  fmt) noexcept
+  {
+    return assign(static_cast<const void*>(data),sizeof(T)*length,fmt);
+  }
+
   const wave_format&  get_format() const noexcept{return m_format;}
 
   uint32_t  length() const noexcept{return m_length;}
+  uint32_t    size() const noexcept{return m_length;}
 
   const uint8_t*  data() const noexcept{return m_data;}
 

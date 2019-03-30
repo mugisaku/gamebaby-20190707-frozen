@@ -13,7 +13,7 @@ namespace gbstd{
 using f32_t = float;
 using sample_t = f32_t;
 
-constexpr f32_t  g_number_of_samples_per_second = 24000;//1秒あたりのサンプル数
+constexpr f32_t  g_number_of_samples_per_second = 8000;//1秒あたりのサンプル数
 constexpr f32_t  g_number_of_samples_per_millisecond = g_number_of_samples_per_second/1000;//1ミリ秒あたりのサンプル数
 
 inline

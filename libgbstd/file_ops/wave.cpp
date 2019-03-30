@@ -77,6 +77,7 @@ assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept
   m_length = length;
   m_data   = static_cast<const uint8_t*>(data);
 
+
   return *this;
 }
 
@@ -104,7 +105,14 @@ save_to_file(FILE*  f) const noexcept
 
   fput_le32(length(),f);
 
-  fwrite(m_data,1,length(),f);
+    switch(m_format.get_number_of_bits_per_sample())
+    {
+  case( 8): fwrite(m_data,1,length(),f);break;
+  case(16): fwrite_le16(reinterpret_cast<const uint16_t*>(m_data),length()/2,f);break;
+  default:
+      printf("invalid number of bits per sample\n");
+      fwrite(m_data,1,length(),f);
+    }
 }
 
 

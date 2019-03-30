@@ -310,7 +310,7 @@ load_from_string(const char*  s) noexcept
 
 std::vector<int16_t>
 onch_space::
-make_raw_binary() const noexcept
+make_16bit_raw_binary() const noexcept
 {
   std::vector<int16_t>  buf;
 
@@ -343,23 +343,74 @@ make_raw_binary() const noexcept
 
 std::vector<uint8_t>
 onch_space::
-make_wave_format_binary() const noexcept
+make_8bit_raw_binary() const noexcept
 {
-  auto  raw_bin = make_raw_binary();
+  std::vector<uint8_t>  buf;
 
-    if(raw_bin.size())
+  auto  def = find("main");
+
+    if(def && def->get_element())
     {
-      gbstd::wave_format  fmt;
+      auto&  e = def->get_element();
 
-      fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
-      fmt.set_number_of_bits_per_sample(16);
-      fmt.set_number_of_channels(1);
+      auto  wave_data = e.generate_wave(*this);
 
-      fmt.update();
+      buf.resize(wave_data.size());
 
-      gbstd::wave  wav(raw_bin.data(),2*raw_bin.size(),fmt);
+      auto  src     = wave_data.data();
+      auto  src_end = wave_data.data()+wave_data.size();
+      auto  dst     = buf.data();
 
-      return wav.to_binary();
+        while(src != src_end)
+        {
+          auto  v = (*src++)*127.0;
+
+          *dst++ = static_cast<uint8_t>(v+128);
+        }
+    }
+
+
+  return std::move(buf);
+}
+
+
+std::vector<uint8_t>
+onch_space::
+make_wave_format_binary(int  number_of_bits_per_sample) const noexcept
+{
+  auto&  bps = number_of_bits_per_sample;
+
+  gbstd::wave_format  fmt;
+
+  fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
+  fmt.set_number_of_bits_per_sample(bps);
+  fmt.set_number_of_channels(1);
+
+  fmt.update();
+
+    if(bps == 8)
+    {
+      auto  raw_bin = make_8bit_raw_binary();
+
+        if(raw_bin.size())
+        {
+          gbstd::wave  wav(raw_bin.data(),raw_bin.size(),fmt);
+
+          return wav.to_binary();
+        }
+    }
+
+  else
+    if(bps == 16)
+    {
+      auto  raw_bin = make_16bit_raw_binary();
+
+        if(raw_bin.size())
+        {
+          gbstd::wave  wav(raw_bin.data(),raw_bin.size(),fmt);
+
+          return wav.to_binary();
+        }
     }
 
 

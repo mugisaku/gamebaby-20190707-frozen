@@ -214,6 +214,13 @@ noise_device: public sound_device
 protected:
   uint16_t  m_seed=0xFFFF;
 
+  uint32_t  m_number_of_samples_per_cycle=0;
+  uint32_t  m_number_of_remain_samples=0;
+
+  void  on_frequency_changed() override;
+
+  virtual void  update_seed() noexcept;
+
 public:
   void  reset() noexcept;
 
@@ -225,8 +232,9 @@ public:
 class
 short_noise_device: public noise_device
 {
+  void  update_seed() noexcept override;
+
 public:
-  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
 
 };
 

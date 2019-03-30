@@ -209,7 +209,7 @@ EM_ASM(
 
           s += ".wav";
 
-          gbstd::wtite_to_file(wave_bin.data(),wave_bin.size(),s.data());
+          gbstd::write_to_file(wave_bin.data(),wave_bin.size(),s.data());
 
           ++n;
 

@@ -11,9 +11,12 @@ namespace gbstd{
 
 
 
+namespace{
 onch_word
 read_word(const char*  s) noexcept
 {
+  onch_word  w;
+
   int  li = 0;
   int  vi = 0;
   int  fi = 0;
@@ -55,7 +58,13 @@ read_word(const char*  s) noexcept
 
 
 QUIT:
-  return onch_word(li,vi,fi);
+  w.set_l_index(li)
+   .set_v_index(vi)
+   .set_f_index(fi)
+  ;
+
+  return w;
+}
 }
 
 
@@ -249,6 +258,16 @@ read_define(token_block_view&  tbv) noexcept
 
 
   return onch_definition();
+}
+
+
+
+
+void
+onch_space::
+clear() noexcept
+{
+  m_definition_table.clear();
 }
 
 

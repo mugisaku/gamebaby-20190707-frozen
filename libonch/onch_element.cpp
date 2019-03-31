@@ -140,16 +140,16 @@ assign(onch_table&&  tbl) noexcept
 
 uint32_t
 onch_element::
-get_length() const noexcept
+get_length(onch_output_context&  ctx) const noexcept
 {
   uint32_t  l = 0;
 
     switch(m_kind)
     {
   case(kind::null ): break;
-  case(kind::cell ): l = m_data.cel.get_length();break;
-  case(kind::text ): l = m_data.txt.get_length();break;
-  case(kind::table): l = m_data.tbl.get_length();break;
+  case(kind::cell ): l = m_data.cel.get_length(ctx);break;
+  case(kind::text ): l = m_data.txt.get_length(ctx);break;
+  case(kind::table): l = m_data.tbl.get_length(ctx);break;
     }
 
 
@@ -161,15 +161,23 @@ std::vector<f32_t>
 onch_element::
 generate_wave(const onch_space&  sp) const noexcept
 {
-  auto  n = gbstd::get_number_of_samples_by_time(get_length());
-
-  std::vector<gbstd::f32_t>  result(n);
-
   onch_output_context  ctx;
 
   ctx.m_space = &sp;
-  ctx.m_it    = result.data();
-  ctx.m_end   = result.data()+n;
+  ctx.m_last_l_index = 0;
+  ctx.m_last_v_index = 0;
+  ctx.m_last_f_index = 0;
+
+  auto  n = gbstd::get_number_of_samples_by_time(get_length(ctx));
+
+  std::vector<gbstd::f32_t>  result(n);
+
+  ctx.m_it  = result.data();
+  ctx.m_end = result.data()+n;
+
+  ctx.m_last_l_index = 0;
+  ctx.m_last_v_index = 0;
+  ctx.m_last_f_index = 0;
 
   output(ctx);
 

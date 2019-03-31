@@ -6,6 +6,7 @@ set(SOURCES
   onch_cell.cpp
   onch_table.cpp
   onch_element.cpp
+  onch_output_context.cpp
   onch_space.cpp
 )
 

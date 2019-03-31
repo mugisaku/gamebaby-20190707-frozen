@@ -222,7 +222,7 @@ protected:
   virtual void  update_seed() noexcept;
 
 public:
-  void  reset() noexcept;
+  void  reset() noexcept override;
 
   void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
 

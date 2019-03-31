@@ -15,6 +15,7 @@ namespace gbstd{
 
 
 class onch_element;
+class onch_word;
 class onch_text;
 class onch_table;
 class onch_definition;
@@ -27,11 +28,19 @@ onch_output_context
 {
   const onch_space*  m_space;
 
+  int  m_last_v_index=0;
+  int  m_last_f_index=0;
+  int  m_last_l_index=0;
+
   f32_t*   m_it;
   f32_t*  m_end;
 
   std::vector<const onch_text*>   m_text_table;
   std::vector<const onch_table*>  m_table_table;
+
+  int  get_v_index(const onch_word&  w) noexcept;
+  int  get_f_index(const onch_word&  w) noexcept;
+  int  get_l_index(const onch_word&  w) noexcept;
 
 };
 
@@ -39,16 +48,34 @@ onch_output_context
 class
 onch_word
 {
+  static constexpr int  m_modulation_flag = 0x8000;
+  static constexpr int        m_rest_flag = 0x4000;
+
   uint16_t  m_data;
 
 public:
-  constexpr onch_word(int  l=0, int  v=0, int  f=0) noexcept: m_data((l<<8)|(v<<4)|f){}
+  constexpr onch_word() noexcept: m_data(0){}
 
-  constexpr int  get_length_index() const noexcept{return (m_data>>8);}
-  constexpr int  get_volume_index() const noexcept{return (m_data>>4)&15;}
-  constexpr int  get_frequency_index() const noexcept{return (m_data&15);}
+  constexpr int  get_l_index() const noexcept{return (m_data>>8)&7;}
+  constexpr int  get_v_index() const noexcept{return (m_data>>4)&7;}
+  constexpr int  get_f_index() const noexcept{return (m_data   )&7;}
 
-  uint32_t  get_length() const noexcept;
+  constexpr bool  test_l_index() const noexcept{return (m_data>>8)&8;}
+  constexpr bool  test_v_index() const noexcept{return (m_data>>4)&8;}
+  constexpr bool  test_f_index() const noexcept{return (m_data   )&8;}
+
+  constexpr bool  test_modulation_flag() const noexcept{return m_data&m_modulation_flag;}
+  constexpr bool  test_rest_flag()       const noexcept{return m_data&m_rest_flag;}
+
+  onch_word&  set_l_index(int  i) noexcept;
+  onch_word&  set_v_index(int  i) noexcept;
+  onch_word&  set_f_index(int  i) noexcept;
+
+  onch_word&  unset_l_index() noexcept;
+  onch_word&  unset_v_index() noexcept;
+  onch_word&  unset_f_index() noexcept;
+
+  uint32_t  get_length(onch_output_context&  ctx) const noexcept;
 
   void  output(sound_kind  k, onch_output_context&  ctx) const noexcept;
 
@@ -68,7 +95,7 @@ public:
   void  push(onch_word  w) noexcept{m_words.emplace_back(w);}
   void  push(const onch_text&  txt) noexcept;
 
-  uint32_t  get_length() const noexcept;
+  uint32_t  get_length(onch_output_context&  ctx) const noexcept;
 
   void  output(sound_kind  k, onch_output_context&  ctx) const noexcept;
 
@@ -89,7 +116,7 @@ public:
 
   void  push(const onch_text&  txt) noexcept{m_texts.emplace_back(txt);}
 
-  uint32_t  get_length() const noexcept;
+  uint32_t  get_length(onch_output_context&  ctx) const noexcept;
 
   void  output(onch_output_context&  ctx) const noexcept;
 
@@ -121,7 +148,7 @@ public:
 
   void  push(onch_element&&  e) noexcept;
 
-  uint32_t  get_length() const noexcept;
+  uint32_t  get_length(onch_output_context&  ctx) const noexcept;
 
   void  output(onch_output_context&  ctx) const noexcept;
 
@@ -182,7 +209,7 @@ public:
   const onch_cell&    get_cell()  const noexcept{return m_data.cel;}
   const onch_table&   get_table() const noexcept{return m_data.tbl;}
 
-  uint32_t  get_length() const noexcept;
+  uint32_t  get_length(onch_output_context&  ctx) const noexcept;
 
   std::vector<f32_t>  generate_wave(const onch_space&  sp) const noexcept;
 
@@ -234,7 +261,7 @@ onch_space
 public:
   onch_space() noexcept{}
 
-  void  clear() noexcept{m_definition_table.clear();}
+  void  clear() noexcept;
 
   const onch_definition*  find(const std::string&  name) const noexcept;
 

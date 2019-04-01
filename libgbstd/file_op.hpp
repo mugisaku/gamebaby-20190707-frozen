@@ -232,6 +232,9 @@ public:
   wave(const riff_subchunk_view&  rv) noexcept{assign(rv);}
   wave(const void*  data, size_t  length, const wave_format&  fmt) noexcept{assign(data,length,fmt);}
 
+  template<typename  T>
+  wave(const T*  data, size_t  length, const wave_format&  fmt) noexcept{assign(data,length,fmt);}
+
   wave&  assign(const riff_subchunk_view&  rv) noexcept;
   wave&  assign(const void*  data, size_t  length, const wave_format&  fmt) noexcept;
 

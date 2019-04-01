@@ -106,7 +106,7 @@ void
 onch_word::
 output(sound_kind  k, onch_output_context&  ctx) const noexcept
 {
-  constexpr double  volume_max = 0.1;
+  constexpr double  volume_max = 0.8;
 
   constexpr double  frequency_table[] = {
       80.0,

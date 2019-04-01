@@ -104,11 +104,11 @@ save_to_file(FILE*  f) const noexcept
   fwrite("data",1,4,f);
 
   fput_le32(length(),f);
-
+print();
     switch(m_format.get_number_of_bits_per_sample())
     {
-  case( 8): fwrite(m_data,1,length(),f);break;
-  case(16): fwrite_le16(reinterpret_cast<const uint16_t*>(m_data),length()/2,f);break;
+  case( 8): fwrite(m_data,1,m_length,f);break;
+  case(16): fwrite_le16(reinterpret_cast<const uint16_t*>(m_data),m_length/2,f);break;
   default:
       printf("invalid number of bits per sample\n");
       fwrite(m_data,1,length(),f);

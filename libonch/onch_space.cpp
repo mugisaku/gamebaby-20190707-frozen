@@ -443,7 +443,6 @@ print() const noexcept
 {
     for(auto&  def: m_definition_table)
     {
-
       printf("%s = ",def.get_name().data());
 
       def.get_element().print();

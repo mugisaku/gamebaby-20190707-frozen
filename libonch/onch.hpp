@@ -105,20 +105,14 @@ public:
 
 
 class
-onch_cell
+onch_cell: public onch_text
 {
   sound_kind  m_kind;
-
-  std::vector<onch_text>  m_texts;
 
 public:
   onch_cell(sound_kind  k) noexcept: m_kind(k){}
 
-  void  push(const onch_text&  txt) noexcept{m_texts.emplace_back(txt);}
-
-  uint32_t  get_length(onch_output_context&  ctx) const noexcept;
-
-  void  output(onch_output_context&  ctx) const noexcept;
+  void  output(onch_output_context&  ctx) const noexcept{onch_text::output(m_kind,ctx);}
 
   void  print() const noexcept;
 

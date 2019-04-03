@@ -124,40 +124,43 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
 
   auto  num_samples = gbstd::get_number_of_samples_by_time(length);
 
-  auto  v = volume_max/8*(1+ctx.get_v_index(*this));
-  auto  f = frequency_table[ctx.get_f_index(*this)];
-
-  gbstd::sound_event  evt(f,v,length);
-
-    switch(k)
+    if(!test_rest_flag())
     {
-  case(sound_kind::square_wave):
-      {
-        gbstd::square_wave_device  sq;
+      auto  v = volume_max/8*(1+ctx.get_v_index(*this));
+      auto  f = frequency_table[ctx.get_f_index(*this)];
 
-        sq.input(evt);
+      gbstd::sound_event  evt(f,v,length);
 
-        sq.generate_for_number_of_samples(num_samples,ctx.m_it);
-      }
-      break;
-  case(sound_kind::noise):
-      {
-        gbstd::noise_device  ns;
+        switch(k)
+        {
+      case(sound_kind::square_wave):
+          {
+            gbstd::square_wave_device  sq;
 
-        ns.input(evt);
+            sq.input(evt);
 
-        ns.generate_for_number_of_samples(num_samples,ctx.m_it);
-      }
-      break;
-  case(sound_kind::short_noise):
-      {
-        gbstd::short_noise_device  sns;
+            sq.generate_for_number_of_samples(num_samples,ctx.m_it);
+          }
+          break;
+      case(sound_kind::noise):
+          {
+            gbstd::noise_device  ns;
 
-        sns.input(evt);
+            ns.input(evt);
 
-        sns.generate_for_number_of_samples(num_samples,ctx.m_it);
-      }
-      break;
+            ns.generate_for_number_of_samples(num_samples,ctx.m_it);
+          }
+          break;
+      case(sound_kind::short_noise):
+          {
+            gbstd::short_noise_device  sns;
+
+            sns.input(evt);
+
+            sns.generate_for_number_of_samples(num_samples,ctx.m_it);
+          }
+          break;
+        }
     }
 
 
@@ -169,9 +172,31 @@ void
 onch_word::
 print() const noexcept
 {
-  printf("l%dv%df%d",1+get_l_index(),
-                     1+get_v_index(),
-                     1+get_f_index());
+    if(test_rest_flag())
+    {
+      printf("r");
+
+        if(test_l_index()){printf("%d",1+get_l_index());}
+      else                {printf("?");}
+    }
+
+  else
+    {
+      printf("p");
+
+        if(test_l_index()){printf("%d",1+get_l_index());}
+      else                {printf("?");}
+
+      printf("v");
+
+        if(test_v_index()){printf("%d",1+get_v_index());}
+      else                {printf("?");}
+
+      printf("f");
+
+        if(test_f_index()){printf("%d",1+get_f_index());}
+      else                {printf("?");}
+    }
 }
 
 

@@ -17,15 +17,25 @@ read_word(const char*  s) noexcept
 {
   onch_word  w;
 
+  bool  rest = false;
+
   int  li = 0;
   int  vi = 0;
   int  fi = 0;
+
+  constexpr int  l_flag = 1;
+  constexpr int  v_flag = 2;
+  constexpr int  f_flag = 4;
+
+  int  flags = 0;
 
   const char*  cp = s;
   const char*  np = s;
 
     for(;;)
     {
+      int  flag = 0;
+
       int*  ip = nullptr;
 
         while(!ip)
@@ -33,9 +43,10 @@ read_word(const char*  s) noexcept
           auto  c = *cp++;
 
                if(!c){goto QUIT;}
-          else if(c == 'l'){ip = &li;}
-          else if(c == 'v'){ip = &vi;}
-          else if(c == 'f'){ip = &fi;}
+          else if((c == 'l') || (c == 'p')){  flag = l_flag;                ip = &li;}
+          else if((c == 'r')              ){  flag = l_flag;  rest = true;  ip = &li;}
+          else if((c == 'v')              ){  flag = v_flag;                ip = &vi;}
+          else if((c == 'f')              ){  flag = f_flag;                ip = &fi;}
         }
 
 
@@ -51,6 +62,8 @@ read_word(const char*  s) noexcept
             {
               *ip = c-'1';
 
+              flags |= flag;
+
               break;
             }
         }
@@ -58,10 +71,18 @@ read_word(const char*  s) noexcept
 
 
 QUIT:
-  w.set_l_index(li)
-   .set_v_index(vi)
-   .set_f_index(fi)
-  ;
+    if(rest)
+    {
+      w.set_rest_flag();
+    }
+
+  else
+    {
+        if(flags&l_flag){w.set_l_index(li);}
+        if(flags&v_flag){w.set_v_index(vi);}
+        if(flags&f_flag){w.set_f_index(fi);}
+    }
+
 
   return w;
 }

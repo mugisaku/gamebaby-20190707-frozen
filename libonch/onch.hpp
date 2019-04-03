@@ -71,6 +71,12 @@ public:
   onch_word&  set_v_index(int  i) noexcept;
   onch_word&  set_f_index(int  i) noexcept;
 
+  onch_word&  set_modulation_flag() noexcept{  m_data |= m_modulation_flag;  return *this;}
+  onch_word&  set_rest_flag()       noexcept{  m_data |=       m_rest_flag;  return *this;}
+
+  onch_word&  unset_modulation_flag() noexcept{  m_data &= ~m_modulation_flag;  return *this;}
+  onch_word&  unset_rest_flag()       noexcept{  m_data &=       ~m_rest_flag;  return *this;}
+
   onch_word&  unset_l_index() noexcept;
   onch_word&  unset_v_index() noexcept;
   onch_word&  unset_f_index() noexcept;

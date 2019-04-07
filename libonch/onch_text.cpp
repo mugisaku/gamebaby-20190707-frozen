@@ -55,12 +55,17 @@ void
 onch_text::
 print() const noexcept
 {
+  printf("text{");
+
     for(auto  w: m_words)
     {
       w.print();
 
       printf(" ");
     }
+
+
+  printf("}");
 }
 
 

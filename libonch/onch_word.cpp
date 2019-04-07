@@ -76,8 +76,8 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
 
       auto  v0 = ctx.get_volume(get_v0_spec(),get_v0_value());
       auto  v1 = ctx.get_volume(get_v1_spec(),get_v1_value());
-      auto  f0 = ctx.get_volume(get_f0_spec(),get_f0_value());
-      auto  f1 = ctx.get_volume(get_f1_spec(),get_f1_value());
+      auto  f0 = ctx.get_frequency(get_f0_spec(),get_f0_value());
+      auto  f1 = ctx.get_frequency(get_f1_spec(),get_f1_value());
 
       instr.set_length(l)
            .set_start_volume(v0)
@@ -108,6 +108,8 @@ void
 onch_word::
 print() const noexcept
 {
+  printf("word{");
+
     if(test_rest_flag())
     {
       printf("r");
@@ -154,6 +156,9 @@ print() const noexcept
       else if(f1spe == specs::index){printf("%d",1+f1val);}
       else if(f1spe == specs::no_spec){printf("?");}
     }
+
+
+  printf("}");
 }
 
 

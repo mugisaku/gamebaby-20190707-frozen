@@ -16,6 +16,8 @@ update() noexcept
 
   set_number_of_upward_samples(  num_samples/2);
   set_number_of_downward_samples(num_samples/2);
+
+  update_seed();
 }
 
 

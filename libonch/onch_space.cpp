@@ -138,8 +138,7 @@ read_word(const char*  ptr, const char*  end) noexcept
           break;
         }
     }
-w.print();
-printf("\n");
+
 
   return w;
 }
@@ -414,6 +413,7 @@ load_from_file(const char*  filepath) noexcept
   auto  s = make_string_from_file(filepath);
 
   load_from_string(s.data());
+print();
 }
 
 

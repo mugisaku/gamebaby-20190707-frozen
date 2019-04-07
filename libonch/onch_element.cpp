@@ -51,6 +51,9 @@ assign(const onch_element&   rhs) noexcept
         {
       case(kind::null):
           break;
+      case(kind::word):
+          new(&m_data) onch_word(rhs.m_data.wor);
+          break;
       case(kind::cell):
           new(&m_data) onch_cell(rhs.m_data.cel);
           break;
@@ -82,6 +85,9 @@ assign(onch_element&&  rhs) noexcept
         {
       case(kind::null):
           break;
+      case(kind::word):
+          new(&m_data) onch_word(rhs.m_data.wor);
+          break;
       case(kind::cell):
           new(&m_data) onch_cell(std::move(rhs.m_data.cel));
           break;
@@ -94,6 +100,19 @@ assign(onch_element&&  rhs) noexcept
         }
     }
 
+
+  return *this;
+}
+
+
+onch_element&
+onch_element::
+assign(onch_word  wor) noexcept
+{
+  clear();
+
+  m_kind = kind::word;
+  new(&m_data) onch_word(std::move(wor));
 
   return *this;
 }
@@ -140,16 +159,17 @@ assign(onch_table&&  tbl) noexcept
 
 uint32_t
 onch_element::
-get_length(onch_output_context&  ctx) const noexcept
+get_output_length(onch_output_context&  ctx) const noexcept
 {
   uint32_t  l = 0;
 
     switch(m_kind)
     {
   case(kind::null ): break;
-  case(kind::cell ): l = m_data.cel.get_length(ctx);break;
-  case(kind::text ): l = m_data.txt.get_length(ctx);break;
-  case(kind::table): l = m_data.tbl.get_length(ctx);break;
+  case(kind::word ): l = m_data.wor.get_output_length(ctx);break;
+  case(kind::cell ): l = m_data.cel.get_output_length(ctx);break;
+  case(kind::text ): l = m_data.txt.get_output_length(ctx);break;
+  case(kind::table): l = m_data.tbl.get_output_length(ctx);break;
     }
 
 
@@ -164,20 +184,17 @@ generate_wave(const onch_space&  sp) const noexcept
   onch_output_context  ctx;
 
   ctx.m_space = &sp;
-  ctx.m_last_l_index = 0;
-  ctx.m_last_v_index = 0;
-  ctx.m_last_f_index = 0;
 
-  auto  n = gbstd::get_number_of_samples_by_time(get_length(ctx));
+  auto  n = gbstd::get_number_of_samples_by_time(get_output_length(ctx));
 
   std::vector<gbstd::f32_t>  result(n);
 
   ctx.m_it  = result.data();
   ctx.m_end = result.data()+n;
 
-  ctx.m_last_l_index = 0;
-  ctx.m_last_v_index = 0;
-  ctx.m_last_f_index = 0;
+  ctx.m_last_length    = 0;
+  ctx.m_last_volume    = 0;
+  ctx.m_last_frequency = 0;
 
   output(ctx);
 
@@ -192,6 +209,7 @@ output(onch_output_context&  ctx) const noexcept
     switch(m_kind)
     {
   case(kind::null ): break;
+  case(kind::word ): m_data.wor.output(sound_kind::square_wave,ctx);break;
   case(kind::cell ): m_data.cel.output(ctx);break;
   case(kind::text ): m_data.txt.output(sound_kind::square_wave,ctx);break;
   case(kind::table): m_data.tbl.output(ctx);break;
@@ -206,6 +224,7 @@ print() const noexcept
     switch(m_kind)
     {
   case(kind::null ): printf("null");break;
+  case(kind::word ): m_data.wor.print();break;
   case(kind::cell ): m_data.cel.print();break;
   case(kind::text ): m_data.txt.print();break;
   case(kind::table): m_data.tbl.print();break;

@@ -12,77 +12,134 @@ namespace gbstd{
 
 
 namespace{
-onch_word
-read_word(const char*  s) noexcept
+bool
+isnum(int  c) noexcept
 {
-  onch_word  w;
+  return (c == '?') || ((c >= '0') && (c <= '8')) ;
+}
 
-  bool  rest = false;
 
-  int  li = 0;
-  int  vi = 0;
-  int  fi = 0;
+struct
+decoder
+{
+  char  symbol;
 
-  constexpr int  l_flag = 1;
-  constexpr int  v_flag = 2;
-  constexpr int  f_flag = 4;
+  char   first_spec;
+  char  second_spec;
 
-  int  flags = 0;
+  char   first_number;
+  char  second_number;
 
-  const char*  cp = s;
-  const char*  np = s;
+  decoder(const char*&  ptr) noexcept;
+
+};
+
+
+decoder::
+decoder(const char*&  ptr) noexcept
+{
+  symbol = 0;
+
+   first_spec = onch_word::specs::no_spec;
+  second_spec = onch_word::specs::no_spec;
+
+   first_number = 0;
+  second_number = 0;
 
     for(;;)
     {
-      int  flag = 0;
+      auto  c = *ptr++;
 
-      int*  ip = nullptr;
+        if(c == 0)
+        {break;}
 
-        while(!ip)
+      else
+        if((c == 'p') ||
+           (c == 'r') ||
+           (c == 'v') ||
+           (c == 'f'))
         {
-          auto  c = *cp++;
+          symbol = c         ;
+                   c = *ptr++;
 
-               if(!c){goto QUIT;}
-          else if((c == 'l') || (c == 'p')){  flag = l_flag;                ip = &li;}
-          else if((c == 'r')              ){  flag = l_flag;  rest = true;  ip = &li;}
-          else if((c == 'v')              ){  flag = v_flag;                ip = &vi;}
-          else if((c == 'f')              ){  flag = f_flag;                ip = &fi;}
-        }
-
-
-        for(;;)
-        {
-          auto  c = *np++;
-
-            if(!c)
-            {goto QUIT;}
-
-          else
-            if((c >= '1') && (c <= '8'))
+            if(isnum(c))
             {
-              *ip = c-'1';
+              first_spec = (c == '?')? onch_word::specs::no_spec
+                          :(c == '0')? onch_word::specs::zero
+                          :            onch_word::specs::index;
 
-              flags |= flag;
+                if(first_spec == onch_word::specs::index)
+                {
+                  first_number = c-'1';
+                }
 
-              break;
+
+              c = *ptr++;
+
+                if(isnum(c))
+                {
+                  second_spec = (c == '?')? onch_word::specs::no_spec
+                               :(c == '0')? onch_word::specs::zero
+                               :            onch_word::specs::index;
+
+
+                    if(second_spec == onch_word::specs::index)
+                    {
+                      second_number = c-'1';
+                    }
+                }
             }
+
+
+          break;
         }
     }
+}
 
 
-QUIT:
-    if(rest)
+onch_word
+read_word(const char*  ptr, const char*  end) noexcept
+{
+  onch_word  w;
+
+    for(;;)
     {
-      w.set_rest_flag();
-    }
+      decoder  dec(ptr);
 
-  else
-    {
-        if(flags&l_flag){w.set_l_index(li);}
-        if(flags&v_flag){w.set_v_index(vi);}
-        if(flags&f_flag){w.set_f_index(fi);}
-    }
+        if(dec.symbol == 'p')
+        {
+          w.set_l(dec.first_spec,dec.first_number);
+        }
 
+      else
+        if(dec.symbol == 'r')
+        {
+          w.set_rest_flag();
+
+          w.set_l(dec.first_spec,dec.first_number);
+        }
+
+      else
+        if(dec.symbol == 'v')
+        {
+          w.set_v( dec.first_spec, dec.first_number,
+                  dec.second_spec,dec.second_number);
+        }
+
+      else
+        if(dec.symbol == 'f')
+        {
+          w.set_f( dec.first_spec, dec.first_number,
+                  dec.second_spec,dec.second_number);
+        }
+
+      else
+        {
+          break;
+        }
+    }
+w.print();
+printf("\n");
 
   return w;
 }
@@ -97,28 +154,35 @@ read_text(token_block_view  tbv) noexcept
 
     while(tbv)
     {
-      auto&  tok = *tbv++;
-
-        if(tok.is_identifier())
+        if(tbv[0].is_double_quoted() || tbv[0].is_single_quoted())
         {
-          auto&  id = tok.get_string();
+          auto&  s = tbv[0].get_string();
 
-          auto  def = find(id);
+          ++tbv;
 
-            if(def)
+          txt.push(read_word(s.data(),s.data()+s.size()));
+        }
+
+      else
+        if(tbv[0].is_operator_code("*") &&
+           tbv[1].is_identifier())
+        {
+          auto&  id = tbv[1].get_string();
+
+          tbv += 2;
+
+          auto  e = find(id);
+
+            if(e)
             {
-              auto&  e = def->get_element();
-
-                if(e.is_text())
-                {
-                  txt.push(e.get_text());
-                }
+                   if(e->is_text()){txt.push(e->get_text());}
+              else if(e->is_word()){txt.push(e->get_word());}
             }
+        }
 
-          else
-            {
-              txt.push(read_word(id.data()));
-            }
+      else
+        {
+          ++tbv;
         }
     }
 
@@ -153,19 +217,24 @@ read_cell(sound_kind  sk, token_block_view  tbv) noexcept
 
           else
             {
-              auto  def = find(id);
+              ++tbv;
+            }
+        }
 
-              tbv += 1;
+      else
+        if(tbv[0].is_operator_code("*") &&
+           tbv[1].is_identifier())
+        {
+          auto&  id = tbv[1].get_string();
 
-                if(def)
-                {
-                  auto&  e = def->get_element();
+          tbv += 2;
 
-                    if(e.is_text())
-                    {
-                      cel.push(e.get_text());
-                    }
-                }
+          auto  e = find(id);
+
+            if(e)
+            {
+                   if(e->is_text()){cel.push(e->get_text());}
+              else if(e->is_word()){cel.push(e->get_word());}
             }
         }
 
@@ -206,14 +275,23 @@ read_table(onch_table_kind  tk, token_block_view  tbv) noexcept
 
           else
             {
-              auto  def = find(id);
+              ++tbv;
+            }
+        }
 
-              tbv += 1;
+      else
+        if(tbv[0].is_operator_code("*") &&
+           tbv[1].is_identifier())
+        {
+          auto&  id = tbv[1].get_string();
 
-                if(def)
-                {
-                  tbl.push(onch_element(def->get_element()));
-                }
+          tbv += 2;
+
+          auto  e = find(id);
+
+            if(e && (e->is_table() || e->is_cell()))
+            {
+              tbl.push(onch_element(*e));
             }
         }
 
@@ -240,7 +318,7 @@ read_element(const std::string&  keyword, token_block_view  tbv) noexcept
   else if(keyword ==        "text"){return read_text(tbv);}
   else
     {
-//      printf("%s is unknown keyword\n",keyword.data());
+      printf("%s is unknown keyword\n",keyword.data());
     }
 
 
@@ -253,22 +331,40 @@ onch_space::
 read_define(token_block_view&  tbv) noexcept
 {
     if(tbv[0].is_identifier() &&
-       tbv[1].is_operator_code("=") &&
-       tbv[2].is_identifier() &&
-       tbv[3].is_block("{","}"))
+       tbv[1].is_operator_code("="))
     {
-      auto&       id = tbv[0].get_string();
-      auto&  keyword = tbv[2].get_string();
-
-      auto  deftbv = token_block_view(tbv[3].get_block());
-
-      tbv += 4;
-
-      auto  e = read_element(keyword,deftbv);
-
-        if(e)
+        if(tbv[2].is_identifier() &&
+           tbv[3].is_block("{","}"))
         {
-          return onch_definition(id,std::move(e));
+          auto&       id = tbv[0].get_string();
+          auto&  keyword = tbv[2].get_string();
+
+          auto  deftbv = token_block_view(tbv[3].get_block());
+
+          tbv += 4;
+
+          auto  e = read_element(keyword,deftbv);
+
+            if(e)
+            {
+              return onch_definition(id,std::move(e));
+            }
+        }
+
+      else
+        if(tbv[2].is_operator_code("*") &&
+           tbv[3].is_identifier())
+        {
+          auto&  id = tbv[3].get_string();
+
+          tbv += 4;
+
+          auto  e = find(id);
+
+            if(e)
+            {
+              return onch_definition(id,onch_element(*e));
+            }
         }
     }
 
@@ -294,7 +390,7 @@ clear() noexcept
 
 
 
-const onch_definition*
+const onch_element*
 onch_space::
 find(const std::string&  name) const noexcept
 {
@@ -302,7 +398,7 @@ find(const std::string&  name) const noexcept
     {
         if(def.get_name() == name)
         {
-          return &def;
+          return &def.get_element();
         }
     }
 
@@ -354,13 +450,11 @@ make_16bit_raw_binary() const noexcept
 {
   std::vector<int16_t>  buf;
 
-  auto  def = find("main");
+  auto  e = find("main");
 
-    if(def && def->get_element())
+    if(e)
     {
-      auto&  e = def->get_element();
-
-      auto  wave_data = e.generate_wave(*this);
+      auto  wave_data = e->generate_wave(*this);
 
       buf.resize(wave_data.size());
 
@@ -387,13 +481,11 @@ make_8bit_raw_binary() const noexcept
 {
   std::vector<uint8_t>  buf;
 
-  auto  def = find("main");
+  auto  e = find("main");
 
-    if(def && def->get_element())
+    if(e)
     {
-      auto&  e = def->get_element();
-
-      auto  wave_data = e.generate_wave(*this);
+      auto  wave_data = e->generate_wave(*this);
 
       buf.resize(wave_data.size());
 

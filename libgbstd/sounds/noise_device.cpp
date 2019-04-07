@@ -10,27 +10,12 @@ namespace gbstd{
 
 void
 noise_device::
-reset() noexcept
+update() noexcept
 {
-  sound_device::reset();
+  auto  num_samples = g_number_of_samples_per_second/get_frequency()/8;
 
-  m_seed = 0xFFFF;
-}
-
-
-void
-noise_device::
-on_frequency_changed()
-{
-  m_number_of_samples_per_cycle = static_cast<uint32_t>(g_number_of_samples_per_second/get_frequency()/8);
-
-    if(!m_number_of_samples_per_cycle)
-    {
-      m_number_of_samples_per_cycle = 1;
-    }
-
-
-  m_number_of_remain_samples = m_number_of_samples_per_cycle;
+  set_number_of_upward_samples(  num_samples/2);
+  set_number_of_downward_samples(num_samples/2);
 }
 
 
@@ -43,36 +28,6 @@ update_seed() noexcept
 }
 
 
-void
-noise_device::
-generate_for_number_of_samples(uint32_t  n, sample_t*  buffer)
-{
-    if(!m_number_of_samples_per_cycle)
-    {
-      m_number_of_samples_per_cycle = 1;
-    }
-
-
-    while(!is_slept() && n--)
-    {
-        if(!m_number_of_remain_samples)
-        {
-          m_number_of_remain_samples = m_number_of_samples_per_cycle;
-
-          update_seed();
-        }
-
-      else
-        {
-          --m_number_of_remain_samples;
-        }
-
-
-      int  sample = static_cast<int16_t>(m_seed);
-
-      put(sample/32767.0*get_volume(),*buffer++);
-    }
-}
 
 
 }

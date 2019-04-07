@@ -52,77 +52,36 @@ sound_kind
 };
 
 
-struct
-sound_event
+class
+sound_instruction
 {
   uint32_t  m_length;
 
-  f32_t  m_start_frequency;
-  f32_t    m_end_frequency;
-
-  uint32_t  m_number_of_fm_steps;
-
   sample_t  m_start_volume;
-  sample_t    m_end_volume;
+  sample_t  m_end_volume;
 
-  uint32_t  m_number_of_vm_steps;
+  f32_t  m_start_frequency;
+  f32_t  m_end_frequency;
 
 public:
-  sound_event() noexcept{}
-  sound_event(f32_t  f, sample_t  v, uint32_t  l) noexcept{assign(f,v,l);}
+  sound_instruction() noexcept{}
 
-  sound_event&  assign(f32_t  f, sample_t  v, uint32_t  l) noexcept
-  {
-    m_length = l;
+  sound_instruction&  set_length(uint32_t  l) noexcept{  m_length    = l;  return *this;}      
 
-    m_start_frequency = f;
-    m_end_frequency   = f;
-    m_start_volume    = v;
-    m_end_volume      = v;
-
-    m_number_of_fm_steps = 1;
-    m_number_of_vm_steps = 1;
-
-    return *this;
-  }
+  sound_instruction&  set_start_volume(sample_t  v) noexcept{  m_start_volume    = v;  return *this;}      
+  sound_instruction&  set_end_volume(  sample_t  v) noexcept{  m_end_volume      = v;  return *this;}      
+  sound_instruction&  set_start_frequency(f32_t  f) noexcept{  m_start_frequency = f;  return *this;}      
+  sound_instruction&  set_end_frequency(  f32_t  f) noexcept{  m_end_frequency   = f;  return *this;}      
 
   uint32_t  get_length() const noexcept{return m_length;}
-
   f32_t  get_start_frequency() const noexcept{return m_start_frequency;}
-  f32_t    get_end_frequency() const noexcept{return   m_end_frequency;}
-
+  f32_t  get_end_frequency() const noexcept{return m_end_frequency;}
   sample_t  get_start_volume() const noexcept{return m_start_volume;}
-  sample_t    get_end_volume() const noexcept{return   m_end_volume;}
-
-  uint32_t  get_number_of_vm_steps() const noexcept{return m_number_of_vm_steps;}
-  uint32_t  get_number_of_fm_steps() const noexcept{return m_number_of_fm_steps;}
+  sample_t  get_end_volume() const noexcept{return m_end_volume;}
 
 };
 
 
-
-
-struct
-modulation_status
-{
-  f32_t  m_current=0;
-  f32_t  m_increment=0;
-
-  uint32_t  m_initial_number_of_remain_samples=0;
-  uint32_t  m_number_of_remain_samples=0;
-  uint32_t  m_number_of_steps=0;
-
-  bool  m_changed=false;
-
-  void  clear() noexcept;
-
-  void  step();
-
-  void  change_current(f32_t  v);
-
-  void  set(f32_t  start, f32_t  target, uint32_t  num_steps, uint32_t  ms);
-
-};
 
 
 //vm is Volume    Modulation音量変調
@@ -130,59 +89,42 @@ modulation_status
 class
 sound_device
 {
+  bool  m_downward_flag=false;
+
+  uint32_t  m_length=0;
+
+  f32_t  m_fm_current  =0;
+  f32_t  m_fm_increment=0;
+
+  f32_t  m_vm_current  =0;
+  f32_t  m_vm_increment=0;
+
+  f32_t  m_number_of_remain_samples=0;
+
+  f32_t  m_number_of_upward_samples  =0;
+  f32_t  m_number_of_downward_samples=0;
+
 protected:
-  using callback = void(*)(sound_device&  dev, void*  data);
+  virtual f32_t  get_sample() noexcept{return is_downward()? -get_volume():get_volume();}
 
-  struct flags{
-    static constexpr int  slept = 1;
-    static constexpr int  muted = 2;
-  };
+  void  set_number_of_upward_samples(  f32_t  v) noexcept{m_number_of_upward_samples   = v;}
+  void  set_number_of_downward_samples(f32_t  v) noexcept{m_number_of_downward_samples = v;}
 
+  virtual void  update() noexcept=0;
 
-  status_value<int>  m_status;
+  bool  is_downward() const noexcept{return m_downward_flag;}
 
-  uint32_t  m_number_of_remain_samples_for_timer=0;
-
-  void  process_timer() noexcept;
-
-
-  modulation_status  m_fm_status;
-  modulation_status  m_vm_status;
-
-
-  std::vector<sound_event>  m_event_queue;
-
-  int  m_event_index;
-
-  void  pump_event() noexcept;
-
-  void  put(sample_t  src, sample_t&  dst);
-
-  virtual void  on_frequency_changed(){}
-
-  void  check_frequency();
+  f32_t  get_volume()    const noexcept{return m_vm_current;}
+  f32_t  get_frequency() const noexcept{return m_fm_current;}
 
 public:
-  sound_device() noexcept{sleep();}
+  sound_device(                               ) noexcept{}
+  sound_device(const sound_instruction&  instr) noexcept;
 
-  void  input(const sound_event&  evt) noexcept;
+  uint32_t  get_length() const noexcept{return m_length;}
+  uint32_t  get_number_of_samples() const noexcept{return get_number_of_samples_by_time(m_length);}
 
-  virtual void  reset() noexcept;
-
-  bool  is_slept() const noexcept{return m_status.test( flags::slept);}
-  void     sleep()       noexcept{m_status.set(  flags::slept);}
-  void      wake()       noexcept{m_status.unset(flags::slept);}
-
-  bool  is_muted() const noexcept{return m_status.test( flags::muted);}
-  void      mute()       noexcept{m_status.set(  flags::muted);}
-  void    unmute()       noexcept{m_status.unset(flags::muted);}
-
-  f32_t  get_frequency() const noexcept{return m_fm_status.m_current;}
-  f32_t     get_volume() const noexcept{return m_vm_status.m_current;}
-
-  void  push(std::initializer_list<sound_event>  ls);
-
-  void  print() const noexcept;
+  void  mix(f32_t*  ptr) noexcept;
 
 };
 
@@ -190,20 +132,10 @@ public:
 class
 square_wave_device: public sound_device
 {
-protected:
-  uint32_t  m_number_of_samples_per_high=0;
-  uint32_t  m_number_of_samples_per_low =0;
-
-  uint32_t  m_number_of_remain_samples=0;
-
-  bool  m_low_phase=false;
-
-  void  on_frequency_changed() override;
+  void  update() noexcept override;
 
 public:
-  void  reset() noexcept override;
-
-  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
+  using sound_device::sound_device;
 
 };
 
@@ -214,17 +146,14 @@ noise_device: public sound_device
 protected:
   uint16_t  m_seed=0xFFFF;
 
-  uint32_t  m_number_of_samples_per_cycle=0;
-  uint32_t  m_number_of_remain_samples=0;
-
-  void  on_frequency_changed() override;
-
   virtual void  update_seed() noexcept;
 
-public:
-  void  reset() noexcept override;
+  void  update() noexcept override;
 
-  void  generate_for_number_of_samples(uint32_t  n, sample_t*  buffer);
+  f32_t  get_sample() noexcept override{return static_cast<int16_t>(m_seed)/32767.0*get_volume();}
+
+public:
+  using sound_device::sound_device;
 
 };
 
@@ -235,6 +164,7 @@ short_noise_device: public noise_device
   void  update_seed() noexcept override;
 
 public:
+  using noise_device::noise_device;
 
 };
 

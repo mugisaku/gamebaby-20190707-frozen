@@ -24,13 +24,13 @@ push(const onch_text&  txt) noexcept
 
 uint32_t
 onch_text::
-get_length(onch_output_context&  ctx) const noexcept
+get_output_length(onch_output_context&  ctx) const noexcept
 {
   uint32_t  l = 0;
 
     for(auto  w: m_words)
     {
-      l += w.get_length(ctx);
+      l += w.get_output_length(ctx);
     }
 
 

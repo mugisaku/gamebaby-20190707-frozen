@@ -11,45 +11,104 @@ namespace gbstd{
 
 
 
-int
+f32_t
 onch_output_context::
-get_v_index(const onch_word&  w) noexcept
+get_volume(int  spec, int value) noexcept
 {
-    if(w.test_v_index())
+    if(spec == onch_word::specs::no_spec)
     {
-      m_last_v_index = w.get_v_index();
+    }
+
+  else
+    if(spec == onch_word::specs::zero)
+    {
+      m_last_volume = 0;
+    }
+
+  else
+    if(spec == onch_word::specs::index)
+    {
+      constexpr f32_t  volume_max = 0.8;
+
+      m_last_volume = volume_max/8*(1+value);
     }
 
 
-  return m_last_v_index;
+  return m_last_volume;
 }
 
 
-int
+f32_t
 onch_output_context::
-get_f_index(const onch_word&  w) noexcept
+get_frequency(int  spec, int value) noexcept
 {
-    if(w.test_f_index())
+    if(spec == onch_word::specs::no_spec)
     {
-      m_last_f_index = w.get_f_index();
+    }
+
+  else
+    if(spec == onch_word::specs::zero)
+    {
+      m_last_frequency = 0;
+    }
+
+  else
+    if(spec == onch_word::specs::index)
+    {
+      constexpr f32_t  frequency_table[] = {
+          80.0,
+         120.0,
+         180.0,
+         270.0,
+         405.0,
+         607.5,
+         911.25,
+        1366.875,
+      };
+
+
+      m_last_frequency = frequency_table[value];
     }
 
 
-  return m_last_f_index;
+  return m_last_frequency;
 }
 
 
-int
+uint32_t
 onch_output_context::
-get_l_index(const onch_word&  w) noexcept
+get_length(int  spec, int value) noexcept
 {
-    if(w.test_l_index())
+    if(spec == onch_word::specs::no_spec)
     {
-      m_last_l_index = w.get_l_index();
+    }
+
+  else
+    if(spec == onch_word::specs::zero)
+    {
+      m_last_length = 0;
+    }
+
+  else
+    if(spec == onch_word::specs::index)
+    {
+      constexpr uint32_t  length_table[] = {
+          40,
+          80,
+         160,
+         320,
+         640,
+        1280,
+        2560,
+        5120,
+      };
+
+
+      m_last_length = length_table[value];
     }
 
 
-  return m_last_l_index;
+  return m_last_length;
 }
 
 

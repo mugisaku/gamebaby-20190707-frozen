@@ -8,124 +8,114 @@ namespace gbstd{
 
 
 
+namespace{
 void
-sound_device::
-input(const sound_event&  evt) noexcept
+set_modulation(f32_t  start, f32_t  end, uint32_t  ms, f32_t&  cur, f32_t&  inc) noexcept
 {
-  auto  l = evt.get_length();
-
-  m_vm_status.set(   evt.get_start_volume(),   evt.get_end_volume(),evt.get_number_of_vm_steps(),l);
-  m_fm_status.set(evt.get_start_frequency(),evt.get_end_frequency(),evt.get_number_of_fm_steps(),l);
-
-  m_number_of_remain_samples_for_timer = get_number_of_samples_by_time(l);
-
-  wake();
-}
-
-
-void
-sound_device::
-reset() noexcept
-{
-  m_status.clear();
-
-  m_fm_status.clear();
-  m_vm_status.clear();
-
-  m_event_queue.clear();
-
-  m_event_index = 0;
-}
-
-
-
-
-void
-sound_device::
-process_timer() noexcept
-{
-    if(m_number_of_remain_samples_for_timer)
+    if(ms <= 1)
     {
-        if(!--m_number_of_remain_samples_for_timer)
+      cur = end;
+      inc =   0;
+
+      return;
+    }
+
+
+  auto  diff = std::abs(end-start);
+
+  cur = start;
+  inc = diff/ms;
+
+    if(start > end)
+    {
+      inc = -inc;
+    }
+}
+}
+
+
+
+
+sound_device::
+sound_device(const sound_instruction&  instr) noexcept
+{
+  m_length = instr.get_length();
+
+  set_modulation(instr.get_start_volume()   ,instr.get_end_volume()   ,m_length,m_vm_current,m_vm_increment);
+  set_modulation(instr.get_start_frequency(),instr.get_end_frequency(),m_length,m_fm_current,m_fm_increment);
+}
+
+
+
+
+void
+sound_device::
+mix(f32_t*  ptr) noexcept
+{
+  update();
+
+    if((m_number_of_upward_samples   <= 0) ||
+       (m_number_of_downward_samples <= 0))
+    {
+      report;
+      return;
+    }
+
+
+  m_number_of_remain_samples = m_number_of_upward_samples;
+
+
+  auto  n = get_number_of_samples();
+
+  uint32_t  num_permil = g_number_of_samples_per_millisecond;
+
+    while(n--)
+    {
+        if(!num_permil)
         {
-          pump_event();
+          num_permil = g_number_of_samples_per_millisecond;
+
+          m_vm_current += m_vm_increment;
+          m_fm_current += m_fm_increment;
         }
+
+      else
+        {
+          --num_permil;
+        }
+
+
+        while(m_number_of_remain_samples < 1)
+        {
+            if(is_downward())
+            {
+              update();
+
+                if((m_number_of_upward_samples   <= 0) ||
+                   (m_number_of_downward_samples <= 0))
+                {
+                  report;
+                  break;
+                }
+
+
+              m_number_of_remain_samples += m_number_of_upward_samples;
+            }
+
+          else
+            {
+              m_number_of_remain_samples += m_number_of_downward_samples;
+            }
+
+
+          m_downward_flag = !m_downward_flag;
+        }
+
+
+      *ptr++ += get_sample();
+
+      m_number_of_remain_samples -= 1;
     }
-}
-
-
-void
-sound_device::
-pump_event() noexcept
-{
-    if(m_event_index < m_event_queue.size())
-    {
-      input(m_event_queue[m_event_index++]);
-    }
-
-  else
-    {
-      sleep();
-    }
-}
-
-
-void
-sound_device::
-check_frequency()
-{
-    if(m_fm_status.m_changed)
-    {
-      m_fm_status.m_changed = false;
-
-      on_frequency_changed();
-    }
-}
-
-
-void
-sound_device::
-put(sample_t  src, sample_t&  dst)
-{
-  process_timer();
-
-  m_vm_status.step();
-  m_fm_status.step();
-
-  check_frequency();
-
-    if(!is_slept() || !is_muted())
-    {
-      dst += src;
-    }
-}
-
-
-
-
-void
-sound_device::
-push(std::initializer_list<sound_event>  ls)
-{
-  m_event_queue = ls;
-
-  m_event_index = 0;
-
-  m_event_queue = ls;
-
-  pump_event();
-}
-
-
-
-
-void
-sound_device::
-print() const noexcept
-{
-  printf("volume: %f\n",m_vm_status.m_current);
-  printf("frequency: %f\n",m_fm_status.m_current);
-  printf("num remain samples for timer: %d\n",m_number_of_remain_samples_for_timer);
 }
 
 

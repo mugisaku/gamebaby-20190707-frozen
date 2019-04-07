@@ -273,6 +273,8 @@ START:
     if((c == '\'') ||
        (c == '\"'))
     {
+      ++m_pointer;
+
       toks.emplace_back(read_quoted_string(c));
 
       return true;

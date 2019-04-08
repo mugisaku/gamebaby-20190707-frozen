@@ -309,7 +309,9 @@ onch_element
 onch_space::
 read_element(const std::string&  keyword, token_block_view  tbv) noexcept
 {
-       if(keyword ==      "square"){return read_cell(sound_kind::square_wave,tbv);}
+       if(keyword ==      "square"){return read_cell(sound_kind::square_wave  ,tbv);}
+  else if(keyword ==    "triangle"){return read_cell(sound_kind::triangle_wave,tbv);}
+  else if(keyword ==    "sawtooth"){return read_cell(sound_kind::sawtooth_wave,tbv);}
   else if(keyword ==       "noise"){return read_cell(sound_kind::noise      ,tbv);}
   else if(keyword == "short_noise"){return read_cell(sound_kind::short_noise,tbv);}
   else if(keyword ==         "row"){return read_table(onch_table_kind::row   ,tbv);}
@@ -413,7 +415,6 @@ load_from_file(const char*  filepath) noexcept
   auto  s = make_string_from_file(filepath);
 
   load_from_string(s.data());
-print();
 }
 
 

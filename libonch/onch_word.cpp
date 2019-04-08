@@ -90,6 +90,12 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
       case(sound_kind::square_wave):
           do_mix<square_wave_device>(instr,ctx.m_it);
           break;
+      case(sound_kind::triangle_wave):
+          do_mix<triangle_wave_device>(instr,ctx.m_it);
+          break;
+      case(sound_kind::sawtooth_wave):
+          do_mix<sawtooth_wave_device>(instr,ctx.m_it);
+          break;
       case(sound_kind::noise):
           do_mix<gbstd::noise_device>(instr,ctx.m_it);
           break;

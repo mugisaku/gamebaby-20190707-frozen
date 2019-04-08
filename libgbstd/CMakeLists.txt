@@ -37,6 +37,8 @@ set(SOURCES
   file_ops/wave_format.cpp
   sounds/sound_device.cpp
   sounds/square_wave_device.cpp
+  sounds/triangle_wave_device.cpp
+  sounds/sawtooth_wave_device.cpp
   sounds/noise_device.cpp
   sounds/short_noise_device.cpp
   stage.cpp

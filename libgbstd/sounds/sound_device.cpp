@@ -54,14 +54,6 @@ mix(f32_t*  ptr) noexcept
 {
   update();
 
-    if((m_number_of_upward_samples   <= 0) ||
-       (m_number_of_downward_samples <= 0))
-    {
-      report;
-      return;
-    }
-
-
   m_number_of_remain_samples = m_number_of_upward_samples;
 
 
@@ -85,19 +77,20 @@ mix(f32_t*  ptr) noexcept
         }
 
 
+      uint32_t  safe_counter = 0;
+
         while(m_number_of_remain_samples < 1)
         {
+            if(++safe_counter > 0x1000000)
+            {
+              report;
+               break;
+            }
+
+
             if(is_downward())
             {
               update();
-
-                if((m_number_of_upward_samples   <= 0) ||
-                   (m_number_of_downward_samples <= 0))
-                {
-                  report;
-                  break;
-                }
-
 
               m_number_of_remain_samples += m_number_of_upward_samples;
             }

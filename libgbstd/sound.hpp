@@ -13,7 +13,7 @@ namespace gbstd{
 using f32_t = float;
 using sample_t = f32_t;
 
-constexpr f32_t  g_number_of_samples_per_second = 8000;//1秒あたりのサンプル数
+constexpr f32_t  g_number_of_samples_per_second = 48000;//1秒あたりのサンプル数
 constexpr f32_t  g_number_of_samples_per_millisecond = g_number_of_samples_per_second/1000;//1ミリ秒あたりのサンプル数
 
 inline
@@ -47,8 +47,11 @@ sound_kind
 {
   null,
   square_wave,
+  triangle_wave,
+  sawtooth_wave,
   noise,
   short_noise,
+
 };
 
 
@@ -136,6 +139,36 @@ square_wave_device: public sound_device
 
 public:
   using sound_device::sound_device;
+
+};
+
+
+class
+triangle_wave_device: public sound_device
+{
+protected:
+  f32_t  m_sample_current;
+  f32_t  m_sample_increment;
+
+  f32_t  get_sample() noexcept override;
+
+  void  update() noexcept override;
+
+public:
+  using sound_device::sound_device;
+
+};
+
+
+class
+sawtooth_wave_device: public triangle_wave_device
+{
+  f32_t  get_sample() noexcept override;
+
+  void  update() noexcept override;
+
+public:
+  using triangle_wave_device::triangle_wave_device;
 
 };
 

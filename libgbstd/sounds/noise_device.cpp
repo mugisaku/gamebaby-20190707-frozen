@@ -12,7 +12,7 @@ void
 noise_device::
 update() noexcept
 {
-  auto  num_samples = g_number_of_samples_per_second/get_frequency()/8;
+  auto  num_samples = get_sampling_rate()/get_frequency()/8;
 
   set_number_of_upward_samples(  num_samples/2);
   set_number_of_downward_samples(num_samples/2);

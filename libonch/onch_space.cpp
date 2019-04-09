@@ -447,7 +447,7 @@ load_from_string(const char*  s) noexcept
 
 std::vector<int16_t>
 onch_space::
-make_16bit_raw_binary() const noexcept
+make_16bit_raw_binary(uint32_t  sampling_rate) const noexcept
 {
   std::vector<int16_t>  buf;
 
@@ -455,7 +455,7 @@ make_16bit_raw_binary() const noexcept
 
     if(e)
     {
-      auto  wave_data = e->generate_wave(*this);
+      auto  wave_data = e->generate_wave(sampling_rate,*this);
 
       buf.resize(wave_data.size());
 
@@ -478,7 +478,7 @@ make_16bit_raw_binary() const noexcept
 
 std::vector<uint8_t>
 onch_space::
-make_8bit_raw_binary() const noexcept
+make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept
 {
   std::vector<uint8_t>  buf;
 
@@ -486,7 +486,7 @@ make_8bit_raw_binary() const noexcept
 
     if(e)
     {
-      auto  wave_data = e->generate_wave(*this);
+      auto  wave_data = e->generate_wave(sampling_rate,*this);
 
       buf.resize(wave_data.size());
 
@@ -509,13 +509,13 @@ make_8bit_raw_binary() const noexcept
 
 std::vector<uint8_t>
 onch_space::
-make_wave_format_binary(int  number_of_bits_per_sample) const noexcept
+make_wave_format_binary(uint32_t  sampling_rate, int  number_of_bits_per_sample) const noexcept
 {
   auto&  bps = number_of_bits_per_sample;
 
   gbstd::wave_format  fmt;
 
-  fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
+  fmt.set_sampling_rate(sampling_rate);
   fmt.set_number_of_bits_per_sample(bps);
   fmt.set_number_of_channels(1);
 
@@ -523,7 +523,7 @@ make_wave_format_binary(int  number_of_bits_per_sample) const noexcept
 
     if(bps == 8)
     {
-      auto  raw_bin = make_8bit_raw_binary();
+      auto  raw_bin = make_8bit_raw_binary(sampling_rate);
 
         if(raw_bin.size())
         {
@@ -536,7 +536,7 @@ make_wave_format_binary(int  number_of_bits_per_sample) const noexcept
   else
     if(bps == 16)
     {
-      auto  raw_bin = make_16bit_raw_binary();
+      auto  raw_bin = make_16bit_raw_binary(sampling_rate);
 
         if(raw_bin.size())
         {

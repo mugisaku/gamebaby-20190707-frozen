@@ -23,6 +23,7 @@ namespace{
 
 
 
+constexpr uint32_t  sampling_rate = 24000;
 constexpr int  g_bps = 8;
 
 
@@ -47,7 +48,7 @@ update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
 
       g_space.load_from_string(reinterpret_cast<const char*>(g_source_code.data()));
 
-      g_wave_bin = g_space.make_wave_format_binary(g_bps);
+      g_wave_bin = g_space.make_wave_format_binary(sampling_rate,g_bps);
 #ifdef __EMSCRIPTEN__
       gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
 #endif
@@ -204,7 +205,7 @@ EM_ASM(
 
       sp.load_from_file(path);
 
-      auto  wave_bin = sp.make_wave_format_binary(g_bps);
+      auto  wave_bin = sp.make_wave_format_binary(sampling_rate,g_bps);
 
         if(wave_bin.size())
         {

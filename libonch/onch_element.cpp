@@ -179,13 +179,15 @@ get_output_length(onch_output_context&  ctx) const noexcept
 
 std::vector<f32_t>
 onch_element::
-generate_wave(const onch_space&  sp) const noexcept
+generate_wave(uint32_t  sampling_rate, const onch_space&  sp) const noexcept
 {
   onch_output_context  ctx;
 
+  ctx.m_sampling_rate = sampling_rate;
+
   ctx.m_space = &sp;
 
-  auto  n = gbstd::get_number_of_samples_by_time(get_output_length(ctx));
+  auto  n = gbstd::sound_device::get_number_of_samples(sampling_rate,get_output_length(ctx));
 
   std::vector<gbstd::f32_t>  result(n);
 

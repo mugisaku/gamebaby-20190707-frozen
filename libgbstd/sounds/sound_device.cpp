@@ -37,15 +37,37 @@ set_modulation(f32_t  start, f32_t  end, uint32_t  ms, f32_t&  cur, f32_t&  inc)
 
 
 sound_device::
-sound_device(const sound_instruction&  instr) noexcept
+sound_device(uint32_t  sampling_rate, const sound_instruction&  instr) noexcept
+{
+  set_sampling_rate(sampling_rate);
+
+  reset(instr);
+}
+
+
+
+
+void
+sound_device::
+reset(const sound_instruction&  instr) noexcept
 {
   m_length = instr.get_length();
 
   set_modulation(instr.get_start_volume()   ,instr.get_end_volume()   ,m_length,m_vm_current,m_vm_increment);
   set_modulation(instr.get_start_frequency(),instr.get_end_frequency(),m_length,m_fm_current,m_fm_increment);
+
+  update_number_of_samples();
 }
 
 
+void
+sound_device::
+set_sampling_rate(uint32_t  rate) noexcept
+{
+  m_sampling_rate = rate;
+
+  update_number_of_samples();
+}
 
 
 void
@@ -59,13 +81,14 @@ mix(f32_t*  ptr) noexcept
 
   auto  n = get_number_of_samples();
 
-  uint32_t  num_permil = g_number_of_samples_per_millisecond;
+  uint32_t  initial_num_permil = get_sampling_rate()/1000;
+  uint32_t          num_permil = initial_num_permil;
 
     while(n--)
     {
         if(!num_permil)
         {
-          num_permil = g_number_of_samples_per_millisecond;
+          num_permil = initial_num_permil;
 
           m_vm_current += m_vm_increment;
           m_fm_current += m_fm_increment;

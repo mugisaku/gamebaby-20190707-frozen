@@ -26,6 +26,8 @@ class onch_space;
 struct
 onch_output_context
 {
+  uint32_t  m_sampling_rate=0;
+
   const onch_space*  m_space=nullptr;
 
   f32_t     m_last_volume=0;
@@ -229,7 +231,7 @@ public:
 
   uint32_t  get_output_length(onch_output_context&  ctx) const noexcept;
 
-  std::vector<f32_t>  generate_wave(const onch_space&  sp) const noexcept;
+  std::vector<f32_t>  generate_wave(uint32_t  sampling_rate, const onch_space&  sp) const noexcept;
 
   void  output(onch_output_context&  ctx) const noexcept;
 
@@ -286,10 +288,10 @@ public:
   void  load_from_file(const char*  filepath) noexcept;
   void  load_from_string(const char*  s) noexcept;
 
-  std::vector<int16_t>  make_16bit_raw_binary() const noexcept;
-  std::vector<uint8_t>   make_8bit_raw_binary() const noexcept;
+  std::vector<int16_t>  make_16bit_raw_binary(uint32_t  sampling_rate) const noexcept;
+  std::vector<uint8_t>   make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept;
 
-  std::vector<uint8_t>  make_wave_format_binary(int  number_of_bits_per_sample) const noexcept;
+  std::vector<uint8_t>  make_wave_format_binary(uint32_t  sampling_rate, int  number_of_bits_per_sample) const noexcept;
 
   void  print() const noexcept;
 

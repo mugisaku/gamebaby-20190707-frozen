@@ -26,7 +26,7 @@ callback(void*  data, uint8_t*  buf, int  len) noexcept
 {
   SDL_memset(buf,g_spec.silence,len);
 
-  auto  dst = reinterpret_cast<gbstd::sample_t*>(buf);
+  auto  dst = reinterpret_cast<float*>(buf);
 
   int  n = len/sizeof(*dst);
 }
@@ -75,7 +75,7 @@ init_sound() noexcept
 
   SDL_AudioSpec  spec;
 
-  spec.freq     = gbstd::g_number_of_samples_per_second;
+  spec.freq     = 24000;
   spec.channels = 1;
   spec.format   = AUDIO_F32;
   spec.samples  = 4096;
@@ -140,7 +140,7 @@ get_sound_wave_binary() noexcept
   gbstd::wave_format  fmt;
 
   fmt.set_number_of_channels(1);
-  fmt.set_sampling_rate(gbstd::g_number_of_samples_per_second);
+  fmt.set_sampling_rate(24000);
   fmt.set_number_of_bits_per_sample(16);
 
   fmt.update();

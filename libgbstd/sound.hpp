@@ -11,33 +11,6 @@ namespace gbstd{
 
 
 using f32_t = float;
-using sample_t = f32_t;
-
-constexpr f32_t  g_number_of_samples_per_second = 48000;//1秒あたりのサンプル数
-constexpr f32_t  g_number_of_samples_per_millisecond = g_number_of_samples_per_second/1000;//1ミリ秒あたりのサンプル数
-
-inline
-constexpr uint32_t
-get_number_of_samples_by_time(uint32_t  ms) noexcept
-{
-  return static_cast<uint32_t>(g_number_of_samples_per_millisecond*ms);
-}
-
-
-class invalid
-{const char*  what() const noexcept{return "invalid";}};
-
-class invalid_frequency
-{const char*  what() const noexcept{return "invalid frequency";}};
-
-class invalid_volume
-{const char*  what() const noexcept{return "invalid volume";}};
-
-class invalid_number_of_samples_per_cycle
-{const char*  what() const noexcept{return "invalid number of samples per cycle";}};
-
-class invalid_number_of_steps
-{const char*  what() const noexcept{return "invalid number of steps";}};
 
 
 
@@ -60,8 +33,8 @@ sound_instruction
 {
   uint32_t  m_length;
 
-  sample_t  m_start_volume;
-  sample_t  m_end_volume;
+  f32_t  m_start_volume;
+  f32_t  m_end_volume;
 
   f32_t  m_start_frequency;
   f32_t  m_end_frequency;
@@ -71,16 +44,16 @@ public:
 
   sound_instruction&  set_length(uint32_t  l) noexcept{  m_length    = l;  return *this;}      
 
-  sound_instruction&  set_start_volume(sample_t  v) noexcept{  m_start_volume    = v;  return *this;}      
-  sound_instruction&  set_end_volume(  sample_t  v) noexcept{  m_end_volume      = v;  return *this;}      
+  sound_instruction&  set_start_volume(   f32_t  v) noexcept{  m_start_volume    = v;  return *this;}      
+  sound_instruction&  set_end_volume(     f32_t  v) noexcept{  m_end_volume      = v;  return *this;}      
   sound_instruction&  set_start_frequency(f32_t  f) noexcept{  m_start_frequency = f;  return *this;}      
   sound_instruction&  set_end_frequency(  f32_t  f) noexcept{  m_end_frequency   = f;  return *this;}      
 
-  uint32_t  get_length() const noexcept{return m_length;}
-  f32_t  get_start_frequency() const noexcept{return m_start_frequency;}
-  f32_t  get_end_frequency() const noexcept{return m_end_frequency;}
-  sample_t  get_start_volume() const noexcept{return m_start_volume;}
-  sample_t  get_end_volume() const noexcept{return m_end_volume;}
+  uint32_t  get_length()          const noexcept{return m_length;}
+  f32_t     get_start_frequency() const noexcept{return m_start_frequency;}
+  f32_t     get_end_frequency()   const noexcept{return m_end_frequency;}
+  f32_t     get_start_volume()    const noexcept{return m_start_volume;}
+  f32_t     get_end_volume()      const noexcept{return m_end_volume;}
 
 };
 
@@ -92,7 +65,9 @@ public:
 class
 sound_device
 {
-  bool  m_downward_flag=false;
+  uint32_t  m_sampling_rate=0;
+
+  uint32_t  m_number_of_samples=0;
 
   uint32_t  m_length=0;
 
@@ -107,6 +82,8 @@ sound_device
   f32_t  m_number_of_upward_samples  =0;
   f32_t  m_number_of_downward_samples=0;
 
+  bool  m_downward_flag=false;
+
 protected:
   virtual f32_t  get_sample() noexcept{return is_downward()? -get_volume():get_volume();}
 
@@ -120,14 +97,25 @@ protected:
   f32_t  get_volume()    const noexcept{return m_vm_current;}
   f32_t  get_frequency() const noexcept{return m_fm_current;}
 
+  void  update_number_of_samples() noexcept{m_number_of_samples = get_number_of_samples(m_sampling_rate,m_length);}
+
 public:
-  sound_device(                               ) noexcept{}
-  sound_device(const sound_instruction&  instr) noexcept;
+  sound_device(                                                        ) noexcept{}
+  sound_device(uint32_t  sampling_rate, const sound_instruction&  instr) noexcept;
+
+  void  reset(const sound_instruction&  instr) noexcept;
+
+  void      set_sampling_rate(uint32_t  rate)       noexcept;
+  uint32_t  get_sampling_rate(              ) const noexcept{return m_sampling_rate;}
 
   uint32_t  get_length() const noexcept{return m_length;}
-  uint32_t  get_number_of_samples() const noexcept{return get_number_of_samples_by_time(m_length);}
+
+  uint32_t  get_number_of_samples() const noexcept{return m_number_of_samples;}
 
   void  mix(f32_t*  ptr) noexcept;
+
+  static constexpr uint32_t  get_number_of_samples(uint32_t  sampling_rate, uint32_t  length) noexcept
+  {return static_cast<double>(sampling_rate)/1000*length;}
 
 };
 

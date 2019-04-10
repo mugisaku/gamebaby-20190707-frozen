@@ -75,9 +75,24 @@ get_frequency(int  spec, int value) noexcept
 }
 
 
+
+
+constexpr uint32_t
+g_length_table[] = {
+    40,
+    80,
+   160,
+   320,
+   640,
+  1280,
+  2560,
+  5120,
+};
+
+
 uint32_t
 onch_output_context::
-get_length(int  spec, int value) noexcept
+get_play_length(int  spec, int value) noexcept
 {
     if(spec == onch_word::specs::no_spec)
     {
@@ -86,29 +101,42 @@ get_length(int  spec, int value) noexcept
   else
     if(spec == onch_word::specs::zero)
     {
-      m_last_length = 0;
+      m_last_play_length = 0;
     }
 
   else
     if(spec == onch_word::specs::index)
     {
-      constexpr uint32_t  length_table[] = {
-          40,
-          80,
-         160,
-         320,
-         640,
-        1280,
-        2560,
-        5120,
-      };
-
-
-      m_last_length = length_table[value];
+      m_last_play_length = g_length_table[value];
     }
 
 
-  return m_last_length;
+  return m_last_play_length;
+}
+
+
+uint32_t
+onch_output_context::
+get_rest_length(int  spec, int value) noexcept
+{
+    if(spec == onch_word::specs::no_spec)
+    {
+    }
+
+  else
+    if(spec == onch_word::specs::zero)
+    {
+      m_last_rest_length = 0;
+    }
+
+  else
+    if(spec == onch_word::specs::index)
+    {
+      m_last_rest_length = g_length_table[value];
+    }
+
+
+  return m_last_rest_length;
 }
 
 

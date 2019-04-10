@@ -50,7 +50,8 @@ uint32_t
 onch_word::
 get_output_length(onch_output_context&  ctx) const noexcept
 {
-  return ctx.get_length(get_l_spec(),get_l_value());
+  return test_rest_flag()? ctx.get_rest_length(get_l_spec(),get_l_value())
+        :                  ctx.get_play_length(get_l_spec(),get_l_value());
 }
 
 

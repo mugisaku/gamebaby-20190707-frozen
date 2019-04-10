@@ -23,8 +23,9 @@ namespace{
 
 
 
-constexpr uint32_t  sampling_rate = 24000;
-constexpr int  g_bps = 8;
+int  g_sampling_rate = 24000;
+
+int  g_bps = 8;
 
 
 std::vector<uint8_t>
@@ -48,7 +49,7 @@ update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
 
       g_space.load_from_string(reinterpret_cast<const char*>(g_source_code.data()));
 
-      g_wave_bin = g_space.make_wave_format_binary(sampling_rate,g_bps);
+      g_wave_bin = g_space.make_wave_format_binary(g_sampling_rate,g_bps);
 #ifdef __EMSCRIPTEN__
       gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
 #endif
@@ -157,10 +158,13 @@ EM_ASM(
    "/*この間がコメント*/"+"\n"
   +"//行末までコメント"+"\n"
   +""+"\n"
-  +"//lvfNNN というのが演奏指示の最小単位でword要素と呼びます"+"\n"
-  +"//Nの部分に、1から8までの数字を指定します"+"\n"
-  +"//lは演奏時間、vは音量、fは音の高低を意味し"+"\n"
-  +"//lvf123と書くと、演奏時間1、音量2、音の高低3という指示になります"+"\n"
+  +"//'p5-v55-f17'や\"r3\"といった記述が演奏指示の最小単位でword要素と呼びます"+"\n"
+  +"//pは演奏を表し、後ろに続く数字は演奏時間を表します"+"\n"
+  +"//rは休止を表し、後ろに続く数字は休止時間を表します"+"\n"
+  +"//vは音量を表し、後ろに続く、ふたつの数字は、開始時と終了時の音量を表します"+"\n"
+  +"//fは音高を表し、後ろに続く、ふたつの数字は、開始時と終了時の音高を表します"+"\n"
+  +"//数字は、音量は0～7、それ以外は、1～7を指定します"+"\n"
+  +"//数字は省略することができ、その場合は"+"\n"
   +""+"\n"
   +"//word要素の列をtext要素と呼びます"+"\n"
   +"//下記の構文は、txt1と言う名前とtext要素とを結びつけます"+"\n"
@@ -203,21 +207,38 @@ EM_ASM(
 
       auto  path = *argv++;
 
-      sp.load_from_file(path);
-
-      auto  wave_bin = sp.make_wave_format_binary(sampling_rate,g_bps);
-
-        if(wave_bin.size())
+        if(*path == '-')
         {
-          std::string  s(path);
+            if(sscanf(path,"-sps:%d",&g_sampling_rate) == 1)
+            {
+              printf("sampling rate was changed to %d\n",g_sampling_rate);
+            }
 
-          s += ".wav";
+          else
+            if(sscanf(path,"-bps:%d",&g_bps) == 1)
+            {
+              printf("bits per sample was changed to %d\n",g_bps);
+            }
+        }
 
-          gbstd::write_to_file(wave_bin.data(),wave_bin.size(),s.data());
+      else
+        {
+          sp.load_from_file(path);
 
-          ++n;
+          auto  wave_bin = sp.make_wave_format_binary(g_sampling_rate,g_bps);
 
-          printf("%s -> %s\n",path,s.data());
+            if(wave_bin.size())
+            {
+              std::string  s(path);
+
+              s += ".wav";
+
+              gbstd::write_to_file(wave_bin.data(),wave_bin.size(),s.data());
+
+              ++n;
+
+              printf("%s -> %s\n",path,s.data());
+            }
         }
     }
 

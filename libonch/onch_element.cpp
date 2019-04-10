@@ -194,9 +194,10 @@ generate_wave(uint32_t  sampling_rate, const onch_space&  sp) const noexcept
   ctx.m_it  = result.data();
   ctx.m_end = result.data()+n;
 
-  ctx.m_last_length    = 0;
-  ctx.m_last_volume    = 0;
-  ctx.m_last_frequency = 0;
+  ctx.m_last_play_length = 0;
+  ctx.m_last_rest_length = 0;
+  ctx.m_last_volume      = 0;
+  ctx.m_last_frequency   = 0;
 
   output(ctx);
 

@@ -32,7 +32,8 @@ onch_output_context
 
   f32_t     m_last_volume=0;
   f32_t     m_last_frequency=0;
-  uint32_t  m_last_length=0;
+  uint32_t  m_last_play_length=0;
+  uint32_t  m_last_rest_length=0;
 
   f32_t*   m_it=nullptr;
   f32_t*  m_end=nullptr;
@@ -40,9 +41,10 @@ onch_output_context
   std::vector<const onch_text*>   m_text_table;
   std::vector<const onch_table*>  m_table_table;
 
-  f32_t     get_volume(   int  spec, int value) noexcept;
-  f32_t     get_frequency(int  spec, int value) noexcept;
-  uint32_t  get_length(   int  spec, int value) noexcept;
+  f32_t     get_volume(     int  spec, int value) noexcept;
+  f32_t     get_frequency(  int  spec, int value) noexcept;
+  uint32_t  get_play_length(int  spec, int value) noexcept;
+  uint32_t  get_rest_length(int  spec, int value) noexcept;
 
 };
 

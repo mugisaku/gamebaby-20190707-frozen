@@ -163,12 +163,11 @@ read_text(token_block_view  tbv) noexcept
         }
 
       else
-        if(tbv[0].is_operator_code("*") &&
-           tbv[1].is_identifier())
+        if(tbv[0].is_identifier())
         {
-          auto&  id = tbv[1].get_string();
+          auto&  id = tbv[0].get_string();
 
-          tbv += 2;
+          ++tbv;
 
           auto  e = find(id);
 
@@ -201,7 +200,18 @@ read_cell(sound_kind  sk, token_block_view  tbv) noexcept
         if(tbv[0].is_identifier())
         {
           auto&  id = tbv[0].get_string();
-                
+
+          auto  e = find(id);
+
+            if(e)
+            {
+              ++tbv;
+
+                   if(e->is_text()){cel.push(e->get_text());}
+              else if(e->is_word()){cel.push(e->get_word());}
+            }
+
+          else
             if(tbv[1].is_block("{","}"))
             {
               auto  e = read_element(id,tbv[1].get_block());
@@ -217,23 +227,6 @@ read_cell(sound_kind  sk, token_block_view  tbv) noexcept
           else
             {
               ++tbv;
-            }
-        }
-
-      else
-        if(tbv[0].is_operator_code("*") &&
-           tbv[1].is_identifier())
-        {
-          auto&  id = tbv[1].get_string();
-
-          tbv += 2;
-
-          auto  e = find(id);
-
-            if(e)
-            {
-                   if(e->is_text()){cel.push(e->get_text());}
-              else if(e->is_word()){cel.push(e->get_word());}
             }
         }
 
@@ -259,7 +252,17 @@ read_table(onch_table_kind  tk, token_block_view  tbv) noexcept
         if(tbv[0].is_identifier())
         {
           auto&  id = tbv[0].get_string();
-                
+
+          auto  e = find(id);
+
+            if(e && (e->is_table() || e->is_cell()))
+            {
+              ++tbv;
+
+              tbl.push(onch_element(*e));
+            }
+
+          else
             if(tbv[1].is_block("{","}"))
             {
               auto  e = read_element(id,tbv[1].get_block());
@@ -275,22 +278,6 @@ read_table(onch_table_kind  tk, token_block_view  tbv) noexcept
           else
             {
               ++tbv;
-            }
-        }
-
-      else
-        if(tbv[0].is_operator_code("*") &&
-           tbv[1].is_identifier())
-        {
-          auto&  id = tbv[1].get_string();
-
-          tbv += 2;
-
-          auto  e = find(id);
-
-            if(e && (e->is_table() || e->is_cell()))
-            {
-              tbl.push(onch_element(*e));
             }
         }
 
@@ -319,6 +306,14 @@ read_element(const std::string&  keyword, token_block_view  tbv) noexcept
   else if(keyword ==        "text"){return read_text(tbv);}
   else
     {
+      auto  e = find(keyword);
+
+        if(e)
+        {
+          return onch_element(*e);
+        }
+
+
       printf("%s is unknown keyword\n",keyword.data());
     }
 
@@ -353,12 +348,11 @@ read_define(token_block_view&  tbv) noexcept
         }
 
       else
-        if(tbv[2].is_operator_code("*") &&
-           tbv[3].is_identifier())
+        if(tbv[2].is_identifier())
         {
-          auto&  id = tbv[3].get_string();
+          auto&  id = tbv[2].get_string();
 
-          tbv += 4;
+          tbv += 3;
 
           auto  e = find(id);
 
@@ -496,7 +490,7 @@ make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept
 
         while(src != src_end)
         {
-          auto  v = (*src++)*127.0;
+          auto  v = (*src++)*127.0*0.2;
 
           *dst++ = static_cast<uint8_t>(v+128);
         }

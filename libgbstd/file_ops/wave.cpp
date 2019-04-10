@@ -104,7 +104,7 @@ save_to_file(FILE*  f) const noexcept
   fwrite("data",1,4,f);
 
   fput_le32(length(),f);
-print();
+
     switch(m_format.get_number_of_bits_per_sample())
     {
   case( 8): fwrite(m_data,1,m_length,f);break;

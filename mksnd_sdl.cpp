@@ -51,7 +51,7 @@ update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
 
       g_wave_bin = g_space.make_wave_format_binary(g_sampling_rate,g_bps);
 #ifdef __EMSCRIPTEN__
-      gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
+     gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
 #endif
     }
 }
@@ -81,11 +81,28 @@ main_loop() noexcept
         if(o == 'p')
         {
         EM_ASM(
+             if(g_object.audio)
+             {
+               g_object.audio.pause();
+             }
+
+
           g_object.audio = new Audio();
 
           g_object.audio.src = URL.createObjectURL(g_object.common_blob);
 
           g_object.audio.play();
+        );
+        }
+
+      else
+        if(o == 's')
+        {
+        EM_ASM(
+             if(g_object.audio)
+             {
+               g_object.audio.pause();
+             }
         );
         }
 
@@ -140,10 +157,14 @@ EM_ASM(
   var  free = document.getElementById('free');
 
   var  play_button = document.createElement('button');
+  var  stop_button = document.createElement('button');
   var  save_button = document.createElement('button');
 
   play_button.innerText = 'play';
   play_button.onclick = function(){g_object.transfer('p'.charCodeAt(0));};
+
+  stop_button.innerText = 'stop';
+  stop_button.onclick = function(){g_object.transfer('s'.charCodeAt(0));};
 
   save_button.innerText = 'save';
   save_button.onclick = function(){g_object.transfer('s'.charCodeAt(0));};
@@ -158,24 +179,34 @@ EM_ASM(
    "/*この間がコメント*/"+"\n"
   +"//行末までコメント"+"\n"
   +""+"\n"
-  +"//'p5-v55-f17'や\"r3\"といった記述が演奏指示の最小単位でword要素と呼びます"+"\n"
+  +"//'p5-v55-f?7'や\"r3\"といった記述が演奏指示の最小単位でword要素と呼びます"+"\n"
   +"//pは演奏を表し、後ろに続く数字は演奏時間を表します"+"\n"
   +"//rは休止を表し、後ろに続く数字は休止時間を表します"+"\n"
   +"//vは音量を表し、後ろに続く、ふたつの数字は、開始時と終了時の音量を表します"+"\n"
   +"//fは音高を表し、後ろに続く、ふたつの数字は、開始時と終了時の音高を表します"+"\n"
-  +"//数字は、音量は0～7、それ以外は、1～7を指定します"+"\n"
-  +"//数字は省略することができ、その場合は"+"\n"
+  +"//間にハイフンがありますが、なくても問題ありません。無関係な文字は読み飛ばされます"+"\n"
+  +"//数字は、音量は0～8、それ以外は、1～8を指定します"+"\n"
+  +"//数字は省略することができ、その場合はp,r,v,fのそれぞれ最後に指定された数が"+"\n"
+  +"//再利用されます"+"\n"
+  +"//v,fの一番目の数字を省略し、2番目の数字を指定したい場合は"+"\n"
+  +"//数字の代わりに、?を置きます"+"\n"
   +""+"\n"
   +"//word要素の列をtext要素と呼びます"+"\n"
   +"//下記の構文は、txt1と言う名前とtext要素とを結びつけます"+"\n"
-  +"txt1 = text{lvf445 lvf443 lvf443 lvf444 lvf445}"+"\n"
+  +"txt1 = text{'p5-v07-f?7' 'p5-v70-f57' 'p5-v12-f47' 'p5-v34-f77'}"+"\n"
   +""+"\n"
   +"//下記のように、名前と結びつけた要素は再利用することができ"+"\n"
   +"//繰り返しを表すのに便利です"+"\n"
-  +"txt2 = text{lvf545 txt1 txt1}"+"\n"
+  +"txt2 = text{'p5-v55-f67' txt1 'r5' txt1}"+"\n"
   +""+"\n"
-  +"//square,noise,short_noiseは、cell要素と呼びます"+"\n"
+  +"//square,triangle,sawtooth,noise,short_noiseは、cell要素と呼びます"+"\n"
   +"//text要素を内容とし、その音色を指示します"+"\n"
+  +"//squareは、矩形波です"+"\n"
+  +"//triangleは、三角波です"+"\n"
+  +"//sawtoothは、ノコギリ波です"+"\n"
+  +"//noiseは、ノイズです"+"\n"
+  +"//short_noiseは、短周期ノイズです"+"\n"
+  +"//"+"\n"
   +"sq = square{txt2}"+"\n"
   +""+"\n"
   +"//column,rowは、table要素と呼びます"+"\n"
@@ -190,6 +221,7 @@ EM_ASM(
 
   free.appendChild(textarea);
   free.appendChild(play_button);
+  free.appendChild(stop_button);
   free.appendChild(save_button);
 );
 

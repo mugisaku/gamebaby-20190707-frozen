@@ -53,17 +53,6 @@ void
 onch_table::
 output(onch_output_context&  ctx) const noexcept
 {
-    for(auto  tbl: ctx.m_table_table)
-    {
-        if(this == tbl)
-        {
-          return;
-        }
-    }
-
-
-  ctx.m_table_table.emplace_back(this);
-
     if(is_row())
     {
         for(auto&  e: m_elements)
@@ -110,9 +99,6 @@ output(onch_output_context&  ctx) const noexcept
 
       ctx.m_it = max_it;
     }
-
-
-  ctx.m_table_table.pop_back();
 }
 
 

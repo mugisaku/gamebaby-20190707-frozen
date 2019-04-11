@@ -23,9 +23,10 @@ namespace{
 
 
 
-int  g_sampling_rate = 24000;
+onch_sound_spec
+g_spec;
 
-int  g_bps = 8;
+
 
 
 std::vector<uint8_t>
@@ -49,7 +50,7 @@ update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
 
       g_space.load_from_string(reinterpret_cast<const char*>(g_source_code.data()));
 
-      g_wave_bin = g_space.make_wave_format_binary(g_sampling_rate,g_bps);
+      g_wave_bin = g_space.make_wave_format_binary(g_spec);
 #ifdef __EMSCRIPTEN__
      gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
 #endif
@@ -207,12 +208,16 @@ EM_ASM(
   +"//noiseは、ノイズです"+"\n"
   +"//short_noiseは、短周期ノイズです"+"\n"
   +"//"+"\n"
-  +"sq = square{txt2}"+"\n"
+  +"sq =      square{                    txt2}"+"\n"
+  +"tr =    triangle{'r2'                txt2}"+"\n"
+  +"sa =    sawtooth{'r2' 'r2'           txt2}"+"\n"
+  +"no =       noise{'r2' 'r2' 'r2'      txt2}"+"\n"
+  +"sh = short_noise{'r2' 'r2' 'r2' 'r2' txt2}"+"\n"
   +""+"\n"
   +"//column,rowは、table要素と呼びます"+"\n"
   +"//columnは内容を同時に演奏し、rowは内容を順番に演奏します"+"\n"
   +"//table要素の内容となるのは、table要素とcell要素です"+"\n"
-  +"main = column{sq}"+"\n"
+  +"main = column{sq tr st no sh}"+"\n"
   +""+"\n"
   +"//mainという名前と結びついた要素が、最終結果として"+"\n"
   +"//WAVE形式で出力されます"+"\n";
@@ -228,6 +233,14 @@ EM_ASM(
 
   emscripten_set_main_loop(main_loop,0,false);
 #else
+
+
+  g_spec.sampling_rate = 24000;
+
+  g_spec.bit_depth = 8;
+
+  g_spec.volume = 0.2;
+
   --argc;
   ++argv;
 
@@ -241,15 +254,15 @@ EM_ASM(
 
         if(*path == '-')
         {
-            if(sscanf(path,"-sps:%d",&g_sampling_rate) == 1)
+            if(sscanf(path,"-sps:%d",&g_spec.sampling_rate) == 1)
             {
-              printf("sampling rate was changed to %d\n",g_sampling_rate);
+              printf("sampling rate was changed to %d\n",g_spec.sampling_rate);
             }
 
           else
-            if(sscanf(path,"-bps:%d",&g_bps) == 1)
+            if(sscanf(path,"-bps:%d",&g_spec.bit_depth) == 1)
             {
-              printf("bits per sample was changed to %d\n",g_bps);
+              printf("bits per sample was changed to %d\n",g_spec.bit_depth);
             }
         }
 
@@ -257,10 +270,14 @@ EM_ASM(
         {
           sp.load_from_file(path);
 
-          auto  wave_bin = sp.make_wave_format_binary(g_sampling_rate,g_bps);
+          auto  wave_bin = sp.make_wave_format_binary(g_spec);
 
             if(wave_bin.size())
             {
+//              sp.print();
+
+//              printf("\n");
+
               std::string  s(path);
 
               s += ".wav";

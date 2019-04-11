@@ -98,7 +98,7 @@ decoder(const char*&  ptr) noexcept
 
 
 onch_word
-read_word(const char*  ptr, const char*  end) noexcept
+read_word(const char*  ptr) noexcept
 {
   onch_word  w;
 
@@ -159,7 +159,7 @@ read_text(token_block_view  tbv) noexcept
 
           ++tbv;
 
-          txt.push(read_word(s.data(),s.data()+s.size()));
+          txt.push(read_word(s.data()));
         }
 
       else
@@ -231,6 +231,18 @@ read_cell(sound_kind  sk, token_block_view  tbv) noexcept
         }
 
       else
+        if(tbv[0].is_single_quoted() || tbv[0].is_double_quoted())
+        {
+          auto&  id = tbv[0].get_string();
+
+          ++tbv;
+
+          auto  w = read_word(id.data());
+
+          cel.push(w);
+        }
+
+      else
         {
           ++tbv;
         }
@@ -279,6 +291,12 @@ read_table(onch_table_kind  tk, token_block_view  tbv) noexcept
             {
               ++tbv;
             }
+        }
+
+      else
+        if(tbv[0].is_single_quoted() || tbv[0].is_double_quoted())
+        {
+          ++tbv;
         }
 
       else
@@ -361,6 +379,23 @@ read_define(token_block_view&  tbv) noexcept
               return onch_definition(id,onch_element(*e));
             }
         }
+
+      else
+        if(tbv[2].is_single_quoted() || tbv[2].is_double_quoted())
+        {
+          auto&  id = tbv[2].get_string();
+
+          tbv += 3;
+
+          auto  w = read_word(id.data());
+
+          return onch_definition(id,onch_element(w));
+        }
+
+      else
+        {
+          tbv += 2;
+        }
     }
 
   else
@@ -441,7 +476,7 @@ load_from_string(const char*  s) noexcept
 
 std::vector<int16_t>
 onch_space::
-make_16bit_raw_binary(uint32_t  sampling_rate) const noexcept
+make_16bit_raw_binary(int  sampling_rate, double  volume) const noexcept
 {
   std::vector<int16_t>  buf;
 
@@ -459,7 +494,7 @@ make_16bit_raw_binary(uint32_t  sampling_rate) const noexcept
 
         while(src != src_end)
         {
-          auto  v = (*src++)*32767.0;
+          auto  v = (*src++)*32767.0*volume;
 
           *dst++ = static_cast<int16_t>(v);
         }
@@ -472,7 +507,7 @@ make_16bit_raw_binary(uint32_t  sampling_rate) const noexcept
 
 std::vector<uint8_t>
 onch_space::
-make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept
+make_8bit_raw_binary(int  sampling_rate, double  volume) const noexcept
 {
   std::vector<uint8_t>  buf;
 
@@ -490,7 +525,7 @@ make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept
 
         while(src != src_end)
         {
-          auto  v = (*src++)*127.0*0.2;
+          auto  v = (*src++)*127.0*volume;
 
           *dst++ = static_cast<uint8_t>(v+128);
         }
@@ -503,21 +538,19 @@ make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept
 
 std::vector<uint8_t>
 onch_space::
-make_wave_format_binary(uint32_t  sampling_rate, int  number_of_bits_per_sample) const noexcept
+make_wave_format_binary(onch_sound_spec  spec) const noexcept
 {
-  auto&  bps = number_of_bits_per_sample;
-
   gbstd::wave_format  fmt;
 
-  fmt.set_sampling_rate(sampling_rate);
-  fmt.set_number_of_bits_per_sample(bps);
+  fmt.set_sampling_rate(spec.sampling_rate);
+  fmt.set_number_of_bits_per_sample(spec.bit_depth);
   fmt.set_number_of_channels(1);
 
   fmt.update();
 
-    if(bps == 8)
+    if(spec.bit_depth == 8)
     {
-      auto  raw_bin = make_8bit_raw_binary(sampling_rate);
+      auto  raw_bin = make_8bit_raw_binary(spec.sampling_rate,spec.volume);
 
         if(raw_bin.size())
         {
@@ -528,9 +561,9 @@ make_wave_format_binary(uint32_t  sampling_rate, int  number_of_bits_per_sample)
     }
 
   else
-    if(bps == 16)
+    if(spec.bit_depth == 16)
     {
-      auto  raw_bin = make_16bit_raw_binary(sampling_rate);
+      auto  raw_bin = make_16bit_raw_binary(spec.sampling_rate,spec.volume);
 
         if(raw_bin.size())
         {

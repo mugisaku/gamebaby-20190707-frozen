@@ -38,9 +38,6 @@ onch_output_context
   f32_t*   m_it=nullptr;
   f32_t*  m_end=nullptr;
 
-  std::vector<const onch_text*>   m_text_table;
-  std::vector<const onch_table*>  m_table_table;
-
   f32_t     get_volume(     int  spec, int value) noexcept;
   f32_t     get_frequency(  int  spec, int value) noexcept;
   uint32_t  get_play_length(int  spec, int value) noexcept;
@@ -268,6 +265,17 @@ public:
 };
 
 
+struct
+onch_sound_spec
+{
+  int  sampling_rate;
+  int      bit_depth;
+
+  double  volume;
+
+};
+
+
 class
 onch_space
 {
@@ -290,10 +298,10 @@ public:
   void  load_from_file(const char*  filepath) noexcept;
   void  load_from_string(const char*  s) noexcept;
 
-  std::vector<int16_t>  make_16bit_raw_binary(uint32_t  sampling_rate) const noexcept;
-  std::vector<uint8_t>   make_8bit_raw_binary(uint32_t  sampling_rate) const noexcept;
+  std::vector<int16_t>  make_16bit_raw_binary(int  sampling_rate, double  volume) const noexcept;
+  std::vector<uint8_t>   make_8bit_raw_binary(int  sampling_rate, double  volume) const noexcept;
 
-  std::vector<uint8_t>  make_wave_format_binary(uint32_t  sampling_rate, int  number_of_bits_per_sample) const noexcept;
+  std::vector<uint8_t>  make_wave_format_binary(onch_sound_spec  spec) const noexcept;
 
   void  print() const noexcept;
 

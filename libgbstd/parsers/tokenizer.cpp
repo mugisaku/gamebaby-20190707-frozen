@@ -69,8 +69,8 @@ read_quoted_string(char  close_char)
         if(c == '\\')
         {
           c = *m_pointer++;
-
-               if(c == '0'){c = '\0';}
+               if(!c){  report;printf("quoted string is not terminated by %c",close_char);  throw 0;}
+          else if(c == '0'){c = '\0';}
           else if(c == 'n'){c = '\n';}
           else if(c == 't'){c = '\t';}
           else if(c == 'r'){c = '\r';}
@@ -92,6 +92,14 @@ read_quoted_string(char  close_char)
 
               throw 0;
             }
+        }
+
+      else
+        if(!c)
+        {
+          printf("toknizer error: 文字列が%cで閉じられていない\n",close_char);
+
+          throw 0;
         }
 
 

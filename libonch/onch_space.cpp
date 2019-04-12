@@ -453,23 +453,32 @@ load_from_string(const char*  s) noexcept
 {
   tokenizer  tknzr;
 
-  auto  blk = tknzr(s);
-
-  token_block_view  tbv(blk);
-
-    while(tbv)
+    try
     {
-      auto  def = read_define(tbv);
+      auto  blk = tknzr(s);
 
-        if(def.get_element())
-        {
-          m_definition_table.emplace_back(std::move(def));
-        }
+      token_block_view  tbv(blk);
 
-      else
+        while(tbv)
         {
-          break;
+          auto  def = read_define(tbv);
+
+            if(def.get_element())
+            {
+              m_definition_table.emplace_back(std::move(def));
+            }
+
+          else
+            {
+              break;
+            }
         }
+    }
+
+
+    catch(...)
+    {
+      printf("tokenizeing error\n");
     }
 }
 

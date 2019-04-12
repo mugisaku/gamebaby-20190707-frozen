@@ -52,7 +52,7 @@ update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
 
       g_wave_bin = g_space.make_wave_format_binary(g_spec);
 #ifdef __EMSCRIPTEN__
-     gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
+      gbstd::update_common_blob(g_wave_bin.data(),g_wave_bin.size());
 #endif
     }
 }
@@ -126,6 +126,12 @@ main_loop() noexcept
 int
 main(int  argc, char**  argv)
 {
+  g_spec.sampling_rate = 24000;
+
+  g_spec.bit_depth = 8;
+
+  g_spec.volume = 0.2;
+
 #ifdef __EMSCRIPTEN__
   set_description("<pre>"
                   "</pre>");
@@ -194,14 +200,14 @@ EM_ASM(
   +""+"\n"
   +"//word要素の列をtext要素と呼びます"+"\n"
   +"//下記の構文は、txt1と言う名前とtext要素とを結びつけます"+"\n"
-  +"txt1 = text{'p5-v07-f?7' 'p5-v70-f57' 'p5-v12-f47' 'p5-v34-f77'}"+"\n"
+  +"txt1 = text{'p5-v07-f?7' 'p5-v70-f77'}"+"\n"
   +""+"\n"
   +"//下記のように、名前と結びつけた要素は再利用することができ"+"\n"
   +"//繰り返しを表すのに便利です"+"\n"
-  +"txt2 = text{'p5-v55-f67' txt1 'r5' txt1}"+"\n"
+  +"txt2 = text{'p7-v55-f67' txt1 'r4' txt1}"+"\n"
   +""+"\n"
   +"//square,triangle,sawtooth,noise,short_noiseは、cell要素と呼びます"+"\n"
-  +"//text要素を内容とし、その音色を指示します"+"\n"
+  +"//word要素とtext要素を内容とし、その音色を指示します"+"\n"
   +"//squareは、矩形波です"+"\n"
   +"//triangleは、三角波です"+"\n"
   +"//sawtoothは、ノコギリ波です"+"\n"
@@ -217,7 +223,7 @@ EM_ASM(
   +"//column,rowは、table要素と呼びます"+"\n"
   +"//columnは内容を同時に演奏し、rowは内容を順番に演奏します"+"\n"
   +"//table要素の内容となるのは、table要素とcell要素です"+"\n"
-  +"main = column{sq tr st no sh}"+"\n"
+  +"main = column{sq tr sa no sh}"+"\n"
   +""+"\n"
   +"//mainという名前と結びついた要素が、最終結果として"+"\n"
   +"//WAVE形式で出力されます"+"\n";
@@ -234,12 +240,6 @@ EM_ASM(
   emscripten_set_main_loop(main_loop,0,false);
 #else
 
-
-  g_spec.sampling_rate = 24000;
-
-  g_spec.bit_depth = 8;
-
-  g_spec.volume = 0.2;
 
   --argc;
   ++argv;

@@ -31,13 +31,15 @@ sound_kind
 class
 sound_instruction
 {
-  uint32_t  m_length;
+  uint32_t  m_length=0;
 
-  f32_t  m_start_volume;
-  f32_t  m_end_volume;
+  f32_t  m_start_volume=0;
+  f32_t  m_end_volume=0;
 
-  f32_t  m_start_frequency;
-  f32_t  m_end_frequency;
+  f32_t  m_start_frequency=0;
+  f32_t  m_end_frequency=0;
+
+  f32_t  m_vibrato_frequency=0;
 
 public:
   sound_instruction() noexcept{}
@@ -49,11 +51,16 @@ public:
   sound_instruction&  set_start_frequency(f32_t  f) noexcept{  m_start_frequency = f;  return *this;}      
   sound_instruction&  set_end_frequency(  f32_t  f) noexcept{  m_end_frequency   = f;  return *this;}      
 
-  uint32_t  get_length()          const noexcept{return m_length;}
-  f32_t     get_start_frequency() const noexcept{return m_start_frequency;}
-  f32_t     get_end_frequency()   const noexcept{return m_end_frequency;}
-  f32_t     get_start_volume()    const noexcept{return m_start_volume;}
-  f32_t     get_end_volume()      const noexcept{return m_end_volume;}
+  sound_instruction&  set_vibrato_frequency(f32_t  v) noexcept{  m_vibrato_frequency = v;  return *this;}      
+
+  uint32_t  get_length() const noexcept{return m_length;}
+
+  f32_t  get_start_frequency() const noexcept{return m_start_frequency;}
+  f32_t  get_end_frequency()   const noexcept{return m_end_frequency;}
+  f32_t  get_start_volume()    const noexcept{return m_start_volume;}
+  f32_t  get_end_volume()      const noexcept{return m_end_volume;}
+
+  f32_t  get_vibrato_frequency() const noexcept{return m_vibrato_frequency;}
 
 };
 
@@ -77,6 +84,8 @@ sound_device
   f32_t  m_vm_current  =0;
   f32_t  m_vm_increment=0;
 
+  f32_t  m_vibrato_frequency=0;
+
   f32_t  m_number_of_remain_samples=0;
 
   f32_t  m_number_of_upward_samples  =0;
@@ -90,7 +99,7 @@ protected:
   void  set_number_of_upward_samples(  f32_t  v) noexcept{m_number_of_upward_samples   = v;}
   void  set_number_of_downward_samples(f32_t  v) noexcept{m_number_of_downward_samples = v;}
 
-  virtual void  update() noexcept=0;
+  virtual void  update(f32_t  number_of_samples_per_cycle) noexcept=0;
 
   bool  is_downward() const noexcept{return m_downward_flag;}
 
@@ -123,7 +132,7 @@ public:
 class
 square_wave_device: public sound_device
 {
-  void  update() noexcept override;
+  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
 
 public:
   using sound_device::sound_device;
@@ -140,7 +149,7 @@ protected:
 
   f32_t  get_sample() noexcept override;
 
-  void  update() noexcept override;
+  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
 
 public:
   using sound_device::sound_device;
@@ -153,7 +162,7 @@ sawtooth_wave_device: public triangle_wave_device
 {
   f32_t  get_sample() noexcept override;
 
-  void  update() noexcept override;
+  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
 
 public:
   using triangle_wave_device::triangle_wave_device;
@@ -169,7 +178,7 @@ protected:
 
   virtual void  update_seed() noexcept;
 
-  void  update() noexcept override;
+  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
 
   f32_t  get_sample() noexcept override{return static_cast<int16_t>(m_seed)/32767.0*get_volume();}
 

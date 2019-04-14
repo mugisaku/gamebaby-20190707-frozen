@@ -32,11 +32,16 @@ onch_output_context
 
   f32_t     m_last_volume=0;
   f32_t     m_last_frequency=0;
+  f32_t     m_last_vibrato_frequency=0;
+  f32_t     m_last_vibrato_intensity=0;
   uint32_t  m_last_play_length=0;
   uint32_t  m_last_rest_length=0;
 
   f32_t*   m_it=nullptr;
   f32_t*  m_end=nullptr;
+
+  f32_t     get_vibrato_frequency(int  spec, int value) noexcept;
+  f32_t     get_vibrato_intensity(int  spec, int value) noexcept;
 
   f32_t     get_volume(     int  spec, int value) noexcept;
   f32_t     get_frequency(  int  spec, int value) noexcept;
@@ -51,7 +56,9 @@ onch_output_context
 class
 onch_word
 {
-  static constexpr int  m_rest_flag = 0x80000000;
+  static constexpr uint64_t  m_rest_flag = 0x80000000;
+
+  static constexpr int  m_bf_shift_amount = 25;
   static constexpr int   m_l_shift_amount = 20;
   static constexpr int  m_v0_shift_amount = 15;
   static constexpr int  m_v1_shift_amount = 10;
@@ -74,12 +81,14 @@ public:
   bool  test_rest_flag() const noexcept{return m_data&m_rest_flag;}
 
   int  get_l_spec()  const noexcept{return ((m_data>> m_l_shift_amount)>>3&3);}
+  int  get_bf_spec() const noexcept{return ((m_data>>m_bf_shift_amount)>>3&3);}
   int  get_v0_spec() const noexcept{return ((m_data>>m_v0_shift_amount)>>3&3);}
   int  get_v1_spec() const noexcept{return ((m_data>>m_v1_shift_amount)>>3&3);}
   int  get_f0_spec() const noexcept{return ((m_data>>m_f0_shift_amount)>>3&3);}
   int  get_f1_spec() const noexcept{return ((m_data>>m_f1_shift_amount)>>3&3);}
 
   int  get_l_value()  const noexcept{return (m_data>> m_l_shift_amount)&7;}
+  int  get_bf_value() const noexcept{return (m_data>>m_bf_shift_amount)&7;}
   int  get_v0_value() const noexcept{return (m_data>>m_v0_shift_amount)&7;}
   int  get_v1_value() const noexcept{return (m_data>>m_v1_shift_amount)&7;}
   int  get_f0_value() const noexcept{return (m_data>>m_f0_shift_amount)&7;}
@@ -88,6 +97,7 @@ public:
   onch_word&  set_rest_flag() noexcept{  m_data |= m_rest_flag;  return *this;}
 
   onch_word&  set_l(int  lspec, int  l) noexcept;
+  onch_word&  set_b(int  bfspec, int  bf) noexcept;
   onch_word&  set_v(int  v0spec, int  v0, int  v1spec, int  v1) noexcept;
   onch_word&  set_f(int  f0spec, int  f0, int  f1spec, int  f1) noexcept;
 

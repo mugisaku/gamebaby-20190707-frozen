@@ -57,6 +57,7 @@ decoder(const char*&  ptr) noexcept
         if((c == 'p') ||
            (c == 'r') ||
            (c == 'v') ||
+           (c == 'b') ||
            (c == 'f'))
         {
           symbol = c         ;
@@ -124,6 +125,12 @@ read_word(const char*  ptr) noexcept
         {
           w.set_v( dec.first_spec, dec.first_number,
                   dec.second_spec,dec.second_number);
+        }
+
+      else
+        if(dec.symbol == 'b')
+        {
+          w.set_b(dec.first_spec, dec.first_number);
         }
 
       else

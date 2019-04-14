@@ -24,6 +24,16 @@ set_l(int  lspec, int  l) noexcept
 
 onch_word&
 onch_word::
+set_b(int  bfspec, int  bf) noexcept
+{
+  m_data |= ((bfspec<<3)|bf)<<m_bf_shift_amount;
+
+  return *this;
+}
+
+
+onch_word&
+onch_word::
 set_v(int  v0spec, int  v0, int  v1spec, int  v1) noexcept
 {
   m_data |= ((v0spec<<3)|v0)<<m_v0_shift_amount;
@@ -79,12 +89,14 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
       auto  v1 = ctx.get_volume(get_v1_spec(),get_v1_value());
       auto  f0 = ctx.get_frequency(get_f0_spec(),get_f0_value());
       auto  f1 = ctx.get_frequency(get_f1_spec(),get_f1_value());
+      auto  bf = ctx.get_vibrato_frequency(get_bf_spec(),get_bf_value());
 
       instr.set_length(l)
            .set_start_volume(v0)
            .set_end_volume(v1)
            .set_start_frequency(f0)
-           .set_end_frequency(f1);
+           .set_end_frequency(f1)
+           .set_vibrato_frequency(bf);
 
         switch(k)
         {
@@ -142,6 +154,9 @@ print() const noexcept
       auto  f1spe = get_f1_spec();
       auto  f1val = get_f1_value();
 
+      auto  bfspe = get_bf_spec();
+      auto  bfval = get_bf_value();
+
       printf("-v");
 
            if(v0spe == specs::zero){printf("0");}
@@ -162,6 +177,13 @@ print() const noexcept
            if(f1spe == specs::zero){printf("0");}
       else if(f1spe == specs::index){printf("%d",1+f1val);}
       else if(f1spe == specs::no_spec){printf("?");}
+
+
+      printf("-b");
+
+           if(bfspe == specs::zero){printf("0");}
+      else if(bfspe == specs::index){printf("%d",1+bfval);}
+      else if(bfspe == specs::no_spec){printf("?");}
     }
 
 

@@ -13,6 +13,45 @@ namespace gbstd{
 
 f32_t
 onch_output_context::
+get_vibrato_frequency(int  spec, int value) noexcept
+{
+    if(spec == onch_word::specs::no_spec)
+    {
+    }
+
+  else
+    if(spec == onch_word::specs::zero)
+    {
+      m_last_vibrato_frequency = 0;
+    }
+
+  else
+    if(spec == onch_word::specs::index)
+    {
+      constexpr f32_t  table[] = {
+          2,
+          4,
+          6,
+          8,
+         10,
+         12,
+         14,
+         16,
+      };
+
+
+      m_last_vibrato_frequency = table[value];
+    }
+
+
+  return m_last_vibrato_frequency;
+}
+
+
+
+
+f32_t
+onch_output_context::
 get_volume(int  spec, int value) noexcept
 {
     if(spec == onch_word::specs::no_spec)

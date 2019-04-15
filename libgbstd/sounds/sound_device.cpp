@@ -89,6 +89,14 @@ mix(f32_t*  ptr) noexcept
   uint32_t  initial_vibr_counter = get_sampling_rate()/m_vibrato_frequency/2;
   uint32_t          vibr_counter = initial_vibr_counter;
 
+  constexpr double  add_amount = 0.3;
+
+  double  vibr_max_rate = 1.0+add_amount;
+  double  vibr_min_rate = 1.0-add_amount;
+  double  vibr_cur_rate =  vibr_min_rate;
+
+  double  slice = (add_amount*2)/initial_vibr_counter;
+
   int  vibrato_state = 0;
 
     while(n--)
@@ -117,6 +125,8 @@ mix(f32_t*  ptr) noexcept
       else
         {
           --vibr_counter;
+
+          vibr_cur_rate += !vibrato_state? slice:-slice;
         }
 
 
@@ -133,12 +143,12 @@ mix(f32_t*  ptr) noexcept
 
             if(is_downward())
             {
-              constexpr f32_t  intensity = 0.0125;
-
+/*
               auto  rate = vibrato_state? 1.0+intensity
                           :               1.0-intensity;
+*/
 
-              update(get_sampling_rate()/(get_frequency()*rate));
+              update(get_sampling_rate()/(get_frequency()/*vibr_cur_rate*/));
 
               m_number_of_remain_samples += m_number_of_upward_samples;
             }

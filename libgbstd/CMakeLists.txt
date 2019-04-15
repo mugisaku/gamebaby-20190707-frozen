@@ -36,6 +36,7 @@ set(SOURCES
   file_ops/wave.cpp
   file_ops/wave_format.cpp
   sounds/sound_device.cpp
+  sounds/sine_wave_device.cpp
   sounds/square_wave_device.cpp
   sounds/triangle_wave_device.cpp
   sounds/sawtooth_wave_device.cpp
@@ -44,6 +45,7 @@ set(SOURCES
   stage.cpp
   process.cpp
   utility.cpp
+  utility_sincos.cpp
   control.cpp
 )
 

@@ -19,6 +19,7 @@ enum class
 sound_kind
 {
   null,
+  sine_wave,
   square_wave,
   triangle_wave,
   sawtooth_wave,
@@ -125,6 +126,22 @@ public:
 
   static constexpr uint32_t  get_number_of_samples(uint32_t  sampling_rate, uint32_t  length) noexcept
   {return static_cast<double>(sampling_rate)/1000*length;}
+
+};
+
+
+class
+sine_wave_device: public sound_device
+{
+  f32_t  m_counter;
+  f32_t  m_increment;
+
+  f32_t  get_sample() noexcept override;
+
+  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
+
+public:
+  using sound_device::sound_device;
 
 };
 

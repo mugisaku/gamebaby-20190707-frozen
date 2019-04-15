@@ -100,6 +100,9 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
 
         switch(k)
         {
+      case(sound_kind::sine_wave):
+          do_mix<sine_wave_device>(ctx.m_sampling_rate,instr,ctx.m_it);
+          break;
       case(sound_kind::square_wave):
           do_mix<square_wave_device>(ctx.m_sampling_rate,instr,ctx.m_it);
           break;

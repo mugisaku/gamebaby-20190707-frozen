@@ -241,7 +241,6 @@ EM_ASM(
   emscripten_set_main_loop(main_loop,0,false);
 #else
 
-
   --argc;
   ++argv;
 
@@ -275,9 +274,9 @@ EM_ASM(
 
             if(wave_bin.size())
             {
-              sp.print();
+//              sp.print();
 
-              printf("\n");
+//              printf("\n");
 
               std::string  s(path);
 

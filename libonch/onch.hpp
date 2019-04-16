@@ -94,6 +94,8 @@ public:
   int  get_f0_value() const noexcept{return (m_data>>m_f0_shift_amount)&7;}
   int  get_f1_value() const noexcept{return (m_data>>m_f1_shift_amount)&7;}
 
+  onch_word&  reset() noexcept{  m_data = 0;  return *this;}
+
   onch_word&  set_rest_flag() noexcept{  m_data |= m_rest_flag;  return *this;}
 
   onch_word&  set_l(int  lspec, int  l) noexcept;

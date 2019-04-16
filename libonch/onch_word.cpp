@@ -76,13 +76,44 @@ do_mix(uint32_t  rate, const sound_instruction&  instr, f32_t*  ptr) noexcept
 
 
 void
+do_mix(gbstd::sound_kind  k, uint32_t  rate, const sound_instruction&  instr, f32_t*  ptr) noexcept
+{
+    switch(k)
+    {
+  case(sound_kind::sine_wave):
+      do_mix<sine_wave_device>(rate,instr,ptr);
+      break;
+  case(sound_kind::square_wave):
+      do_mix<square_wave_device>(rate,instr,ptr);
+      break;
+  case(sound_kind::triangle_wave):
+      do_mix<triangle_wave_device>(rate,instr,ptr);
+      break;
+  case(sound_kind::sawtooth_wave):
+      do_mix<sawtooth_wave_device>(rate,instr,ptr);
+      break;
+  case(sound_kind::noise):
+      do_mix<gbstd::noise_device>(rate,instr,ptr);
+      break;
+  case(sound_kind::short_noise):
+      do_mix<gbstd::short_noise_device>(rate,instr,ptr);
+      break;
+    }
+}
+
+
+void
 onch_word::
 output(sound_kind  k, onch_output_context&  ctx) const noexcept
 {
   auto  l = get_output_length(ctx);
 
+  auto  num_samples = gbstd::sound_device::get_number_of_samples(ctx.m_sampling_rate,l);
+
     if(!test_rest_flag())
     {
+      std::vector<f32_t>  buf(num_samples);
+
       gbstd::sound_instruction  instr;
 
       auto  v0 = ctx.get_volume(get_v0_spec(),get_v0_value());
@@ -95,34 +126,40 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
            .set_start_volume(v0)
            .set_end_volume(v1)
            .set_start_frequency(f0)
-           .set_end_frequency(f1)
-           .set_vibrato_frequency(bf);
+           .set_end_frequency(f1);
 
-        switch(k)
+      do_mix(k,ctx.m_sampling_rate,instr,buf.data());
+
+
+      std::vector<f32_t>  a_subbuf(num_samples);
+      std::vector<f32_t>  b_subbuf(num_samples);
+
+      instr.set_length(l)
+           .set_start_volume(0.4)
+           .set_end_volume(  0.4)
+           .set_start_frequency(110)
+           .set_end_frequency(  110);
+
+      do_mix(gbstd::sound_kind::triangle_wave,ctx.m_sampling_rate,instr,a_subbuf.data());
+
+      instr.set_length(l)
+           .set_start_volume(0.4)
+           .set_end_volume(  0.4)
+           .set_start_frequency(220)
+           .set_end_frequency(  220);
+
+      do_mix(gbstd::sound_kind::triangle_wave,ctx.m_sampling_rate,instr,b_subbuf.data());
+
+        for(int  i = 0;  i < num_samples;  ++i)
         {
-      case(sound_kind::sine_wave):
-          do_mix<sine_wave_device>(ctx.m_sampling_rate,instr,ctx.m_it);
-          break;
-      case(sound_kind::square_wave):
-          do_mix<square_wave_device>(ctx.m_sampling_rate,instr,ctx.m_it);
-          break;
-      case(sound_kind::triangle_wave):
-          do_mix<triangle_wave_device>(ctx.m_sampling_rate,instr,ctx.m_it);
-          break;
-      case(sound_kind::sawtooth_wave):
-          do_mix<sawtooth_wave_device>(ctx.m_sampling_rate,instr,ctx.m_it);
-          break;
-      case(sound_kind::noise):
-          do_mix<gbstd::noise_device>(ctx.m_sampling_rate,instr,ctx.m_it);
-          break;
-      case(sound_kind::short_noise):
-          do_mix<gbstd::short_noise_device>(ctx.m_sampling_rate,instr,ctx.m_it);
-          break;
+          auto  rate = (1.0+a_subbuf[i]+b_subbuf[i]);
+
+          ctx.m_it[i] += buf[i]*rate;
         }
     }
 
 
-  ctx.m_it += gbstd::sound_device::get_number_of_samples(ctx.m_sampling_rate,l);
+  ctx.m_it += num_samples;
 }
 
 

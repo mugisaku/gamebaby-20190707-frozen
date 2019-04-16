@@ -40,7 +40,7 @@ g_space;
 
 
 void
-update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
+update_wave_binary(std::vector<uint8_t>&&  new_code, gbstd::f32_t  volume) noexcept
 {
     if(g_source_code != new_code)
     {
@@ -49,6 +49,8 @@ update_wave_binary(std::vector<uint8_t>&&  new_code) noexcept
       g_space.clear();
 
       g_space.load_from_string(reinterpret_cast<const char*>(g_source_code.data()));
+
+      g_spec.volume = volume;
 
       g_wave_bin = g_space.make_wave_format_binary(g_spec);
 #ifdef __EMSCRIPTEN__
@@ -75,7 +77,7 @@ main_loop() noexcept
 
         if(g_source_code != gbstd::g_dropped_file)
         {
-          update_wave_binary(std::move(gbstd::g_dropped_file));
+          update_wave_binary(std::move(gbstd::g_dropped_file),(o == 's')? 1.0:0.2);
         }
 
 
@@ -97,7 +99,7 @@ main_loop() noexcept
         }
 
       else
-        if(o == 's')
+        if(o == 't')
         {
         EM_ASM(
              if(g_object.audio)
@@ -130,7 +132,7 @@ main(int  argc, char**  argv)
 
   g_spec.bit_depth = 8;
 
-  g_spec.volume = 0.2;
+  g_spec.volume = 1.0;
 
 #ifdef __EMSCRIPTEN__
   set_description("<pre>"
@@ -171,7 +173,7 @@ EM_ASM(
   play_button.onclick = function(){g_object.transfer('p'.charCodeAt(0));};
 
   stop_button.innerText = 'stop';
-  stop_button.onclick = function(){g_object.transfer('s'.charCodeAt(0));};
+  stop_button.onclick = function(){g_object.transfer('t'.charCodeAt(0));};
 
   save_button.innerText = 'save';
   save_button.onclick = function(){g_object.transfer('s'.charCodeAt(0));};
@@ -194,7 +196,7 @@ EM_ASM(
   +"//bはビブラートを表し、後ろに続く数字は、ビブラート頻度を表します"+"\n"
   +"//間にハイフンがありますが、なくても問題ありません。無関係な文字は読み飛ばされます"+"\n"
   +"//数字は、音量とビブラート0～8、それ以外は、1～8を指定します"+"\n"
-  +"//数字は省略することができ、その場合はp,r,v,fのそれぞれ最後に指定された数が"+"\n"
+  +"//数字は省略することができ、その場合はp,r,v,f,bのそれぞれ最後に指定された数が"+"\n"
   +"//再利用されます"+"\n"
   +"//v,fの一番目の数字を省略し、2番目の数字を指定したい場合は"+"\n"
   +"//数字の代わりに、?を置きます"+"\n"
@@ -254,6 +256,8 @@ EM_ASM(
 
         if(*path == '-')
         {
+          int  vol;
+
             if(sscanf(path,"-sps:%d",&g_spec.sampling_rate) == 1)
             {
               printf("sampling rate was changed to %d\n",g_spec.sampling_rate);
@@ -263,6 +267,14 @@ EM_ASM(
             if(sscanf(path,"-bps:%d",&g_spec.bit_depth) == 1)
             {
               printf("bits per sample was changed to %d\n",g_spec.bit_depth);
+            }
+
+          else
+            if(sscanf(path,"-vol:%d",&vol) == 1)
+            {
+              g_spec.volume = static_cast<f32_t>(vol)/10;
+
+              printf("volume was changed to %f\n",g_spec.volume);
             }
         }
 

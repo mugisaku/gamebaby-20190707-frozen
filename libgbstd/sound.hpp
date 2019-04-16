@@ -40,8 +40,6 @@ sound_instruction
   f32_t  m_start_frequency=0;
   f32_t  m_end_frequency=0;
 
-  f32_t  m_vibrato_frequency=0;
-
 public:
   sound_instruction() noexcept{}
 
@@ -52,16 +50,12 @@ public:
   sound_instruction&  set_start_frequency(f32_t  f) noexcept{  m_start_frequency = f;  return *this;}      
   sound_instruction&  set_end_frequency(  f32_t  f) noexcept{  m_end_frequency   = f;  return *this;}      
 
-  sound_instruction&  set_vibrato_frequency(f32_t  v) noexcept{  m_vibrato_frequency = v;  return *this;}      
-
   uint32_t  get_length() const noexcept{return m_length;}
 
   f32_t  get_start_frequency() const noexcept{return m_start_frequency;}
   f32_t  get_end_frequency()   const noexcept{return m_end_frequency;}
   f32_t  get_start_volume()    const noexcept{return m_start_volume;}
   f32_t  get_end_volume()      const noexcept{return m_end_volume;}
-
-  f32_t  get_vibrato_frequency() const noexcept{return m_vibrato_frequency;}
 
 };
 
@@ -84,8 +78,6 @@ sound_device
 
   f32_t  m_vm_current  =0;
   f32_t  m_vm_increment=0;
-
-  f32_t  m_vibrato_frequency=0;
 
   f32_t  m_number_of_remain_samples=0;
 

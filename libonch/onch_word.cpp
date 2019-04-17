@@ -131,28 +131,19 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
       do_mix(k,ctx.m_sampling_rate,instr,buf.data());
 
 
-      std::vector<f32_t>  a_subbuf(num_samples);
-      std::vector<f32_t>  b_subbuf(num_samples);
+      std::vector<f32_t>  subbuf(num_samples);
 
       instr.set_length(l)
            .set_start_volume(0.4)
            .set_end_volume(  0.4)
-           .set_start_frequency(110)
-           .set_end_frequency(  110);
+           .set_start_frequency(bf)
+           .set_end_frequency(  bf);
 
-      do_mix(gbstd::sound_kind::triangle_wave,ctx.m_sampling_rate,instr,a_subbuf.data());
-
-      instr.set_length(l)
-           .set_start_volume(0.4)
-           .set_end_volume(  0.4)
-           .set_start_frequency(220)
-           .set_end_frequency(  220);
-
-      do_mix(gbstd::sound_kind::triangle_wave,ctx.m_sampling_rate,instr,b_subbuf.data());
+      do_mix(gbstd::sound_kind::sine_wave,ctx.m_sampling_rate,instr,subbuf.data());
 
         for(int  i = 0;  i < num_samples;  ++i)
         {
-          auto  rate = (1.0+a_subbuf[i]+b_subbuf[i]);
+          auto  rate = (1.0+subbuf[i]);
 
           ctx.m_it[i] += buf[i]*rate;
         }

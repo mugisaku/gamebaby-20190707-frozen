@@ -491,6 +491,33 @@ load_from_string(const char*  s) noexcept
 }
 
 
+std::vector<gbstd::f32_t>
+onch_space::
+make_f32_raw_binary(int  sampling_rate, double  volume) const noexcept
+{
+  auto  e = find("main");
+
+    if(e)
+    {
+      auto  buf = e->generate_wave(sampling_rate,*this);
+
+        if(volume != 1)
+        {
+            for(auto&  v: buf)
+            {
+              v *= volume;
+            }
+        }
+
+
+      return std::move(buf);
+    }
+
+
+  return {};
+}
+
+
 std::vector<int16_t>
 onch_space::
 make_16bit_raw_binary(int  sampling_rate, double  volume) const noexcept

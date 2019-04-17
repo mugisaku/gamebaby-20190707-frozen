@@ -73,6 +73,12 @@ main(int  argc, char**  argv)
   sdl::init(screen_w,screen_h,1.0);
   sdl::init_sound();
 
+sdl::add_sound("test","main = square{\"p6-v55-f51-b3\"}");
+sdl::change_bgm("test");
+
+sdl::start_sound_playing();
+
+
   g_context.set_screen_size(screen_w,screen_h);
 
   g_context.startup();

@@ -28,10 +28,14 @@ bool   test_sound_recording() noexcept;
 
 std::vector<uint8_t>  get_sound_wave_binary() noexcept;
 
+void  add_sound(const char*  name, const char*  text) noexcept;
+
+void  change_bgm(const char*  name) noexcept;
+void  stop_bgm() noexcept;
+void  play_sound(const char*  name) noexcept;
+
 void  start_sound_playing() noexcept;
 void   stop_sound_playing() noexcept;
-
-void  beep(uint32_t  ms) noexcept;
 
 void  resize_screen(int  w, int  h) noexcept;
 

@@ -48,7 +48,7 @@ decoder(const char*&  ptr) noexcept
 
     for(;;)
     {
-      auto  c = *ptr++;
+      auto  c = *ptr;
 
         if(c == 0)
         {break;}
@@ -61,7 +61,7 @@ decoder(const char*&  ptr) noexcept
            (c == 'f'))
         {
           symbol = c         ;
-                   c = *ptr++;
+                   c = *++ptr;
 
             if(isnum(c))
             {
@@ -75,7 +75,7 @@ decoder(const char*&  ptr) noexcept
                 }
 
 
-              c = *ptr++;
+              c = *++ptr;
 
                 if(isnum(c))
                 {
@@ -94,6 +94,11 @@ decoder(const char*&  ptr) noexcept
 
           break;
         }
+
+      else
+        {
+          ++ptr;
+        }
     }
 }
 
@@ -103,21 +108,21 @@ read_word(const char*  ptr) noexcept
 {
   onch_word  w;
 
-    for(;;)
+    while(*ptr)
     {
       decoder  dec(ptr);
 
         if(dec.symbol == 'p')
         {
-          w.set_l(dec.first_spec,dec.first_number);
+          w.set_kind(onch_word_kind::play)
+           .set_l(dec.first_spec,dec.first_number);
         }
 
       else
         if(dec.symbol == 'r')
         {
-          w.set_rest_flag();
-
-          w.set_l(dec.first_spec,dec.first_number);
+          w.set_kind(onch_word_kind::rest)
+           .set_l(dec.first_spec,dec.first_number);
         }
 
       else

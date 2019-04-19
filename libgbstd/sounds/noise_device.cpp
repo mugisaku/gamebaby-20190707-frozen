@@ -10,14 +10,14 @@ namespace gbstd{
 
 void
 noise_device::
-update(f32_t  number_of_samples_per_cycle) noexcept
+restart_phase() noexcept
 {
-  number_of_samples_per_cycle /= 8;
+  set_number_of_phase_samples(get_number_of_samples_per_cycle()/8/2);
 
-  set_number_of_upward_samples(  number_of_samples_per_cycle/2);
-  set_number_of_downward_samples(number_of_samples_per_cycle/2);
-
-  update_seed();
+    if(is_upward())
+    {
+      update_seed();
+    }
 }
 
 

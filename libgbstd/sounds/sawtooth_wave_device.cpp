@@ -21,13 +21,19 @@ get_sample() noexcept
 
 void
 sawtooth_wave_device::
-update(f32_t  number_of_samples_per_cycle) noexcept
+restart_phase() noexcept
 {
-  set_number_of_upward_samples(number_of_samples_per_cycle);
-  set_number_of_downward_samples(0);
+    if(is_downward())
+    {
+      auto  n = get_number_of_samples_per_cycle();
 
-  m_sample_current   = -get_volume();
-  m_sample_increment = (get_volume()*2)/number_of_samples_per_cycle;
+      set_number_of_phase_samples(n);
+
+      auto  v = get_volume();
+
+      m_sample_current   = -v;
+      m_sample_increment = (v*2)/n;
+    }
 }
 
 

@@ -18,7 +18,7 @@ void  quit() noexcept;
 void  init(                int  w, int  h, double  scale=1) noexcept;
 void  init(int  x, int  y, int  w, int  h, double  scale=1) noexcept;
 
-void  init_sound() noexcept;
+void  init_sound(int  sampling_rate) noexcept;
 void  quit_sound() noexcept;
 
 void  start_sound_recording() noexcept;

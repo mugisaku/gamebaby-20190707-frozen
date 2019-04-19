@@ -23,6 +23,8 @@ judge_hit(gbstd::execution&  exec, battle_context*  ctx) noexcept
 
     if(hit_rand() <= 8)
     {
+      sdl::play_sound("bashi");
+
       int  damage_amount = damage_rand();
 
       ctx->m_notifiers.emplace_back(target.get_offset(),target.get_current_position(),sf("%4d",damage_amount));

@@ -15,7 +15,8 @@ namespace sdl{
 namespace{
 
 
-constexpr int  g_sampling_rate = 24000;
+int
+g_sampling_rate;
 
 
 struct
@@ -147,7 +148,7 @@ print() noexcept
 
 
 void
-init_sound() noexcept
+init_sound(int  sampling_rate) noexcept
 {
     if(SDL_WasInit(SDL_INIT_AUDIO))
     {
@@ -158,6 +159,8 @@ init_sound() noexcept
   SDL_InitSubSystem(SDL_INIT_AUDIO);
 
   SDL_AudioSpec  spec;
+
+  g_sampling_rate = sampling_rate;
 
   spec.freq     = g_sampling_rate;
   spec.channels = 1;

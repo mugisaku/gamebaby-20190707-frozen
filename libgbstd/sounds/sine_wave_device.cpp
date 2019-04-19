@@ -14,12 +14,6 @@ get_sample() noexcept
 {
   auto  i = static_cast<int>(m_counter);
 
-    if(i >= g_cos_table_length)
-    {
-      i = g_cos_table_length-(1+(i-g_cos_table_length));
-    }
-
-
   auto  rate = g_cos_table[i];
 
   auto  v = get_volume()*rate;
@@ -32,13 +26,24 @@ get_sample() noexcept
 
 void
 sine_wave_device::
-update(f32_t  number_of_samples_per_cycle) noexcept
+restart_phase() noexcept
 {
-  set_number_of_upward_samples(  number_of_samples_per_cycle/2);
-  set_number_of_downward_samples(number_of_samples_per_cycle/2);
+  auto  n = get_number_of_samples_per_cycle();
 
-  m_counter = 0;
-  m_increment = (g_cos_table_length*2)/(number_of_samples_per_cycle);
+  set_number_of_phase_samples(n/2);
+
+  m_increment = static_cast<f32_t>(g_cos_table_length-1)/(n/2);
+
+    if(is_upward())
+    {
+      m_counter = 0;
+    }
+
+  else
+    {
+      m_counter   = g_cos_table_length-1;
+      m_increment *=                  -1;
+    }
 }
 
 

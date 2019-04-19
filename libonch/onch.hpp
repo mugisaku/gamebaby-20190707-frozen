@@ -53,11 +53,20 @@ onch_output_context
 
 
 
+enum class
+onch_word_kind
+{
+  null,
+  play,
+  rest,
+
+};
+
+
 class
 onch_word
 {
-  static constexpr uint64_t  m_rest_flag = 0x80000000;
-
+  static constexpr int   m_k_shift_amount = 30;
   static constexpr int  m_bf_shift_amount = 25;
   static constexpr int   m_l_shift_amount = 20;
   static constexpr int  m_v0_shift_amount = 15;
@@ -78,7 +87,11 @@ public:
 
   constexpr onch_word() noexcept: m_data(0){}
 
-  bool  test_rest_flag() const noexcept{return m_data&m_rest_flag;}
+  onch_word_kind  get_kind() const noexcept{return static_cast<onch_word_kind>((m_data>>m_k_shift_amount)&3);}
+
+  bool  is_null() const noexcept{return get_kind() == onch_word_kind::null;}
+  bool  is_play() const noexcept{return get_kind() == onch_word_kind::play;}
+  bool  is_rest() const noexcept{return get_kind() == onch_word_kind::rest;}
 
   int  get_l_spec()  const noexcept{return ((m_data>> m_l_shift_amount)>>3&3);}
   int  get_bf_spec() const noexcept{return ((m_data>>m_bf_shift_amount)>>3&3);}
@@ -96,7 +109,7 @@ public:
 
   onch_word&  reset() noexcept{  m_data = 0;  return *this;}
 
-  onch_word&  set_rest_flag() noexcept{  m_data |= m_rest_flag;  return *this;}
+  onch_word&  set_kind(onch_word_kind  k) noexcept{  m_data |= static_cast<int>(k)<<m_k_shift_amount;  return *this;}
 
   onch_word&  set_l(int  lspec, int  l) noexcept;
   onch_word&  set_b(int  bfspec, int  bf) noexcept;

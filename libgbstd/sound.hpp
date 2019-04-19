@@ -69,7 +69,11 @@ sound_device
 {
   uint32_t  m_sampling_rate=0;
 
-  uint32_t  m_number_of_samples=0;
+  uint32_t  m_number_of_whole_samples=0;
+  uint32_t  m_number_of_phase_samples=0;
+
+  uint32_t  m_modulation_counter_base=0;
+  uint32_t  m_modulation_counter=0;
 
   uint32_t  m_length=0;
 
@@ -79,27 +83,16 @@ sound_device
   f32_t  m_vm_current  =0;
   f32_t  m_vm_increment=0;
 
-  f32_t  m_number_of_remain_samples=0;
-
-  f32_t  m_number_of_upward_samples  =0;
-  f32_t  m_number_of_downward_samples=0;
-
   bool  m_downward_flag=false;
 
 protected:
   virtual f32_t  get_sample() noexcept{return is_downward()? -get_volume():get_volume();}
 
-  void  set_number_of_upward_samples(  f32_t  v) noexcept{m_number_of_upward_samples   = v;}
-  void  set_number_of_downward_samples(f32_t  v) noexcept{m_number_of_downward_samples = v;}
+  void  set_number_of_phase_samples(uint32_t  v) noexcept{m_number_of_phase_samples = v;}
 
-  virtual void  update(f32_t  number_of_samples_per_cycle) noexcept=0;
+  virtual void  restart_phase() noexcept=0;
 
-  bool  is_downward() const noexcept{return m_downward_flag;}
-
-  f32_t  get_volume()    const noexcept{return m_vm_current;}
-  f32_t  get_frequency() const noexcept{return m_fm_current;}
-
-  void  update_number_of_samples() noexcept{m_number_of_samples = get_number_of_samples(m_sampling_rate,m_length);}
+  void  update_number_of_whole_samples() noexcept{m_number_of_whole_samples = get_number_of_samples(m_sampling_rate,m_length);}
 
 public:
   sound_device(                                                        ) noexcept{}
@@ -112,7 +105,16 @@ public:
 
   uint32_t  get_length() const noexcept{return m_length;}
 
-  uint32_t  get_number_of_samples() const noexcept{return m_number_of_samples;}
+  uint32_t  get_number_of_samples_per_cycle() const noexcept{return get_sampling_rate()/get_frequency();}
+
+  uint32_t  get_number_of_whole_samples() const noexcept{return m_number_of_whole_samples;}
+  uint32_t  get_number_of_phase_samples() const noexcept{return m_number_of_whole_samples;}
+
+  bool  is_upward()   const noexcept{return !m_downward_flag;}
+  bool  is_downward() const noexcept{return  m_downward_flag;}
+
+  f32_t  get_volume()    const noexcept{return m_vm_current;}
+  f32_t  get_frequency() const noexcept{return m_fm_current;}
 
   void  mix(f32_t*  ptr) noexcept;
 
@@ -130,7 +132,7 @@ sine_wave_device: public sound_device
 
   f32_t  get_sample() noexcept override;
 
-  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
+  void  restart_phase() noexcept override;
 
 public:
   using sound_device::sound_device;
@@ -141,7 +143,7 @@ public:
 class
 square_wave_device: public sound_device
 {
-  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
+  void  restart_phase() noexcept override;
 
 public:
   using sound_device::sound_device;
@@ -158,7 +160,7 @@ protected:
 
   f32_t  get_sample() noexcept override;
 
-  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
+  void  restart_phase() noexcept override;
 
 public:
   using sound_device::sound_device;
@@ -171,7 +173,7 @@ sawtooth_wave_device: public triangle_wave_device
 {
   f32_t  get_sample() noexcept override;
 
-  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
+  void  restart_phase() noexcept override;
 
 public:
   using triangle_wave_device::triangle_wave_device;
@@ -187,7 +189,7 @@ protected:
 
   virtual void  update_seed() noexcept;
 
-  void  update(f32_t  number_of_samples_per_cycle) noexcept override;
+  void  restart_phase() noexcept override;
 
   f32_t  get_sample() noexcept override{return static_cast<int16_t>(m_seed)/32767.0*get_volume();}
 

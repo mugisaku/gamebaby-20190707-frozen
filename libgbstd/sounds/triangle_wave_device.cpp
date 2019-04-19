@@ -12,10 +12,8 @@ f32_t
 triangle_wave_device::
 get_sample() noexcept
 {
-  auto  v = m_sample_current;
-
-    if(is_downward()){m_sample_current -= m_sample_increment;}
-  else               {m_sample_current += m_sample_increment;}
+  auto  v = m_sample_current                      ;
+            m_sample_current += m_sample_increment;
 
   return v;
 }
@@ -23,15 +21,26 @@ get_sample() noexcept
 
 void
 triangle_wave_device::
-update(f32_t  number_of_samples_per_cycle) noexcept
+restart_phase() noexcept
 {
-  auto  half = number_of_samples_per_cycle/2;
+  auto  n = get_number_of_samples_per_cycle();
 
-  set_number_of_upward_samples(  half);
-  set_number_of_downward_samples(half);
+  set_number_of_phase_samples(n/2);
 
-  m_sample_current   = -get_volume();
-  m_sample_increment = (get_volume()*2)/half;
+  auto  v = get_volume();
+
+  m_sample_increment = (v*2)/(n/2);
+
+    if(is_upward())
+    {
+      m_sample_current = -v;
+    }
+
+  else
+    {
+      m_sample_current    =  v;
+      m_sample_increment *= -1;
+    }
 }
 
 

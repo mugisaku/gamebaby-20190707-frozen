@@ -282,14 +282,14 @@ EM_ASM(
         {
           sp.load_from_file(path);
 
+          sp.print();
+
+          printf("\n");
+
           auto  wave_bin = sp.make_wave_format_binary(g_spec);
 
             if(wave_bin.size())
             {
-//              sp.print();
-
-//              printf("\n");
-
               std::string  s(path);
 
               s += ".wav";

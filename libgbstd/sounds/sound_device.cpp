@@ -56,7 +56,10 @@ reset(const sound_instruction&  instr) noexcept
   set_modulation(instr.get_start_volume()   ,instr.get_end_volume()   ,m_length,m_vm_current,m_vm_increment);
   set_modulation(instr.get_start_frequency(),instr.get_end_frequency(),m_length,m_fm_current,m_fm_increment);
 
-  update_number_of_samples();
+  update_number_of_whole_samples();
+
+  m_modulation_counter_base = get_sampling_rate()/1000;
+  m_modulation_counter      = m_modulation_counter_base;
 }
 
 
@@ -66,7 +69,7 @@ set_sampling_rate(uint32_t  rate) noexcept
 {
   m_sampling_rate = rate;
 
-  update_number_of_samples();
+  update_number_of_whole_samples();
 }
 
 
@@ -74,21 +77,13 @@ void
 sound_device::
 mix(f32_t*  ptr) noexcept
 {
-  update(get_sampling_rate()/get_frequency());
+  restart_phase();
 
-  m_number_of_remain_samples = m_number_of_upward_samples;
-
-
-  auto  n = get_number_of_samples();
-
-  uint32_t  initial_num_permil = get_sampling_rate()/1000;
-  uint32_t          num_permil = initial_num_permil;
-
-    while(n--)
+    while(m_number_of_whole_samples--)
     {
-        if(!num_permil)
+        if(!m_modulation_counter)
         {
-          num_permil = initial_num_permil;
+          m_modulation_counter = m_modulation_counter_base;
 
           m_vm_current += m_vm_increment;
           m_fm_current += m_fm_increment;
@@ -96,13 +91,13 @@ mix(f32_t*  ptr) noexcept
 
       else
         {
-          --num_permil;
+          --m_modulation_counter;
         }
 
 
       uint32_t  safe_counter = 0;
 
-        while(m_number_of_remain_samples < 1)
+        while(!m_number_of_phase_samples)
         {
             if(++safe_counter > 0x1000000)
             {
@@ -111,26 +106,15 @@ mix(f32_t*  ptr) noexcept
             }
 
 
-            if(is_downward())
-            {
-              update(get_sampling_rate()/get_frequency());
-
-              m_number_of_remain_samples += m_number_of_upward_samples;
-            }
-
-          else
-            {
-              m_number_of_remain_samples += m_number_of_downward_samples;
-            }
-
-
           m_downward_flag = !m_downward_flag;
+
+          restart_phase();
         }
 
 
       *ptr++ = get_sample();
 
-      m_number_of_remain_samples -= 1;
+      --m_number_of_phase_samples;
     }
 }
 

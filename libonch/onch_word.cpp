@@ -70,9 +70,9 @@ template<typename  T>
 void
 do_mix(uint32_t  rate, const sound_instruction&  instr, f32_t*  ptr) noexcept
 {
-  T  tmp(rate,instr);
+  T  tmp(rate);
 
-  tmp.mix(ptr);
+  tmp.mix(instr,ptr);
 }
 
 

@@ -37,11 +37,9 @@ set_modulation(f32_t  start, f32_t  end, uint32_t  ms, f32_t&  cur, f32_t&  inc)
 
 
 sound_device::
-sound_device(uint32_t  sampling_rate, const sound_instruction&  instr) noexcept
+sound_device(uint32_t  sampling_rate) noexcept
 {
   set_sampling_rate(sampling_rate);
-
-  reset(instr);
 }
 
 
@@ -49,72 +47,96 @@ sound_device(uint32_t  sampling_rate, const sound_instruction&  instr) noexcept
 
 void
 sound_device::
-reset(const sound_instruction&  instr) noexcept
+reset() noexcept
 {
-  m_length = instr.get_length();
-
-  set_modulation(instr.get_start_volume()   ,instr.get_end_volume()   ,m_length,m_vm_current,m_vm_increment);
-  set_modulation(instr.get_start_frequency(),instr.get_end_frequency(),m_length,m_fm_current,m_fm_increment);
-
-  update_number_of_whole_samples();
-
-  m_modulation_counter_base = get_sampling_rate()/1000;
-  m_modulation_counter      = m_modulation_counter_base;
+  m_dirty_flag = true;
 }
 
 
-void
+sound_device&
 sound_device::
 set_sampling_rate(uint32_t  rate) noexcept
 {
   m_sampling_rate = rate;
 
-  update_number_of_whole_samples();
+  return *this;
+}
+
+
+f32_t
+sound_device::
+operator*() noexcept
+{
+    if(m_dirty_flag)
+    {
+      m_downward_flag = false;
+      m_dirty_flag    = false;
+
+      restart_phase();
+    }
+
+
+  uint32_t  safe_counter = 0;
+
+    while(!m_number_of_phase_samples)
+    {
+        if(++safe_counter > 0x1000000)
+        {
+          report;
+           break;
+        }
+
+
+      m_downward_flag = !m_downward_flag;
+
+      restart_phase();
+    }
+
+
+  --m_number_of_phase_samples;
+
+  return get_sample();
 }
 
 
 void
 sound_device::
-mix(f32_t*  ptr) noexcept
+mix(const sound_instruction&  instr, f32_t*  ptr) noexcept
 {
+  auto  length = instr.get_length();
+
+  auto  number_of_whole_samples = get_number_of_samples(m_sampling_rate,length);
+
+  f32_t  fm_increment=0;
+  f32_t  vm_increment=0;
+
+  set_modulation(instr.get_start_volume()   ,instr.get_end_volume()   ,length,m_vm_current,vm_increment);
+  set_modulation(instr.get_start_frequency(),instr.get_end_frequency(),length,m_fm_current,fm_increment);
+
+  uint32_t  modulation_counter_base = get_sampling_rate()/1000;
+  uint32_t  modulation_counter      = modulation_counter_base;
+
+  m_downward_flag = false;
+
   restart_phase();
 
-    while(m_number_of_whole_samples--)
+    while(number_of_whole_samples--)
     {
-        if(!m_modulation_counter)
+        if(!modulation_counter)
         {
-          m_modulation_counter = m_modulation_counter_base;
+          modulation_counter = modulation_counter_base;
 
-          m_vm_current += m_vm_increment;
-          m_fm_current += m_fm_increment;
+          m_vm_current += vm_increment;
+          m_fm_current += fm_increment;
         }
 
       else
         {
-          --m_modulation_counter;
+          --modulation_counter;
         }
 
 
-      uint32_t  safe_counter = 0;
-
-        while(!m_number_of_phase_samples)
-        {
-            if(++safe_counter > 0x1000000)
-            {
-              report;
-               break;
-            }
-
-
-          m_downward_flag = !m_downward_flag;
-
-          restart_phase();
-        }
-
-
-      *ptr++ = get_sample();
-
-      --m_number_of_phase_samples;
+      *ptr++ = **this;
     }
 }
 

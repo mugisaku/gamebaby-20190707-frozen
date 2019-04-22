@@ -102,8 +102,8 @@ public:
   f32_t  get_volume()    const noexcept{return m_vm_current;}
   f32_t  get_frequency() const noexcept{return m_fm_current;}
 
-  sound_device&  set_volume(f32_t     v) noexcept{  m_vm_current = v;  return *this;}
-  sound_device&  set_frequency(f32_t  v) noexcept{  m_fm_current = v;  return *this;}
+  sound_device&  set_volume(f32_t     v) noexcept{  m_vm_current = v;  reset();  return *this;}
+  sound_device&  set_frequency(f32_t  v) noexcept{  m_fm_current = v;  reset();  return *this;}
 
   f32_t  operator*() noexcept;
 
@@ -200,6 +200,10 @@ public:
 
 };
 
+
+constexpr int  g_scale_table_length = 128;
+
+extern const double  g_scale_table[g_scale_table_length];
 
 
 }

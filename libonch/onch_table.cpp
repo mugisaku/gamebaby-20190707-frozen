@@ -21,7 +21,7 @@ push(onch_element&&  e) noexcept
 
 uint32_t
 onch_table::
-get_output_length(onch_output_context&  ctx) const noexcept
+get_output_length() const noexcept
 {
   uint32_t  l = 0;
 
@@ -29,7 +29,7 @@ get_output_length(onch_output_context&  ctx) const noexcept
     {
         for(auto&  e: m_elements)
         {
-          l += e.get_output_length(ctx);
+          l += e.get_output_length();
         }
     }
 
@@ -38,7 +38,7 @@ get_output_length(onch_output_context&  ctx) const noexcept
     {
         for(auto&  e: m_elements)
         {
-          l = std::max(l,e.get_output_length(ctx));
+          l = std::max(l,e.get_output_length());
         }
     }
 

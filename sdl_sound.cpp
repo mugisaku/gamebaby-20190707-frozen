@@ -19,6 +19,46 @@ int
 g_sampling_rate;
 
 
+int
+g_reverb_rate;
+
+
+struct
+reverb
+{
+  const gbstd::f32_t*  m_begin;
+  const gbstd::f32_t*  m_current;
+  const gbstd::f32_t*  m_end;
+
+  int  m_remain;
+
+  void  write(gbstd::f32_t*  dst, int  n) noexcept
+  {
+      while(n--)
+      {
+          if(!m_remain)
+          {
+            break;
+          }
+
+
+        --m_remain;
+
+          if(m_current >= m_end)
+          {
+            m_current = m_begin;
+          }
+
+
+        auto  s = *m_current++;
+
+        *dst++ += s*(static_cast<double>(m_remain)/g_reverb_rate);
+      }
+  }
+
+};
+
+
 struct
 entry
 {
@@ -69,8 +109,21 @@ std::list<entry>
 g_entry_list;
 
 
+std::list<reverb>
+g_reverb_list;
+
+
 std::vector<gbstd::f32_t>
 g_bgm_sound;
+
+
+std::vector<gbstd::f32_t>
+g_wave_table[gbstd::g_scale_table_length];
+
+
+const gbstd::f32_t*  g_wave_begin;
+const gbstd::f32_t*  g_wave_ptr;
+const gbstd::f32_t*  g_wave_end;
 
 
 std::unordered_map<std::string,std::vector<gbstd::f32_t>>
@@ -98,22 +151,59 @@ callback(void*  data, uint8_t*  buf, int  len) noexcept
 
   g_bgm_entry.write(dst,n,true);
 
-  auto  it = g_entry_list.begin();
-
-    while(it != g_entry_list.end())
+    if(g_wave_begin)
     {
-      it->write(dst,n,false);
-
-        if(*it)
+        for(int  i = 0;  i < n;  ++i)
         {
-          ++it;
-        }
+            if(g_wave_ptr >= g_wave_end)
+            {
+              g_wave_ptr = g_wave_begin;
+            }
 
-      else
-        {
-          it = g_entry_list.erase(it);
+
+          dst[i] += *g_wave_ptr++;
         }
     }
+
+
+  {
+    auto  it = g_reverb_list.begin();
+
+      while(it != g_reverb_list.end())
+      {
+        it->write(dst,n);
+
+          if(it->m_remain)
+          {
+            ++it;
+          }
+
+        else
+          {
+            it = g_reverb_list.erase(it);
+          }
+      }
+  }
+
+
+  {
+    auto  it = g_entry_list.begin();
+
+      while(it != g_entry_list.end())
+      {
+        it->write(dst,n,false);
+
+          if(*it)
+          {
+            ++it;
+          }
+
+        else
+          {
+            it = g_entry_list.erase(it);
+          }
+      }
+  }
 }
 
 
@@ -161,12 +251,13 @@ init_sound(int  sampling_rate) noexcept
   SDL_AudioSpec  spec;
 
   g_sampling_rate = sampling_rate;
+  g_reverb_rate   = sampling_rate/2;
 
   spec.freq     = g_sampling_rate;
-  spec.channels = 1;
-  spec.format   = AUDIO_F32;
-  spec.samples  = 4096;
-  spec.callback = callback;
+  spec.channels =               1;
+  spec.format   =       AUDIO_F32;
+  spec.samples  =            4096;
+  spec.callback =        callback;
 
   g_devid = SDL_OpenAudioDevice(nullptr,0,&spec,&g_spec,0);
 
@@ -194,8 +285,85 @@ quit_sound() noexcept
 
 
 void
+make_wave_table() noexcept
+{
+    for(int  i = 0;  i < gbstd::g_scale_table_length;  ++i)
+    {
+      auto  f = gbstd::g_scale_table[i];
+
+        if((g_sampling_rate/f) < 2)
+        {
+          break;
+        }
+
+
+      gbstd::triangle_wave_device  dev(g_sampling_rate);
+
+      dev.set_volume(0.05).set_frequency(f);
+
+      auto  num_sample = dev.get_number_of_samples_per_cycle();
+
+      g_wave_table[i].resize(num_sample);
+
+      auto  dst = g_wave_table[i].begin();
+
+        while(num_sample--)
+        {
+          *dst++ = *dev;
+        }
+    }
+}
+
+
+void
+set_keyon(int  i) noexcept
+{
+    if(i < gbstd::g_scale_table_length)
+    {
+      auto&  v = g_wave_table[i];
+
+        if(v.data() != g_wave_begin)
+        {
+          SDL_LockAudioDevice(g_devid);
+
+          g_wave_begin = v.data();
+          g_wave_ptr   = v.data();
+          g_wave_end   = v.data()+v.size();
+
+          SDL_UnlockAudioDevice(g_devid);
+        }
+    }
+}
+
+
+void
+unset_keyon() noexcept
+{
+    if(g_wave_begin)
+    {
+      SDL_LockAudioDevice(g_devid);
+
+      reverb  rev;
+
+      rev.m_begin   = g_wave_begin;
+      rev.m_current =   g_wave_ptr;
+      rev.m_end     =   g_wave_end;
+      rev.m_remain  = g_reverb_rate;
+
+      g_reverb_list.emplace_back(rev);
+
+      g_wave_begin = nullptr;
+
+      SDL_UnlockAudioDevice(g_devid);
+    }
+}
+
+
+void
 change_bgm(const char*  name) noexcept
 {
+  SDL_LockAudioDevice(g_devid);
+
   auto  it = g_sound_map.find(name);
 
     if(it != g_sound_map.cend())
@@ -204,25 +372,37 @@ change_bgm(const char*  name) noexcept
       g_bgm_entry.m_current = it->second.data();
       g_bgm_entry.m_end     = it->second.data()+it->second.size();
     }
+
+
+  SDL_UnlockAudioDevice(g_devid);
 }
 
 
 void
 stop_bgm() noexcept
 {
+  SDL_LockAudioDevice(g_devid);
+
   g_bgm_entry.m_current = nullptr;
+
+  SDL_UnlockAudioDevice(g_devid);
 }
 
 
 void
 play_sound(const char*  name) noexcept
 {
+  SDL_LockAudioDevice(g_devid);
+
   auto  it = g_sound_map.find(name);
 
     if(it != g_sound_map.cend())
     {
       g_entry_list.emplace_back(it->second.data(),it->second.data()+it->second.size());
     }
+
+
+  SDL_UnlockAudioDevice(g_devid);
 }
 
 

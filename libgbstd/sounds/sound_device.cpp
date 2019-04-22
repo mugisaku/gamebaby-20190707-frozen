@@ -59,6 +59,8 @@ set_sampling_rate(uint32_t  rate) noexcept
 {
   m_sampling_rate = rate;
 
+  reset();
+
   return *this;
 }
 

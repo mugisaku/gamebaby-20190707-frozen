@@ -14,16 +14,6 @@ namespace gbstd{
 
 onch_word&
 onch_word::
-set_l(int  lspec, int  l) noexcept
-{
-  m_data |= (( lspec<<3)|l )<<m_l_shift_amount;
-
-  return *this;
-}
-
-
-onch_word&
-onch_word::
 set_b(int  bfspec, int  bf) noexcept
 {
   m_data |= ((bfspec<<3)|bf)<<m_bf_shift_amount;
@@ -54,16 +44,6 @@ set_f(int  f0spec, int  f0, int  f1spec, int  f1) noexcept
 }
 
 
-
-
-uint32_t
-onch_word::
-get_output_length(onch_output_context&  ctx) const noexcept
-{
-  return is_play()? ctx.get_play_length(get_l_spec(),get_l_value())
-        :is_rest()? ctx.get_rest_length(get_l_spec(),get_l_value())
-        :0;
-}
 
 
 template<typename  T>
@@ -107,7 +87,7 @@ void
 onch_word::
 output(sound_kind  k, onch_output_context&  ctx) const noexcept
 {
-  auto  l = get_output_length(ctx);
+  auto  l = get_output_length();
 
   auto  num_samples = gbstd::sound_device::get_number_of_samples(ctx.m_sampling_rate,l);
 
@@ -173,22 +153,16 @@ print() const noexcept
 
     if(is_rest())
     {
-      printf("r");
-
-        if(get_l_spec() == specs::index){printf("%d",1+get_l_value());}
-      else                              {printf("?");}
+      printf("r%u",get_output_length());
     }
 
   else
     {
         if(is_play())
         {
-          printf("p");
+          printf("p%u",get_output_length());
         }
 
-
-        if(get_l_spec() == specs::index){printf("%d",1+get_l_value());}
-      else                              {printf("?");}
 
       auto  v0spe = get_v0_spec();
       auto  v0val = get_v0_value();

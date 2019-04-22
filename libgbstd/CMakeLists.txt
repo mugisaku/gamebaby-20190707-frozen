@@ -42,6 +42,7 @@ set(SOURCES
   sounds/sawtooth_wave_device.cpp
   sounds/noise_device.cpp
   sounds/short_noise_device.cpp
+  sounds/scale_table.cpp
   stage.cpp
   process.cpp
   utility.cpp

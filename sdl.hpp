@@ -4,6 +4,7 @@
 
 #include"libgbstd/image.hpp"
 #include"libgbstd/control.hpp"
+#include"libgbstd/sound.hpp"
 
 
 namespace sdl{
@@ -20,6 +21,12 @@ void  init(int  x, int  y, int  w, int  h, double  scale=1) noexcept;
 
 void  init_sound(int  sampling_rate) noexcept;
 void  quit_sound() noexcept;
+
+
+void  make_wave_table() noexcept;
+
+void    set_keyon(int  i) noexcept;
+void  unset_keyon(      ) noexcept;
 
 void  start_sound_recording() noexcept;
 void  clear_sound_recording() noexcept;

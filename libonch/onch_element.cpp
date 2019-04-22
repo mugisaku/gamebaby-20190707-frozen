@@ -159,17 +159,17 @@ assign(onch_table&&  tbl) noexcept
 
 uint32_t
 onch_element::
-get_output_length(onch_output_context&  ctx) const noexcept
+get_output_length() const noexcept
 {
   uint32_t  l = 0;
 
     switch(m_kind)
     {
   case(kind::null ): break;
-  case(kind::word ): l = m_data.wor.get_output_length(ctx);break;
-  case(kind::cell ): l = m_data.cel.get_output_length(ctx);break;
-  case(kind::text ): l = m_data.txt.get_output_length(ctx);break;
-  case(kind::table): l = m_data.tbl.get_output_length(ctx);break;
+  case(kind::word ): l = m_data.wor.get_output_length();break;
+  case(kind::cell ): l = m_data.cel.get_output_length();break;
+  case(kind::text ): l = m_data.txt.get_output_length();break;
+  case(kind::table): l = m_data.tbl.get_output_length();break;
     }
 
 
@@ -187,17 +187,15 @@ generate_wave(uint32_t  sampling_rate, const onch_space&  sp) const noexcept
 
   ctx.m_space = &sp;
 
-  auto  n = gbstd::sound_device::get_number_of_samples(sampling_rate,get_output_length(ctx));
+  auto  n = gbstd::sound_device::get_number_of_samples(sampling_rate,get_output_length());
 
   std::vector<gbstd::f32_t>  result(n);
 
   ctx.m_it  = result.data();
   ctx.m_end = result.data()+n;
 
-  ctx.m_last_play_length = 0;
-  ctx.m_last_rest_length = 0;
-  ctx.m_last_volume      = 0;
-  ctx.m_last_frequency   = 0;
+  ctx.m_last_volume    = 0;
+  ctx.m_last_frequency = 0;
 
   output(ctx);
 

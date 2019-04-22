@@ -30,6 +30,8 @@ decoder
   char   first_number;
   char  second_number;
 
+  uint32_t  length;
+
   decoder(const char*&  ptr) noexcept;
 
 };
@@ -46,6 +48,8 @@ decoder(const char*&  ptr) noexcept
    first_number = 0;
   second_number = 0;
 
+  length = 0;
+
     for(;;)
     {
       auto  c = *ptr;
@@ -55,8 +59,21 @@ decoder(const char*&  ptr) noexcept
 
       else
         if((c == 'p') ||
-           (c == 'r') ||
-           (c == 'v') ||
+           (c == 'r'))
+        {
+          int  n = 0;
+
+          symbol = c;
+
+          sscanf(++ptr," %u%n",&length,&n);
+
+          ptr += n;
+
+          break;
+        }
+
+      else
+        if((c == 'v') ||
            (c == 'b') ||
            (c == 'f'))
         {
@@ -115,14 +132,14 @@ read_word(const char*  ptr) noexcept
         if(dec.symbol == 'p')
         {
           w.set_kind(onch_word_kind::play)
-           .set_l(dec.first_spec,dec.first_number);
+           .set_length(dec.length);
         }
 
       else
         if(dec.symbol == 'r')
         {
           w.set_kind(onch_word_kind::rest)
-           .set_l(dec.first_spec,dec.first_number);
+           .set_length(dec.length);
         }
 
       else

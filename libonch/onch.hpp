@@ -34,8 +34,6 @@ onch_output_context
   f32_t     m_last_frequency=0;
   f32_t     m_last_vibrato_frequency=0;
   f32_t     m_last_vibrato_intensity=0;
-  uint32_t  m_last_play_length=0;
-  uint32_t  m_last_rest_length=0;
 
   f32_t*   m_it=nullptr;
   f32_t*  m_end=nullptr;
@@ -74,6 +72,8 @@ onch_word
   static constexpr int  m_f0_shift_amount =  5;
   static constexpr int  m_f1_shift_amount =  0;
 
+  uint32_t  m_length;
+
   uint32_t  m_data;
 
   gbstd::sound_instruction  make_instruction(onch_output_context&  ctx) const noexcept;
@@ -85,7 +85,7 @@ public:
     static constexpr int    index = 2;
   };
 
-  constexpr onch_word() noexcept: m_data(0){}
+  constexpr onch_word() noexcept: m_length(0), m_data(0){}
 
   onch_word_kind  get_kind() const noexcept{return static_cast<onch_word_kind>((m_data>>m_k_shift_amount)&3);}
 
@@ -93,14 +93,14 @@ public:
   bool  is_play() const noexcept{return get_kind() == onch_word_kind::play;}
   bool  is_rest() const noexcept{return get_kind() == onch_word_kind::rest;}
 
-  int  get_l_spec()  const noexcept{return ((m_data>> m_l_shift_amount)>>3&3);}
   int  get_bf_spec() const noexcept{return ((m_data>>m_bf_shift_amount)>>3&3);}
   int  get_v0_spec() const noexcept{return ((m_data>>m_v0_shift_amount)>>3&3);}
   int  get_v1_spec() const noexcept{return ((m_data>>m_v1_shift_amount)>>3&3);}
   int  get_f0_spec() const noexcept{return ((m_data>>m_f0_shift_amount)>>3&3);}
   int  get_f1_spec() const noexcept{return ((m_data>>m_f1_shift_amount)>>3&3);}
 
-  int  get_l_value()  const noexcept{return (m_data>> m_l_shift_amount)&7;}
+  uint32_t  get_output_length() const noexcept{return m_length;}
+
   int  get_bf_value() const noexcept{return (m_data>>m_bf_shift_amount)&7;}
   int  get_v0_value() const noexcept{return (m_data>>m_v0_shift_amount)&7;}
   int  get_v1_value() const noexcept{return (m_data>>m_v1_shift_amount)&7;}
@@ -111,12 +111,10 @@ public:
 
   onch_word&  set_kind(onch_word_kind  k) noexcept{  m_data |= static_cast<int>(k)<<m_k_shift_amount;  return *this;}
 
-  onch_word&  set_l(int  lspec, int  l) noexcept;
+  onch_word&  set_length(uint32_t  l) noexcept{  m_length = l;  return *this;}
   onch_word&  set_b(int  bfspec, int  bf) noexcept;
   onch_word&  set_v(int  v0spec, int  v0, int  v1spec, int  v1) noexcept;
   onch_word&  set_f(int  f0spec, int  f0, int  f1spec, int  f1) noexcept;
-
-  uint32_t  get_output_length(onch_output_context&  ctx) const noexcept;
 
   void  output(sound_kind  k, onch_output_context&  ctx) const noexcept;
 
@@ -140,7 +138,7 @@ public:
   void  push(onch_word  w) noexcept{m_words.emplace_back(w);}
   void  push(const onch_text&  txt) noexcept;
 
-  uint32_t  get_output_length(onch_output_context&  ctx) const noexcept;
+  uint32_t  get_output_length() const noexcept;
 
   void  output(sound_kind  k, onch_output_context&  ctx) const noexcept;
 
@@ -187,7 +185,7 @@ public:
 
   void  push(onch_element&&  e) noexcept;
 
-  uint32_t  get_output_length(onch_output_context&  ctx) const noexcept;
+  uint32_t  get_output_length() const noexcept;
 
   void  output(onch_output_context&  ctx) const noexcept;
 
@@ -253,7 +251,7 @@ public:
   const onch_cell&    get_cell()  const noexcept{return m_data.cel;}
   const onch_table&   get_table() const noexcept{return m_data.tbl;}
 
-  uint32_t  get_output_length(onch_output_context&  ctx) const noexcept;
+  uint32_t  get_output_length() const noexcept;
 
   std::vector<f32_t>  generate_wave(uint32_t  sampling_rate, const onch_space&  sp) const noexcept;
 

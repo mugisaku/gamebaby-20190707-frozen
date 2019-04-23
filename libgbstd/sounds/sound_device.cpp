@@ -82,10 +82,9 @@ operator*() noexcept
 
     while(!m_number_of_phase_samples)
     {
-        if(++safe_counter > 0x1000000)
+        if(++safe_counter > 4)
         {
-          report;
-           break;
+          break;
         }
 
 
@@ -115,6 +114,7 @@ mix(const sound_instruction&  instr, f32_t*  ptr) noexcept
   set_modulation(instr.get_start_volume()   ,instr.get_end_volume()   ,length,m_vm_current,vm_increment);
   set_modulation(instr.get_start_frequency(),instr.get_end_frequency(),length,m_fm_current,fm_increment);
 
+
   uint32_t  modulation_counter_base = get_sampling_rate()/1000;
   uint32_t  modulation_counter      = modulation_counter_base;
 
@@ -130,6 +130,14 @@ mix(const sound_instruction&  instr, f32_t*  ptr) noexcept
 
           m_vm_current += vm_increment;
           m_fm_current += fm_increment;
+
+               if(m_vm_current < 0.0){m_vm_current = 0.0;}
+          else if(m_vm_current > 1.0){m_vm_current = 1.0;}
+
+            if(m_fm_current < 0.0)
+            {
+              m_fm_current = 2.0;
+            }
         }
 
       else

@@ -201,7 +201,8 @@ public:
 };
 
 
-constexpr int  g_scale_table_length = 128;
+constexpr int  g_scale_table_length   = 128;
+constexpr int  g_pitch_standard_index =  48;
 
 extern const double  g_scale_table[g_scale_table_length];
 

@@ -22,15 +22,10 @@ isnum(int  c) noexcept
 struct
 decoder
 {
-  char  symbol;
+  int  symbol;
 
-  char   first_spec;
-  char  second_spec;
-
-  char   first_number;
-  char  second_number;
-
-  uint32_t  length;
+  int   first_number;
+  int  second_number;
 
   decoder(const char*&  ptr) noexcept;
 
@@ -42,13 +37,8 @@ decoder(const char*&  ptr) noexcept
 {
   symbol = 0;
 
-   first_spec = onch_word::specs::no_spec;
-  second_spec = onch_word::specs::no_spec;
-
    first_number = 0;
   second_number = 0;
-
-  length = 0;
 
     for(;;)
     {
@@ -59,63 +49,55 @@ decoder(const char*&  ptr) noexcept
 
       else
         if((c == 'p') ||
-           (c == 'r'))
+           (c == 'r') ||
+           (c == 'b'))
         {
           int  n = 0;
 
-          symbol = c;
+          ++ptr;
 
-          sscanf(++ptr," %u%n",&length,&n);
+            if(sscanf(ptr," %d %n",&first_number,&n) >= 1)
+            {
+              symbol = c;
 
-          ptr += n;
+              ptr += n;
 
-          break;
+              break;
+            }
         }
 
       else
         if((c == 'v') ||
-           (c == 'b') ||
            (c == 'f'))
         {
-          symbol = c         ;
-                   c = *++ptr;
+          int  n = 0;
 
-            if(isnum(c))
+          ++ptr;
+
+            if(sscanf(ptr," %d -> %d %n",&first_number,&second_number,&n) >= 2)
             {
-              first_spec = (c == '?')? onch_word::specs::no_spec
-                          :(c == '0')? onch_word::specs::zero
-                          :            onch_word::specs::index;
+              symbol = c;
 
-                if(first_spec == onch_word::specs::index)
-                {
-                  first_number = c-'1';
-                }
+              ptr += n;
 
-
-              c = *++ptr;
-
-                if(isnum(c))
-                {
-                  second_spec = (c == '?')? onch_word::specs::no_spec
-                               :(c == '0')? onch_word::specs::zero
-                               :            onch_word::specs::index;
-
-
-                    if(second_spec == onch_word::specs::index)
-                    {
-                      second_number = c-'1';
-                    }
-                }
+              break;
             }
 
+          else
+            if(sscanf(ptr," %d %n",&first_number,&n) >= 1)
+            {
+              symbol = c;
 
-          break;
+              second_number = first_number;
+
+              ptr += n;
+
+              break;
+            }
         }
 
-      else
-        {
-          ++ptr;
-        }
+
+      ++ptr;
     }
 }
 
@@ -132,34 +114,32 @@ read_word(const char*  ptr) noexcept
         if(dec.symbol == 'p')
         {
           w.set_kind(onch_word_kind::play)
-           .set_length(dec.length);
+           .set_length(dec.first_number);
         }
 
       else
         if(dec.symbol == 'r')
         {
           w.set_kind(onch_word_kind::rest)
-           .set_length(dec.length);
+           .set_length(dec.first_number);
         }
 
       else
         if(dec.symbol == 'v')
         {
-          w.set_v( dec.first_spec, dec.first_number,
-                  dec.second_spec,dec.second_number);
+          w.set_v_level(dec.first_number,dec.second_number);
         }
 
       else
         if(dec.symbol == 'b')
         {
-          w.set_b(dec.first_spec, dec.first_number);
+          w.set_vibrato_amount(dec.first_number);
         }
 
       else
         if(dec.symbol == 'f')
         {
-          w.set_f( dec.first_spec, dec.first_number,
-                  dec.second_spec,dec.second_number);
+          w.set_f_index(dec.first_number,dec.second_number);
         }
 
       else

@@ -14,9 +14,10 @@ namespace gbstd{
 
 onch_word&
 onch_word::
-set_b(int  bfspec, int  bf) noexcept
+set_v_level(int  start, int  end) noexcept
 {
-  m_data |= ((bfspec<<3)|bf)<<m_bf_shift_amount;
+  m_start_v_level = start&0x1F;
+  m_end_v_level   =   end&0x1F;
 
   return *this;
 }
@@ -24,21 +25,10 @@ set_b(int  bfspec, int  bf) noexcept
 
 onch_word&
 onch_word::
-set_v(int  v0spec, int  v0, int  v1spec, int  v1) noexcept
+set_f_index(int  start, int  end) noexcept
 {
-  m_data |= ((v0spec<<3)|v0)<<m_v0_shift_amount;
-  m_data |= ((v1spec<<3)|v1)<<m_v1_shift_amount;
-
-  return *this;
-}
-
-
-onch_word&
-onch_word::
-set_f(int  f0spec, int  f0, int  f1spec, int  f1) noexcept
-{
-  m_data |= ((f0spec<<3)|f0)<<m_f0_shift_amount;
-  m_data |= ((f1spec<<3)|f1)<<m_f1_shift_amount;
+  m_start_f_index = (            start-1)&0x7F;
+  m_end_f_index   = ((!end? start:end)-1)&0x7F;
 
   return *this;
 }
@@ -91,27 +81,23 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
 
   auto  num_samples = gbstd::sound_device::get_number_of_samples(ctx.m_sampling_rate,l);
 
-  auto  v0 = ctx.get_volume(get_v0_spec(),get_v0_value());
-  auto  v1 = ctx.get_volume(get_v1_spec(),get_v1_value());
-  auto  f0 = ctx.get_frequency(get_f0_spec(),get_f0_value());
-  auto  f1 = ctx.get_frequency(get_f1_spec(),get_f1_value());
-  auto  bf = ctx.get_vibrato_frequency(get_bf_spec(),get_bf_value());
-
     if(is_play() && num_samples)
     {
       std::vector<f32_t>  buf(num_samples);
 
       gbstd::sound_instruction  instr;
 
+      constexpr double  v_base = 0.6/32;
+
       instr.set_length(l)
-           .set_start_volume(v0)
-           .set_end_volume(v1)
-           .set_start_frequency(f0)
-           .set_end_frequency(f1);
+           .set_start_volume(v_base*m_start_v_level)
+           .set_end_volume(  v_base*m_end_v_level)
+           .set_start_frequency(gbstd::g_scale_table[m_start_f_index])
+           .set_end_frequency(  gbstd::g_scale_table[  m_end_f_index]);
 
       do_mix(k,ctx.m_sampling_rate,instr,buf.data());
 
-        if(bf == 0)
+        if(!m_vibrato_amount)
         {
             for(int  i = 0;  i < num_samples;  ++i)
             {
@@ -121,13 +107,17 @@ output(sound_kind  k, onch_output_context&  ctx) const noexcept
 
       else
         {
+          auto  f = 1<<(m_vibrato_amount&7);
+
           std::vector<f32_t>  subbuf(num_samples);
 
+          constexpr double  v = 0.4;
+
           instr.set_length(l)
-               .set_start_volume(0.4)
-               .set_end_volume(  0.4)
-               .set_start_frequency(bf)
-               .set_end_frequency(  bf);
+               .set_start_volume(v)
+               .set_end_volume(  v)
+               .set_start_frequency(f)
+               .set_end_frequency(  f);
 
           do_mix(gbstd::sound_kind::sine_wave,ctx.m_sampling_rate,instr,subbuf.data());
 
@@ -164,46 +154,10 @@ print() const noexcept
         }
 
 
-      auto  v0spe = get_v0_spec();
-      auto  v0val = get_v0_value();
-      auto  v1spe = get_v1_spec();
-      auto  v1val = get_v1_value();
+      printf(":v%d->%d",m_start_v_level,m_end_v_level);
+      printf(":f%d->%d",m_start_f_index+1,m_end_f_index+1);
 
-      auto  f0spe = get_f0_spec();
-      auto  f0val = get_f0_value();
-      auto  f1spe = get_f1_spec();
-      auto  f1val = get_f1_value();
-
-      auto  bfspe = get_bf_spec();
-      auto  bfval = get_bf_value();
-
-      printf("-v");
-
-           if(v0spe == specs::zero){printf("0");}
-      else if(v0spe == specs::index){printf("%d",1+v0val);}
-      else if(v0spe == specs::no_spec){printf("?");}
-
-           if(v1spe == specs::zero){printf("0");}
-      else if(v1spe == specs::index){printf("%d",1+v1val);}
-      else if(v1spe == specs::no_spec){printf("?");}
-
-
-      printf("-f");
-
-           if(f0spe == specs::zero){printf("0");}
-      else if(f0spe == specs::index){printf("%d",1+f0val);}
-      else if(f0spe == specs::no_spec){printf("?");}
-
-           if(f1spe == specs::zero){printf("0");}
-      else if(f1spe == specs::index){printf("%d",1+f1val);}
-      else if(f1spe == specs::no_spec){printf("?");}
-
-
-      printf("-b");
-
-           if(bfspe == specs::zero){printf("0");}
-      else if(bfspe == specs::index){printf("%d",1+bfval);}
-      else if(bfspe == specs::no_spec){printf("?");}
+      printf(":b%d",m_vibrato_amount);
     }
 
 

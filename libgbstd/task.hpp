@@ -67,27 +67,37 @@ draw_task_list
 
   std::list<node*>  m_container;
 
+  static void  unrefer(node*  ptr) noexcept;
   static void  unrefer(reference_counter*  ptr) noexcept;
 
 public:
   draw_task_list() noexcept{}
  ~draw_task_list();
 
-  class observer{
-    node*                  m_node;
-    reference_counter*  m_counter;
+  class control{
+    node*                  m_node=nullptr;
+    reference_counter*  m_counter=nullptr;
 
   public:
-    observer(node&  nd) noexcept;
-   ~observer();
+    constexpr control() noexcept{}
+    control(node&  nd) noexcept;
+    control(const control&   rhs) noexcept{assign(rhs);}
+    control(      control&&  rhs) noexcept{assign(std::move(rhs));}
+   ~control();
+
+    control&  operator=(const control&   rhs) noexcept{return assign(rhs);}
+    control&  operator=(      control&&  rhs) noexcept{return assign(std::move(rhs));}
 
     operator bool() const noexcept;
 
-    observer&    set_remove_flag() noexcept;
-    observer&  unset_remove_flag() noexcept;
+    control&  assign(const control&   rhs) noexcept;
+    control&  assign(      control&&  rhs) noexcept;
 
-    observer&    set_skip_flag() noexcept;
-    observer&  unset_skip_flag() noexcept;
+    control&    set_remove_flag() noexcept;
+    control&  unset_remove_flag() noexcept;
+
+    control&    set_skip_flag() noexcept;
+    control&  unset_skip_flag() noexcept;
 
     bool  test_remove_flag() const noexcept;
     bool  test_skip_flag()   const noexcept;
@@ -95,9 +105,11 @@ public:
   };
 
 
-  observer  push(draw_task_entry  ent) noexcept;
+  control  push(draw_task_entry  ent) noexcept;
 
   void  process(const canvas&  cv) noexcept;
+
+  void  print() const noexcept;
 
 };
 

@@ -14,7 +14,7 @@ struct flags{
 };
 
 
-using observer = draw_task_list::observer;
+using control = draw_task_list::control;
 
 
 struct
@@ -58,22 +58,9 @@ m_dead_counter_top=nullptr;
 
 void
 draw_task_list::
-unrefer(reference_counter*  ptr) noexcept
+unrefer(node*  ptr) noexcept
 {
-  auto&  n = ptr->m_weak_value;
-
-    if(!--n)
-    {
-      ptr->m_next = m_dead_counter_top      ;
-                    m_dead_counter_top = ptr;
-    }
-}
-
-
-draw_task_list::
-~draw_task_list()
-{
-    for(auto  ptr: m_container)
+    if(ptr)
     {
       ptr->m_counter->m_value = 0;
 
@@ -85,9 +72,36 @@ draw_task_list::
 }
 
 
+void
+draw_task_list::
+unrefer(reference_counter*  ptr) noexcept
+{
+    if(ptr)
+    {
+      auto&  n = ptr->m_weak_value;
+
+        if(!--n)
+        {
+          ptr->m_next = m_dead_counter_top      ;
+                        m_dead_counter_top = ptr;
+        }
+    }
+}
 
 
-draw_task_list::observer
+draw_task_list::
+~draw_task_list()
+{
+    for(auto  ptr: m_container)
+    {
+      unrefer(ptr);
+    }
+}
+
+
+
+
+draw_task_list::control
 draw_task_list::
 push(draw_task_entry  ent) noexcept
 {
@@ -121,7 +135,9 @@ push(draw_task_entry  ent) noexcept
   node->m_status.clear();
   node->m_counter = counter;
 
-  return observer(*node);
+  m_container.emplace_back(node);
+
+  return control(*node);
 }
 
 
@@ -137,8 +153,7 @@ process(const canvas&  cv) noexcept
 
         if(nd->m_status.test(flags::remove))
         {
-          nd->m_next = m_dead_node_top     ;
-                       m_dead_node_top = nd;
+          unrefer(nd);
 
           it = m_container.erase(it);
         }
@@ -148,23 +163,52 @@ process(const canvas&  cv) noexcept
         {
           ++nd->m_skip_count;
 
-          nd->m_entry(cv);
-
           ++it;
         }
 
       else
         {
+          nd->m_entry(cv);
+
           ++it;
         }
     }
 }
 
 
+template<typename  T>
+int
+count(T*  ptr) noexcept
+{
+  int  n = 0;
+
+    while(ptr)
+    {
+      ++n;
+
+      ptr = ptr->m_next;
+    }
 
 
-observer::
-observer(node&  nd) noexcept:
+  return n;
+}
+
+
+void
+draw_task_list::
+print() const noexcept
+{
+  printf("dead top %d, dead counter %d\n",
+    count(m_dead_node_top),
+    count(m_dead_counter_top));
+
+}
+
+
+
+
+control::
+control(node&  nd) noexcept:
 m_node(&nd),
 m_counter(nd.m_counter)
 {
@@ -172,8 +216,8 @@ m_counter(nd.m_counter)
 }
 
 
-observer::
-~observer()
+control::
+~control()
 {
   unrefer(m_counter);
 }
@@ -181,21 +225,60 @@ observer::
 
 
 
-observer::
+control::
 operator bool() const noexcept
 {
-  return m_counter->m_value;
+  return m_node && m_counter->m_value;
 }
 
 
-observer&    observer::set_remove_flag() noexcept{  m_node->m_status.set(  flags::remove);  return *this;}
-observer&  observer::unset_remove_flag() noexcept{  m_node->m_status.unset(flags::remove);  return *this;}
+control&
+control::
+assign(const control&   rhs) noexcept
+{
+    if(this != &rhs)
+    {
+      unrefer(m_counter);
 
-observer&    observer::set_skip_flag() noexcept{  m_node->m_status.set(  flags::skip);  return *this;}
-observer&  observer::unset_skip_flag() noexcept{  m_node->m_status.unset(flags::skip);  return *this;}
+      m_node    = rhs.m_node;
+      m_counter = rhs.m_counter;
 
-bool  observer::test_remove_flag() const noexcept{return m_node->m_status.test(flags::remove);}
-bool  observer::test_skip_flag()   const noexcept{return m_node->m_status.test(flags::skip  );}
+      ++m_counter->m_weak_value;
+    }
+
+
+  return *this;
+}
+
+
+control&
+control::
+assign(control&&  rhs) noexcept
+{
+    if(this != &rhs)
+    {
+      unrefer(m_counter);
+
+      m_node = rhs.m_node          ;
+               rhs.m_node = nullptr;
+
+      m_counter = rhs.m_counter          ;
+                  rhs.m_counter = nullptr;
+    }
+
+
+  return *this;
+}
+
+
+control&    control::set_remove_flag() noexcept{  m_node->m_status.set(  flags::remove);  return *this;}
+control&  control::unset_remove_flag() noexcept{  m_node->m_status.unset(flags::remove);  return *this;}
+
+control&    control::set_skip_flag() noexcept{  m_node->m_status.set(  flags::skip);  return *this;}
+control&  control::unset_skip_flag() noexcept{  m_node->m_status.unset(flags::skip);  return *this;}
+
+bool  control::test_remove_flag() const noexcept{return m_node->m_status.test(flags::remove);}
+bool  control::test_skip_flag()   const noexcept{return m_node->m_status.test(flags::skip  );}
 
 
 

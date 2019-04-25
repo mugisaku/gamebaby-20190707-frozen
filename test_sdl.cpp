@@ -1,7 +1,7 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
-#include"libww/ww.hpp"
+#include"libgbstd/task.hpp"
 #include"sdl.hpp"
 #include<list>
 #include<vector>
@@ -24,8 +24,52 @@ canvas
 g_screen_canvas;
 
 
-ww::executive_context
-g_context;
+draw_task_list
+g_list;
+
+
+image
+g_image(g_misc_png);
+
+
+struct
+data
+{
+  draw_task_list::control  ctrl;
+
+  int  x=0;
+  int  y=0;
+};
+
+
+
+std::list<data>
+g_data;
+
+
+void
+cb(const canvas&  cv, data&  dat) noexcept
+{
+  cv.draw_canvas({g_image,0,0,24,24},dat.x,dat.y);
+}
+
+
+int  g_max;
+
+void
+add() noexcept
+{
+  g_data.emplace_back();
+
+  auto&  dat = g_data.back();
+
+  dat.ctrl = g_list.push({{},cb,dat});
+
+  dat.x = 100;
+  dat.y = 100;
+
+  g_max = std::max(g_max,(int)g_data.size());
+}
 
 
 void
@@ -37,13 +81,23 @@ main_loop() noexcept
 
   sdl::update_control();
 
+    if(g_input.test_up()){g_data.back().y -= 7;}
+    if(g_input.test_down()){g_data.back().y += 7;}
+    if(g_input.test_left()){g_data.back().x -= 7;}
+    if(g_input.test_right()){g_data.back().x += 7;}
+    if(g_input.test_p()){add();}
+    if(g_input.test_n()){
+if(g_data.size())
+{
+g_data.back().ctrl.set_remove_flag();
+g_data.pop_back();
+}
+}
     if(gbstd::g_time >= next)
     {
       g_screen_canvas.fill(color());
 
-      gbstd::process_task_lists();
-
-      gbstd::render_painter_lists(g_screen_canvas);
+      g_list.process(g_screen_canvas);
 
       sdl::update_screen(g_screen_canvas);
 
@@ -60,33 +114,15 @@ main_loop() noexcept
 int
 main(int  argc, char**  argv)
 {
-#ifdef __EMSCRIPTEN__
-  set_description("<pre>"
-                  "</pre>");
+  constexpr int  screen_w = 320;
+  constexpr int  screen_h = 320;
 
-  show_github_link();
-#endif
-
-  constexpr int  screen_w = ww::g_center_space_width+(ww::g_row_width*2);
-  constexpr int  screen_h = (ww::g_column_height);
-
-  sdl::init(screen_w,screen_h,1.0);
-  sdl::init_sound(24000);
-
-  sdl::add_sound("bashi","main = noise{\"p80:v20:f48:b3\"}");
-
-  sdl::start_sound_playing();
-
-
-  g_context.set_screen_size(screen_w,screen_h);
-
-  g_context.startup();
+  sdl::init(screen_w,screen_h);
 
   g_screen_canvas = sdl::make_screen_canvas();
 
-#ifdef __EMSCRIPTEN__
-  emscripten_set_main_loop(main_loop,0,false);
-#else
+  add();
+
     for(;;)
     {
       main_loop();
@@ -95,9 +131,7 @@ main(int  argc, char**  argv)
     }
 
 
-  sdl::quit_sound();
   sdl::quit();
-#endif
 
 
   return 0;

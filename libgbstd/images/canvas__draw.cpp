@@ -502,10 +502,10 @@ draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept
 
 namespace{
 bool
-correct(canvas&  src_cv, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexcept
+correct(rectangle&  src_rect, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexcept
 {
-  auto  src_w = src_cv.get_width() ;
-  auto  src_h = src_cv.get_height();
+  auto&  src_w = src_rect.w;
+  auto&  src_h = src_rect.h;
 
     if(dst_x < 0)
     {
@@ -515,7 +515,7 @@ correct(canvas&  src_cv, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexc
         }
 
 
-      src_cv.move_x(-dst_x);
+      src_rect.x = -dst_x;
 
       src_w += dst_x    ;
                dst_x = 0;
@@ -530,7 +530,7 @@ correct(canvas&  src_cv, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexc
         }
 
 
-      src_cv.move_y(-dst_y);
+      src_rect.y = -dst_y;
 
       src_h += dst_y    ;
                dst_y = 0;
@@ -559,23 +559,22 @@ correct(canvas&  src_cv, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) noexc
     }
 
 
-  src_cv.set_width( src_w);
-  src_cv.set_height(src_h);
-
   return true;
 }
 
 
-template<bool  COPY>
+template<typename  SRC, bool  COPY>
 void
-transfer(const canvas&  orig_src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
+transfer(const SRC&  orig_src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
 {
-  canvas  src = orig_src;
+  rectangle  src_rect(0,0,orig_src.get_width(),orig_src.get_height());
 
-    if(correct(src,dst_x,dst_y,dst.get_width(),dst.get_height()))
+    if(correct(src_rect,dst_x,dst_y,dst.get_width(),dst.get_height()))
     {
-      auto  src_pixptr_base = src.get_pixel_pointer(    0,    0);
-      auto  dst_pixptr_base = dst.get_pixel_pointer(dst_x,dst_y);
+      SRC  src(orig_src,src_rect);
+
+      auto  src_pixptr_base = src(    0,    0);
+      auto  dst_pixptr_base = dst(dst_x,dst_y);
 
       auto  src_w = src.get_width() ;
       auto  src_h = src.get_height();
@@ -583,16 +582,16 @@ transfer(const canvas&  orig_src, const canvas&  dst, int  dst_x, int  dst_y) no
         for(int  y = 0;  y < src_h;  ++y)
         {
           auto  dst_pixptr = dst_pixptr_base                         ;
-                             dst_pixptr_base += dst.get_image_width();
+                             dst_pixptr_base += dst.get_source_width();
 
           auto  src_pixptr = src_pixptr_base                         ;
-                             src_pixptr_base += src.get_image_width();
+                             src_pixptr_base += src.get_source_width();
 
             for(int  x = 0;  x < src_w;  ++x)
             {
               auto&  pix = *src_pixptr;
 
-                if(COPY || pix.color)
+                if(COPY || pix)
                 {
                   *dst_pixptr = pix;
                 }
@@ -611,7 +610,7 @@ void
 canvas::
 draw_canvas(const canvas&  cv, int   x, int  y) const noexcept
 {
-  transfer<false>(cv,*this,x,y);
+  transfer<canvas,false>(cv,*this,x,y);
 }
 
 
@@ -619,7 +618,23 @@ void
 canvas::
 copy_canvas(const canvas&  cv, int   x, int  y) const noexcept
 {
-  transfer<true>(cv,*this,x,y);
+  transfer<canvas,true>(cv,*this,x,y);
+}
+
+
+void
+canvas::
+draw_picture_frame(const picture_frame&  frm, int  x, int  y) const noexcept
+{
+  transfer<picture_frame,false>(frm,*this,x,y);
+}
+
+
+void
+canvas::
+copy_picture_frame(const picture_frame&  frm, int  x, int  y) const noexcept
+{
+  transfer<picture_frame,true>(frm,*this,x,y);
 }
 
 
@@ -658,10 +673,12 @@ void
 canvas::
 blend_canvas(const canvas&  cv, int  x, int  y) const noexcept
 {
-  canvas  src_cv = cv;
+  rectangle  src_rect(0,0,cv.get_width(),cv.get_height());
 
-    if(correct(src_cv,x,y,get_width(),get_height()))
+    if(correct(src_rect,x,y,get_width(),get_height()))
     {
+      canvas  src_cv(cv,src_rect);
+
       auto  src_pixptr_base = src_cv.get_pixel_pointer(0,0);
       auto  dst_pixptr_base =        get_pixel_pointer(x,y);
 
@@ -671,10 +688,10 @@ blend_canvas(const canvas&  cv, int  x, int  y) const noexcept
         for(int  yy = 0;  yy < src_h;  ++yy)
         {
           auto  dst_pixptr = dst_pixptr_base                     ;
-                             dst_pixptr_base += get_image_width();
+                             dst_pixptr_base += get_source_width();
 
           auto  src_pixptr = src_pixptr_base                            ;
-                             src_pixptr_base += src_cv.get_image_width();
+                             src_pixptr_base += src_cv.get_source_width();
 
             for(int  xx = 0;  xx < src_w;  ++xx)
             {
@@ -698,10 +715,12 @@ void
 canvas::
 blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) const noexcept
 {
-  canvas  src_cv = cv;
+  rectangle  src_rect(0,0,cv.get_width(),cv.get_height());
 
-    if(correct(src_cv,x,y,get_width(),get_height()))
+    if(correct(src_rect,x,y,get_width(),get_height()))
     {
+      canvas  src_cv(cv,src_rect);
+
       auto  src_pixptr_base = src_cv.get_pixel_pointer(0,0);
       auto  dst_pixptr_base =        get_pixel_pointer(x,y);
 
@@ -711,10 +730,10 @@ blend_canvas(const canvas&  cv, int  x, int  y, int  z_base, int  z_add_amount) 
         for(int  yy = 0;  yy < src_h;  ++yy)
         {
           auto  dst_pixptr = dst_pixptr_base                     ;
-                             dst_pixptr_base += get_image_width();
+                             dst_pixptr_base += get_source_width();
 
           auto  src_pixptr = src_pixptr_base                            ;
-                             src_pixptr_base += src_cv.get_image_width();
+                             src_pixptr_base += src_cv.get_source_width();
 
             for(int  xx = 0;  xx < src_w;  ++xx)
             {

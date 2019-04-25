@@ -11,6 +11,7 @@ namespace ww{
 executive_context::
 executive_context() noexcept
 {
+  m_misc_image.read_png_stream(gbstd::g_misc_png);
 }
 
 

@@ -54,11 +54,85 @@ pixel
   constexpr pixel(gbstd::color  c=gbstd::color(), int16_t  z_=0) noexcept:
   color(c), z(z_){}
 
+  constexpr operator bool() const noexcept{return color;}
   constexpr operator gbstd::color() const noexcept{return color;}
 
 };
 
 
+
+
+class
+picture
+{
+  int  m_width ;
+  int  m_height;
+
+  const color*  m_colors;
+
+public:
+  constexpr picture(int  w=0, int  h=0, const color*  colors=nullptr) noexcept:
+  m_width(w), m_height(h), m_colors(colors){}
+
+  constexpr int  get_width()  const noexcept{return m_width ;}
+  constexpr int  get_height() const noexcept{return m_height;}
+
+  constexpr const color&  get_color( int  x, int  y) const noexcept{return  m_colors[(m_width*y)+x];}
+  constexpr const color*  operator()(int  x, int  y) const noexcept{return &m_colors[(m_width*y)+x];}
+
+};
+
+
+class
+picture_frame
+{
+  int  m_width =0;
+  int  m_height=0;
+
+  int  m_source_width=0;
+
+  const color*  m_colors;
+
+public:
+  constexpr picture_frame(const picture&  pic) noexcept:
+  m_width(pic.get_width()),
+  m_height(pic.get_height()),
+  m_source_width(pic.get_width()),
+  m_colors(&pic.get_color(0,0)){}
+
+  constexpr picture_frame(const picture&  pic, int  x, int  y, int  w, int  h) noexcept:
+  m_width(w), m_height(h), m_source_width(pic.get_width()), m_colors(&pic.get_color(x,y)){}
+
+  constexpr picture_frame(const picture&  pic, const rectangle&  rect) noexcept:
+  m_width(rect.w), m_height(rect.h), m_source_width(pic.get_width()), m_colors(&pic.get_color(rect.x,rect.y)){}
+
+  constexpr picture_frame(const picture_frame&  picfrm, int  x, int  y) noexcept:
+  m_width(picfrm.get_width()),
+  m_height(picfrm.get_height()),
+  m_source_width(picfrm.get_source_width()),
+  m_colors(&picfrm.get_color(x,y)){}
+
+  constexpr picture_frame(const picture_frame&  picfrm, int  x, int  y, int  w, int  h) noexcept:
+  m_width(w),
+  m_height(h),
+  m_source_width(picfrm.get_source_width()),
+  m_colors(&picfrm.get_color(x,y)){}
+
+  constexpr picture_frame(const picture_frame&  picfrm, const rectangle&  rect) noexcept:
+  m_width(rect.w),
+  m_height(rect.h),
+  m_source_width(picfrm.get_source_width()),
+  m_colors(&picfrm.get_color(rect.x,rect.y)){}
+
+  constexpr int  get_width()  const noexcept{return m_width ;}
+  constexpr int  get_height() const noexcept{return m_height;}
+
+  constexpr int  get_source_width()  const noexcept{return m_source_width;}
+
+  constexpr const color&  get_color( int  x, int  y) const noexcept{return  m_colors[(m_source_width*y)+x];}
+  constexpr const color*  operator()(int  x, int  y) const noexcept{return &m_colors[(m_source_width*y)+x];}
+
+};
 
 
 class
@@ -105,6 +179,7 @@ public:
   pixel*    end() const noexcept{return m_pixels+(m_width*m_height);}
 
   pixel*  get_pixel_pointer(int  x, int  y) const noexcept{return m_pixels+(m_width*y)+x;}
+  pixel*  operator()(int  x, int  y) const noexcept{return get_pixel_pointer(x,y);}
 
   void  fill(color  c) const noexcept;
 
@@ -128,7 +203,7 @@ canvas
 {
   pixel*  m_pointer=nullptr;
 
-  int  m_image_width=0;
+  int  m_source_width=0;
 
   int  m_width =0;
   int  m_height=0;
@@ -153,7 +228,7 @@ public:
   canvas&  assign(const canvas&  cv, const rectangle&  rect) noexcept{return assign(cv,rect.x,rect.y,rect.w,rect.h);}
 
   void  move_x(int  v) noexcept{m_pointer +=               v;}
-  void  move_y(int  v) noexcept{m_pointer += m_image_width*v;}
+  void  move_y(int  v) noexcept{m_pointer += m_source_width*v;}
 
   void  set_width( int  v) noexcept{m_width  = v;}
   void  set_height(int  v) noexcept{m_height = v;}
@@ -161,9 +236,10 @@ public:
   int   get_width() const noexcept{return m_width ;}
   int  get_height() const noexcept{return m_height;}
 
-  int  get_image_width() const noexcept{return m_image_width;}
+  int  get_source_width() const noexcept{return m_source_width;}
 
-  pixel*  get_pixel_pointer(int  x, int  y) const noexcept{return m_pointer+(m_image_width*y)+x;}
+  pixel*  get_pixel_pointer(int  x, int  y) const noexcept{return m_pointer+(m_source_width*y)+x;}
+  pixel*  operator()(int  x, int  y) const noexcept{return get_pixel_pointer(x,y);}
 
   void  fill(color  c                                ) const noexcept;
   void  fill(color  c, int  x, int  y, int  w, int  h) const noexcept;
@@ -240,6 +316,12 @@ public:
   void  draw_canvas(const canvas&  cv, int  permill, int  x, int  y) const noexcept;
   void  draw_canvas(const canvas&  cv, int  permill, point  pt) const noexcept{draw_canvas(cv,permill,pt.x,pt.y);}
 
+  void  draw_picture_frame(const picture_frame&  frm, int  x, int  y) const noexcept;
+  void  draw_picture_frame(const picture_frame&  frm, point  pt) const noexcept{draw_picture_frame(frm,pt.x,pt.y);}
+
+  void  copy_picture_frame(const picture_frame&  frm, int  x, int  y) const noexcept;
+  void  copy_picture_frame(const picture_frame&  frm, point  pt) const noexcept{copy_picture_frame(frm,pt.x,pt.y);}
+
   void  copy_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  copy_canvas(const canvas&  cv, point  pt) const noexcept{copy_canvas(cv,pt.x,pt.y);}
 
@@ -249,6 +331,7 @@ public:
 };
 
 
+extern const uint8_t  g_misc_png[];
 
 
 }

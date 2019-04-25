@@ -91,6 +91,9 @@ rectangle
   constexpr int  get_y()     const noexcept{return y  ;}
   constexpr int  get_y_end() const noexcept{return y+h;}
 
+  constexpr int  get_w() const noexcept{return w;}
+  constexpr int  get_h() const noexcept{return h;}
+
   static constexpr int  get_left(const rectangle&  a, const rectangle&  b) noexcept
   {
     return (a.x < b.x)? b.x:a.x;

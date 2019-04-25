@@ -179,6 +179,13 @@ make_txt_stream() const noexcept
 }
 
 
+const uint8_t
+g_misc_png[] =
+{
+#include"misc.png.txt"
+};
+
+
 }
 
 

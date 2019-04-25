@@ -43,7 +43,7 @@ set(SOURCES
   sounds/noise_device.cpp
   sounds/short_noise_device.cpp
   sounds/scale_table.cpp
-  stage.cpp
+  draw_task_list.cpp
   process.cpp
   utility.cpp
   utility_sincos.cpp

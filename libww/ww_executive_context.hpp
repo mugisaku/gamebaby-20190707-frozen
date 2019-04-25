@@ -22,6 +22,8 @@ executive_context
 
   battle_context  m_battle_context;
 
+  gbstd::image  m_misc_image;
+
   static void  initialize(gbstd::execution&  exec, executive_context*  ctx) noexcept;
 
   static void  loop_battle(gbstd::execution&  exec, executive_context*  ctx) noexcept;

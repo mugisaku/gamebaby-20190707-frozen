@@ -12,10 +12,10 @@ bool
 canvas::
 operator==(const canvas&  rhs) const noexcept
 {
-  return((m_pointer     == rhs.m_pointer    ) &&
-         (m_width       == rhs.m_width      ) &&
-         (m_height      == rhs.m_height     ) &&
-         (m_image_width == rhs.m_image_width));
+  return((m_pointer      == rhs.m_pointer     ) &&
+         (m_width        == rhs.m_width       ) &&
+         (m_height       == rhs.m_height      ) &&
+         (m_source_width == rhs.m_source_width));
 }
 
 
@@ -35,7 +35,7 @@ assign(const image&  img, int  x, int  y, int  w, int  h) noexcept
 {
   m_pointer = img.get_pixel_pointer(x,y);
 
-  m_image_width = img.get_width();
+  m_source_width = img.get_width();
 
   m_width  = w;
   m_height = h;
@@ -49,9 +49,9 @@ canvas&
 canvas::
 assign(const canvas&  cv, int  x, int  y, int  w, int  h) noexcept
 {
-  m_pointer = cv.m_pointer+(cv.m_image_width*y)+x;
+  m_pointer = cv.m_pointer+(cv.m_source_width*y)+x;
 
-  m_image_width = cv.m_image_width;
+  m_source_width = cv.m_source_width;
 
   m_width  = w;
   m_height = h;
@@ -79,8 +79,8 @@ fill(color  c, int  x, int  y, int  w, int  h) const noexcept
 
     for(int  yy = 0;  yy < h;  ++yy)
     {
-      auto  pp = p                 ;
-                 p += m_image_width;
+      auto  pp = p                  ;
+                 p += m_source_width;
 
         for(int  xx = 0;  xx < w;  ++xx)
         {
@@ -121,8 +121,8 @@ add_rgb(color_modifier  mod, int  x, int  y, int  w, int  h) const noexcept
 
     while(h--)
     {
-      auto  pp = p                 ;
-                 p += m_image_width;
+      auto  pp = p                  ;
+                 p += m_source_width;
 
       auto  end = pp+w;
 
@@ -159,8 +159,8 @@ reverse_rgb(int  x, int  y, int  w, int  h) const noexcept
 
     while(h--)
     {
-      auto  pp = p                 ;
-                 p += m_image_width;
+      auto  pp = p                  ;
+                 p += m_source_width;
 
       auto  end = pp+w;
 

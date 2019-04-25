@@ -35,6 +35,9 @@ extern const double  g_sin_table[g_sin_table_length];
 extern const double  g_cos_table[g_cos_table_length];
 
 
+class dummy{};
+
+
 template<typename  T>
 inline void
 destruct(T&  t) noexcept
@@ -334,20 +337,20 @@ public:
 
 template<typename  T>
 class
-pointer
+fixed_ptr
 {
   T*  m_data;
 
 public:
-  constexpr pointer(T*  ptr=nullptr) noexcept: m_data(ptr){}
+  constexpr fixed_ptr(T*  ptr=nullptr) noexcept: m_data(ptr){}
 
   template<typename  U>
-  constexpr pointer(U*  ptr) noexcept: m_data(static_cast<T*>(ptr)){}
+  constexpr fixed_ptr(U*  ptr) noexcept: m_data(static_cast<T*>(ptr)){}
 
-  pointer&  operator=(T*  ptr) noexcept{  m_data = ptr;  return *this;}
+  fixed_ptr&  operator=(T*  ptr) noexcept{  m_data = ptr;  return *this;}
 
   template<typename  U>
-  pointer&  operator=(U*  ptr) noexcept{  m_data = static_cast<T*>(ptr);  return *this;}
+  fixed_ptr&  operator=(U*  ptr) noexcept{  m_data = static_cast<T*>(ptr);  return *this;}
 
   constexpr T*  operator->() const noexcept{return  m_data;}
   constexpr T&  operator *() const noexcept{return *m_data;}
@@ -369,6 +372,8 @@ public:
   template<typename  U>constexpr bool  operator>=(const U*  ptr) const noexcept{return m_data >= static_cast<const T*>(ptr);}
 
 };
+
+
 
 
 }

@@ -72,7 +72,7 @@ draw_task_list
 
 public:
   draw_task_list() noexcept{}
- ~draw_task_list();
+ ~draw_task_list(){clear();}
 
   class control{
     node*                  m_node=nullptr;
@@ -99,13 +99,23 @@ public:
     control&    set_skip_flag() noexcept;
     control&  unset_skip_flag() noexcept;
 
+    control&    set_blink_flag() noexcept;
+    control&  unset_blink_flag() noexcept;
+
+    control&  set_blinking_rate(int  show, int  hide) noexcept;
+
     bool  test_remove_flag() const noexcept;
     bool  test_skip_flag()   const noexcept;
+    bool  test_blink_flag()   const noexcept;
 
   };
 
 
+  void  clear() noexcept;
+
   control  push(draw_task_entry  ent) noexcept;
+
+  void  remove() noexcept;
 
   void  process(const canvas&  cv) noexcept;
 

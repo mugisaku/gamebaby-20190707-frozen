@@ -65,6 +65,9 @@ add() noexcept
 
   dat.ctrl = g_list.push({{},cb,dat});
 
+  dat.ctrl.set_blink_flag();
+  dat.ctrl.set_blinking_rate(10,20);
+
   dat.x = 100;
   dat.y = 100;
 

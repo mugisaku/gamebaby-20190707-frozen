@@ -11,6 +11,8 @@ namespace gbstd{
 struct flags{
   static constexpr int  remove = 1;
   static constexpr int    skip = 2;
+  static constexpr int   blink_major = 4;
+  static constexpr int   blink_minor = 8;
 };
 
 
@@ -26,6 +28,10 @@ node
   status_value<int>  m_status;
 
   uint32_t  m_skip_count;
+
+  uint32_t  m_blink_show_value;
+  uint32_t  m_blink_hide_value;
+  uint32_t  m_blink_counter=0;
 
   reference_counter*  m_counter;
 
@@ -89,16 +95,17 @@ unrefer(reference_counter*  ptr) noexcept
 }
 
 
+
+
+void
 draw_task_list::
-~draw_task_list()
+clear() noexcept
 {
     for(auto  ptr: m_container)
     {
       unrefer(ptr);
     }
 }
-
-
 
 
 draw_task_list::control
@@ -132,12 +139,40 @@ push(draw_task_entry  ent) noexcept
 
   node->m_entry   = ent;
   node->m_skip_count = 0;
+  node->m_blink_show_value = 0;
+  node->m_blink_hide_value = 0;
+  node->m_blink_counter = 0;
   node->m_status.clear();
   node->m_counter = counter;
 
   m_container.emplace_back(node);
 
   return control(*node);
+}
+
+
+void
+draw_task_list::
+remove() noexcept
+{
+  auto  it = m_container.begin();
+
+    while(it != m_container.end())
+    {
+      auto  nd = *it;
+
+        if(nd->m_status.test(flags::remove))
+        {
+          unrefer(nd);
+
+          it = m_container.erase(it);
+        }
+
+      else
+        {
+          ++it;
+        }
+    }
 }
 
 
@@ -168,7 +203,28 @@ process(const canvas&  cv) noexcept
 
       else
         {
-          nd->m_entry(cv);
+            if(nd->m_status.test(flags::blink_major))
+            {
+                if(nd->m_blink_counter)
+                {
+                  --nd->m_blink_counter;
+                }
+
+              else
+                {
+                  nd->m_blink_counter = nd->m_status.test(flags::blink_minor)? nd->m_blink_show_value
+                                       :                                       nd->m_blink_hide_value;
+
+                  nd->m_status.reverse(flags::blink_minor);
+                }
+            }
+
+
+            if(!nd->m_status.test(flags::blink_minor))
+            {
+              nd->m_entry(cv);
+            }
+
 
           ++it;
         }
@@ -277,8 +333,33 @@ control&  control::unset_remove_flag() noexcept{  m_node->m_status.unset(flags::
 control&    control::set_skip_flag() noexcept{  m_node->m_status.set(  flags::skip);  return *this;}
 control&  control::unset_skip_flag() noexcept{  m_node->m_status.unset(flags::skip);  return *this;}
 
-bool  control::test_remove_flag() const noexcept{return m_node->m_status.test(flags::remove);}
-bool  control::test_skip_flag()   const noexcept{return m_node->m_status.test(flags::skip  );}
+control&  control::set_blink_flag() noexcept{  m_node->m_status.set(  flags::blink_major);  return *this;}
+
+control&
+control::
+unset_blink_flag() noexcept
+{
+  m_node->m_status.unset(flags::blink_major);
+  m_node->m_status.unset(flags::blink_minor);
+
+  return *this;
+}
+
+
+control&
+control::
+set_blinking_rate(int  show, int  hide) noexcept
+{
+  m_node->m_blink_show_value = show;
+  m_node->m_blink_hide_value = hide;
+
+  return *this;
+}
+
+
+bool  control::test_remove_flag() const noexcept{return m_node->m_status.test(flags::remove     );}
+bool  control::test_skip_flag()   const noexcept{return m_node->m_status.test(flags::skip       );}
+bool  control::test_blink_flag()  const noexcept{return m_node->m_status.test(flags::blink_major);}
 
 
 

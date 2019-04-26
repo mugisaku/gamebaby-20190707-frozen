@@ -65,8 +65,8 @@ add() noexcept
 
   dat.ctrl = g_list.push({{},cb,dat});
 
-  dat.ctrl.set_blink_flag();
-  dat.ctrl.set_blinking_rate(10,20);
+//  dat.ctrl.set_blink_flag();
+//  dat.ctrl.set_blinking_rate(10,20);
 
   dat.x = 100;
   dat.y = 100;
@@ -95,6 +95,18 @@ if(g_data.size())
 g_data.back().ctrl.set_remove_flag();
 g_data.pop_back();
 }
+else
+{
+draw_task_list::print_dead();
+printf(", max %d\n",g_max);
+
+g_list.clear();
+draw_task_list::clear_dead();
+
+draw_task_list::print_dead();
+printf(", max %d\n\n",g_max);
+}
+
 }
     if(gbstd::g_time >= next)
     {
@@ -123,8 +135,6 @@ main(int  argc, char**  argv)
   sdl::init(screen_w,screen_h);
 
   g_screen_canvas = sdl::make_screen_canvas();
-
-  add();
 
     for(;;)
     {

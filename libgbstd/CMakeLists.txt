@@ -43,6 +43,7 @@ set(SOURCES
   sounds/noise_device.cpp
   sounds/short_noise_device.cpp
   sounds/scale_table.cpp
+  weak_reference_counter.cpp
   draw_task_list.cpp
   process.cpp
   utility.cpp

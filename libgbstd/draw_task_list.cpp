@@ -33,21 +33,9 @@ node
   uint32_t  m_blink_hide_value;
   uint32_t  m_blink_counter=0;
 
-  reference_counter*  m_counter;
+  weak_reference_counter  m_counter;
 
   node*  m_next;
-
-};
-
-
-struct
-draw_task_list::
-reference_counter
-{
-  int  m_value;
-  int  m_weak_value;
-
-  reference_counter*  m_next;
 
 };
 
@@ -57,40 +45,16 @@ draw_task_list::
 m_dead_node_top=nullptr;
 
 
-draw_task_list::reference_counter*
-draw_task_list::
-m_dead_counter_top=nullptr;
-
-
 void
 draw_task_list::
 unrefer(node*  ptr) noexcept
 {
     if(ptr)
     {
-      ptr->m_counter->m_value = 0;
-
-      unrefer(ptr->m_counter);
+      ptr->m_counter.set_value(0).reset();
 
       ptr->m_next = m_dead_node_top      ;
                     m_dead_node_top = ptr;
-    }
-}
-
-
-void
-draw_task_list::
-unrefer(reference_counter*  ptr) noexcept
-{
-    if(ptr)
-    {
-      auto&  n = ptr->m_weak_value;
-
-        if(!--n)
-        {
-          ptr->m_next = m_dead_counter_top      ;
-                        m_dead_counter_top = ptr;
-        }
     }
 }
 
@@ -105,6 +69,9 @@ clear() noexcept
     {
       unrefer(ptr);
     }
+
+
+  m_container.clear();
 }
 
 
@@ -120,22 +87,8 @@ push(draw_task_entry  ent) noexcept
     }
 
 
-    if(!m_dead_counter_top)
-    {
-      m_dead_counter_top = new reference_counter;
-
-      m_dead_counter_top->m_next = nullptr;
-    }
-
-
   auto  node = m_dead_node_top                          ;
                m_dead_node_top = m_dead_node_top->m_next;
-
-  auto  counter = m_dead_counter_top                             ;
-                  m_dead_counter_top = m_dead_counter_top->m_next;
-
-  counter->m_value      = 1;
-  counter->m_weak_value = 1;
 
   node->m_entry   = ent;
   node->m_skip_count = 0;
@@ -143,7 +96,8 @@ push(draw_task_entry  ent) noexcept
   node->m_blink_hide_value = 0;
   node->m_blink_counter = 0;
   node->m_status.clear();
-  node->m_counter = counter;
+  node->m_counter = weak_reference_counter();
+  node->m_counter.set_value(1);
 
   m_container.emplace_back(node);
 
@@ -252,12 +206,28 @@ count(T*  ptr) noexcept
 
 void
 draw_task_list::
-print() const noexcept
+print_dead() noexcept
 {
-  printf("dead top %d, dead counter %d\n",
-    count(m_dead_node_top),
-    count(m_dead_counter_top));
+  printf("dead top %d, ",count(m_dead_node_top));
 
+  weak_reference_counter::print_dead();
+}
+
+
+void
+draw_task_list::
+clear_dead() noexcept
+{
+  auto  ptr = m_dead_node_top          ;
+              m_dead_node_top = nullptr;
+
+    while(ptr)
+    {
+      auto  next = ptr->m_next;
+
+      delete ptr       ;
+             ptr = next;
+    }
 }
 
 
@@ -268,14 +238,6 @@ control(node&  nd) noexcept:
 m_node(&nd),
 m_counter(nd.m_counter)
 {
-  ++m_counter->m_weak_value;
-}
-
-
-control::
-~control()
-{
-  unrefer(m_counter);
 }
 
 
@@ -284,7 +246,7 @@ control::
 control::
 operator bool() const noexcept
 {
-  return m_node && m_counter->m_value;
+  return m_node && m_counter;
 }
 
 
@@ -294,12 +256,8 @@ assign(const control&   rhs) noexcept
 {
     if(this != &rhs)
     {
-      unrefer(m_counter);
-
       m_node    = rhs.m_node;
       m_counter = rhs.m_counter;
-
-      ++m_counter->m_weak_value;
     }
 
 
@@ -313,13 +271,10 @@ assign(control&&  rhs) noexcept
 {
     if(this != &rhs)
     {
-      unrefer(m_counter);
-
       m_node = rhs.m_node          ;
                rhs.m_node = nullptr;
 
-      m_counter = rhs.m_counter          ;
-                  rhs.m_counter = nullptr;
+      std::swap(m_counter,rhs.m_counter);
     }
 
 

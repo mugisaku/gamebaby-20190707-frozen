@@ -3,6 +3,7 @@
 
 
 #include"libgbstd/utility.hpp"
+#include"libgbstd/weak_reference_counter.hpp"
 #include"libgbstd/process.hpp"
 #include"libgbstd/image.hpp"
 #include<list>
@@ -59,31 +60,27 @@ public:
 class
 draw_task_list
 {
-  struct reference_counter;
   struct node;
 
-  static struct reference_counter*  m_dead_counter_top;
-  static struct node*               m_dead_node_top;
+  static node*  m_dead_node_top;
 
   std::list<node*>  m_container;
 
   static void  unrefer(node*  ptr) noexcept;
-  static void  unrefer(reference_counter*  ptr) noexcept;
 
 public:
   draw_task_list() noexcept{}
  ~draw_task_list(){clear();}
 
   class control{
-    node*                  m_node=nullptr;
-    reference_counter*  m_counter=nullptr;
+    node*                   m_node=nullptr;
+    weak_reference_counter  m_counter;
 
   public:
-    constexpr control() noexcept{}
+    control() noexcept{}
     control(node&  nd) noexcept;
     control(const control&   rhs) noexcept{assign(rhs);}
     control(      control&&  rhs) noexcept{assign(std::move(rhs));}
-   ~control();
 
     control&  operator=(const control&   rhs) noexcept{return assign(rhs);}
     control&  operator=(      control&&  rhs) noexcept{return assign(std::move(rhs));}
@@ -119,7 +116,8 @@ public:
 
   void  process(const canvas&  cv) noexcept;
 
-  void  print() const noexcept;
+  static void  print_dead() noexcept;
+  static void  clear_dead() noexcept;
 
 };
 

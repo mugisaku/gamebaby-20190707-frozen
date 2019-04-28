@@ -2,6 +2,7 @@
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
 #include"libgbstd/task.hpp"
+#include"libgbstd/clock.hpp"
 #include"sdl.hpp"
 #include<list>
 #include<vector>
@@ -55,6 +56,10 @@ cb(const canvas&  cv, data&  dat) noexcept
 
 
 int  g_max;
+
+clock_master
+g_tmmaster;
+
 
 void
 add() noexcept
@@ -117,6 +122,10 @@ printf(", max %d\n\n",g_max);
       sdl::update_screen(g_screen_canvas);
 
       next = gbstd::g_time+delay;
+
+g_tmmaster.step();
+g_tmmaster.print();
+printf("\n");
     }
 }
 
@@ -135,7 +144,12 @@ main(int  argc, char**  argv)
   sdl::init(screen_w,screen_h);
 
   g_screen_canvas = sdl::make_screen_canvas();
-
+g_tmmaster+=gbstd::clock("4321",4321,true);
+g_tmmaster+=gbstd::clock("2000",2000);
+g_tmmaster+=gbstd::clock("1000",1000,true);
+g_tmmaster+=gbstd::clock(" 500", 500,true);
+g_tmmaster+=gbstd::clock(" 100", 100);
+g_tmmaster+=gbstd::clock("   1",   1,true);
     for(;;)
     {
       main_loop();

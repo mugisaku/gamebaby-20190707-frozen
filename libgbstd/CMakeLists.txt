@@ -45,6 +45,7 @@ set(SOURCES
   sounds/scale_table.cpp
   weak_reference_counter.cpp
   draw_task_list.cpp
+  clock.cpp
   process.cpp
   utility.cpp
   utility_sincos.cpp

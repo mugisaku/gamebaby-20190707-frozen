@@ -25,37 +25,48 @@ canvas
 g_screen_canvas;
 
 
-draw_task_list
-g_list;
+tick_task_list  g_tt_list;
+draw_task_list  g_dt_list;
 
 
 image
 g_image(g_misc_png);
 
 
-struct
-data
+class
+cursor
 {
-  draw_task_list::control  ctrl;
+public:
+  draw_task_control  dt_ctrl;
+  tick_task_control  tt_ctrl;
 
   int  x=0;
   int  y=0;
+
+  cursor(){}
+
 };
 
 
 
-std::list<data>
+std::list<cursor>
 g_data;
 
 
 void
-cb(const canvas&  cv, data&  dat) noexcept
+dt_cb(const canvas&  cv, cursor&  dat) noexcept
 {
   cv.draw_canvas({g_image,0,0,24,24},dat.x,dat.y);
 }
 
 
-int  g_max;
+void
+tt_cb(cursor&  dat) noexcept
+{
+  ++dat.x;
+  ++dat.y;
+}
+
 
 clock_master
 g_tmmaster;
@@ -67,16 +78,23 @@ add() noexcept
   g_data.emplace_back();
 
   auto&  dat = g_data.back();
+dat.x = 0;
+dat.y = 0;
+  dat.dt_ctrl = g_dt_list.push(dt_cb,dat);
+  dat.tt_ctrl = g_tt_list.push(g_tmmaster["test"],100,tt_cb,dat);
+}
 
-  dat.ctrl = g_list.push({{},cb,dat});
 
-//  dat.ctrl.set_blink_flag();
-//  dat.ctrl.set_blinking_rate(10,20);
+void
+print() noexcept
+{
+return;
+      draw_task_list::print_dead();
+      tick_task_list::print_dead();
 
-  dat.x = 100;
-  dat.y = 100;
+      weak_reference_counter::print_dead();
 
-  g_max = std::max(g_max,(int)g_data.size());
+      printf("\n");
 }
 
 
@@ -89,43 +107,47 @@ main_loop() noexcept
 
   sdl::update_control();
 
-    if(g_input.test_up()){g_data.back().y -= 7;}
-    if(g_input.test_down()){g_data.back().y += 7;}
-    if(g_input.test_left()){g_data.back().x -= 7;}
-    if(g_input.test_right()){g_data.back().x += 7;}
-    if(g_input.test_p()){add();}
-    if(g_input.test_n()){
-if(g_data.size())
-{
-g_data.back().ctrl.set_remove_flag();
-g_data.pop_back();
-}
-else
-{
-draw_task_list::print_dead();
-printf(", max %d\n",g_max);
+  g_tmmaster.step();
 
-g_list.clear();
-draw_task_list::clear_dead();
+    if(g_data.size())
+    {
+      if(g_input.test_up()){g_data.back().y -= 7;}
+      if(g_input.test_down()){g_data.back().y += 7;}
+      if(g_input.test_left()){g_data.back().x -= 7;}
+      if(g_input.test_right()){g_data.back().x += 7;}
+    }
 
-draw_task_list::print_dead();
-printf(", max %d\n\n",g_max);
-}
 
-}
+    if(g_input.test_p() && g_modified_input.test_p())
+    {
+      add();
+//      print();
+    }
+
+
+    if(g_input.test_n() && g_modified_input.test_n())
+    {
+        if(g_data.size())
+        {
+          g_data.back().dt_ctrl.set_remove_flag();
+          g_data.back().tt_ctrl.set_remove_flag();
+          g_data.pop_back();
+        }
+
+      print();
+    }
+
+
     if(gbstd::g_time >= next)
     {
       g_screen_canvas.fill(color());
 
-      g_list.process(g_screen_canvas);
+      g_tt_list.process();
+      g_dt_list.process(g_screen_canvas);
 
       sdl::update_screen(g_screen_canvas);
 
       next = gbstd::g_time+delay;
-
-g_tmmaster.step();
-g_tmmaster.print();
-printf("\n");
     }
 }
 
@@ -144,12 +166,11 @@ main(int  argc, char**  argv)
   sdl::init(screen_w,screen_h);
 
   g_screen_canvas = sdl::make_screen_canvas();
-g_tmmaster+=gbstd::clock("4321",4321,true);
-g_tmmaster+=gbstd::clock("2000",2000);
-g_tmmaster+=gbstd::clock("1000",1000,true);
-g_tmmaster+=gbstd::clock(" 500", 500,true);
-g_tmmaster+=gbstd::clock(" 100", 100);
-g_tmmaster+=gbstd::clock("   1",   1,true);
+
+  auto  ctrl = g_tmmaster.add("test",1000);
+
+  ctrl.start();
+
     for(;;)
     {
       main_loop();

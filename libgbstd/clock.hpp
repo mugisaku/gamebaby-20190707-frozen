@@ -6,7 +6,7 @@
 #include"libgbstd/weak_reference_counter.hpp"
 #include"libgbstd/process.hpp"
 #include"libgbstd/image.hpp"
-#include<list>
+#include<string_view>
 
 
 
@@ -16,20 +16,34 @@ namespace gbstd{
 
 
 
-class clock;
+struct clock_entity;
 
 
 class
 clock_control
 {
-  clock*  m_clock=nullptr;
+  clock_entity*  m_entity=nullptr;
 
 public:
-  constexpr clock_control() noexcept{}
-  constexpr clock_control(clock&  clk) noexcept: m_clock(&clk){}
+  clock_control() noexcept{}
+  clock_control(clock_entity&  ent) noexcept: m_entity(&ent){}
 
-  clock&  operator *() const noexcept{return *m_clock;}
-  clock*  operator->() const noexcept{return  m_clock;}
+  const clock_entity&   get_entity() const noexcept{return *m_entity;}
+
+  const uint32_t&   get_time() const noexcept;
+  const int&      get_permil() const noexcept;
+
+  bool  is_working() const noexcept;
+  bool  is_stopped() const noexcept;
+
+  clock_control&  set_time(uint32_t  v) noexcept;
+  clock_control&  set_permil(   int  v) noexcept;
+
+  void  reset() noexcept;
+
+  void    start() noexcept;
+  void  restart() noexcept;
+  void     stop() noexcept;
 
 };
 
@@ -37,55 +51,18 @@ public:
 class
 clock_watch
 {
-  const clock*  m_clock=nullptr;
+  const clock_entity*  m_entity=nullptr;
 
 public:
-  constexpr clock_watch() noexcept{}
-  constexpr clock_watch(const clock&  clk) noexcept: m_clock(&clk){}
+  clock_watch() noexcept{}
+  clock_watch(const clock_entity&  ent) noexcept: m_entity(&ent){}
+  clock_watch(const clock_control&  ctrl) noexcept: m_entity(&ctrl.get_entity()){}
 
-  const std::string&   get_name() const noexcept;
-  const uint32_t&     get_value() const noexcept;
+  const uint32_t&   get_time() const noexcept;
+  const int&      get_permil() const noexcept;
 
-};
-
-
-class
-clock
-{
-  std::string  m_name;
-
-  uint32_t  m_value=0;
-  uint32_t  m_buffer=0;
-
-  int  m_permil=0;
-
-  bool  m_stopped_flag=false;
-
-public:
-  clock() noexcept{}
-
-  clock(const std::string&  name, int  permil=0, bool  immediately=false) noexcept:
-  m_name(name), m_permil(permil), m_stopped_flag(!immediately){}
-
-  const std::string&  get_name() const noexcept{return m_name;}
-
-  const uint32_t&  get_value() const noexcept{return m_value;}
-  const int&  get_permil() const noexcept{return m_permil;}
-
-  clock&  set_value(     uint32_t  v) noexcept{  m_value      = v;  return *this;}
-  clock&  set_permil(int  v) noexcept{  m_permil = v;  return *this;}
-
-  void  reset() noexcept;
-
-  void    start() noexcept{            m_stopped_flag = false;}
-  void  restart() noexcept{  reset();  m_stopped_flag = false;}
-  void     stop() noexcept{            m_stopped_flag =  true;}
-
-  bool  is_stopped() const noexcept{return m_stopped_flag;}
-
-  void  step(uint32_t  t) noexcept;
-
-  void  print() const noexcept;
+  bool  is_working() const noexcept;
+  bool  is_stopped() const noexcept;
 
 };
 
@@ -93,17 +70,22 @@ public:
 class
 clock_master
 {
-  std::vector<clock>  m_clock_list;
+  clock_entity*  m_top_pointer=nullptr;
 
   uint32_t  m_last_time=0;
 
 public:
-  clock_master(){}
+  clock_master() noexcept{}
+  clock_master(const clock_master& ) noexcept=delete;
+  clock_master(      clock_master&&) noexcept=delete;
+ ~clock_master();
 
-  clock*  find(const std::string&  name) noexcept;
-  clock&  operator[](const std::string&  name) noexcept;
+  clock_master&  operator=(const clock_master& ) noexcept=delete;
+  clock_master&  operator=(      clock_master&&) noexcept=delete;
 
-  void  operator+=(clock  t) noexcept{m_clock_list.emplace_back(t);}
+  clock_control  operator[](std::string_view  name) noexcept;
+
+  clock_control  add(std::string_view  name, int  permil=1000) noexcept;
 
   void  step() noexcept;
 

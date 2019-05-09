@@ -1,15 +1,12 @@
 
 
 set(SOURCES
-  ww_entry.cpp
-  ww_company.cpp
-  ww_company_callbacks.cpp
+#  ww_entry.cpp
+#  ww_company.cpp
   ww_bar.cpp
-  ww_notifier.cpp
-  ww_battle_context.cpp
-  ww_battle_context_callbacks.cpp
-  ww_executive_context.cpp
-  ww_executive_context_callbacks.cpp
+  ww_spilling_text.cpp
+#  ww_context.cpp
+#  ww_context_callbacks.cpp
 )
 
 

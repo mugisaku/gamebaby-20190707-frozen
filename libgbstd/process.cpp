@@ -50,7 +50,7 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
       m_memory[m_sp++] = ent.m_nameptr;
       m_memory[m_sp++] = ent.m_callback;
       m_memory[m_sp++] = ent.m_data;
-      m_memory[m_sp++] = ent.m_stop_sign;
+      m_memory[m_sp++] = static_cast<bool>(ent.m_interruption);
     }
 
 
@@ -79,7 +79,7 @@ replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
       m_memory[m_sp++] = ent.m_nameptr;
       m_memory[m_sp++] = ent.m_callback;
       m_memory[m_sp++] = ent.m_data;
-      m_memory[m_sp++] = ent.m_stop_sign;
+      m_memory[m_sp++] = static_cast<bool>(ent.m_interruption);
     }
 }
 
@@ -153,7 +153,7 @@ step() noexcept
           auto&  ent = *reinterpret_cast<const execution_entry*>(&m_memory[m_pc]);
 
           auto    cb = ent.get_callback();
-          auto  data = ent.get_data();
+          auto  data = static_cast<dummy*>(ent.get_data());
 
             if(test_verbose_flag())
             {
@@ -162,12 +162,9 @@ step() noexcept
             }
 
 
-          cb(*this,data);
+          cb(*this,*data);
 
-
-          auto  stop_sign(ent.m_stop_sign);
-
-            if(!--counter || stop_sign)
+            if(!--counter || ent.get_interruption())
             {
               return;
             }

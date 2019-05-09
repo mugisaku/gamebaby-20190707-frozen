@@ -10,83 +10,56 @@ namespace ww{
 
 void
 bar::
-set_increment(int  length, int  num_frames) noexcept
+update_increment() noexcept
 {
-    if(num_frames > 0)
+  auto  diff = m_length-m_desired_length;
+
+  m_increment = diff.abs()/64;
+
+    if(m_length > m_desired_length)
     {
-      m_increment = gbstd::fixed_t(length)/num_frames;
+      m_increment = -m_increment;
     }
 }
 
 
-void
-bar::
-set_target_length(int  length) noexcept
-{
-  m_target_length = length;
-}
-
-
 
 
 void
 bar::
-startup() noexcept
-{
-  auto&  tskls =     gbstd::get_major_task_list();
-  auto&  pails = *gbstd::get_major_painter_list();
-
-  tskls.push(drive,80,this);
-  pails.emplace_back(*this,render);
-}
-
-
-void
-bar::
-cleanup() noexcept
-{
-}
-
-
-void
-bar::
-render(const bar&  b, const gbstd::canvas&  cv) noexcept
+draw(const gbstd::canvas&  cv, bar&  b) noexcept
 {
     if(b.m_length)
     {
-      auto  pos = b.m_offset+b.m_pos;
+      int  x = (b.is_left_to_right()? b.m_pos.x:b.m_pos.x-b.m_length);
 
-      int  x = (b.is_left_to_right()? pos.x:pos.x-b.m_length);
-
-      cv.fill_rectangle(b.m_color,x,pos.y,b.m_length,b.m_thickness);
+      cv.fill_rectangle(b.m_color,x,b.m_pos.y,b.m_length,b.m_thickness);
     }
 }
 
 
 void
 bar::
-drive(gbstd::task_control&  ctrl, bar*  b) noexcept
+tick(bar&  b) noexcept
 {
-    if(!b->m_frozen)
+    if(!b.is_finished())
     {
-        if(b->m_length < b->m_target_length)
-        {
-          b->m_length += b->m_increment;
+      b.m_length += b.m_increment;
 
-            if(b->m_length >= b->m_target_length)
+        if(b.m_increment < 0)
+        {
+            if(b.m_length < b.m_desired_length)
             {
-              b->m_length = b->m_target_length;
+              b.m_length = b.m_desired_length;
             }
         }
 
       else
-        if(b->m_length > b->m_target_length)
+        if(b.m_increment > 0)
         {
-          b->m_length -= b->m_increment;
-
-            if(b->m_length <= b->m_target_length)
+            if(b.m_length > b.m_desired_length)
             {
-              b->m_length = b->m_target_length;
+              b.m_length = b.m_desired_length;
             }
         }
     }

@@ -100,6 +100,12 @@ public:
     return push(reinterpret_cast<callback>(cb),reinterpret_cast<void*>(&data),name);
   }
 
+  template<typename  T>
+  draw_task_control  push(T&  data, std::string_view  name="") noexcept
+  {
+    return push(reinterpret_cast<callback>(T::draw),reinterpret_cast<void*>(&data),name);
+  }
+
 
   draw_task_control  push(draw_task_list&  ls, std::string_view  name="") noexcept;
 
@@ -184,6 +190,12 @@ public:
   tick_task_control  push(clock_watch  w, uint32_t  intval, void  (*cb)(T&), T&  data, std::string_view  name="") noexcept
   {
     return push(w,intval,reinterpret_cast<callback>(cb),reinterpret_cast<void*>(&data),name);
+  }
+
+  template<typename  T>
+  tick_task_control  push(clock_watch  w, uint32_t  intval, T&  data, std::string_view  name="") noexcept
+  {
+    return push(w,intval,reinterpret_cast<callback>(T::tick),reinterpret_cast<void*>(&data),name);
   }
 
   tick_task_control  push(clock_watch  w, uint32_t  intval, tick_task_list&  ls, std::string_view  name="") noexcept;

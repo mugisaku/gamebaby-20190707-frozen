@@ -5,7 +5,8 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
-#include"libgbstd/stage.hpp"
+#include"libgbstd/task.hpp"
+#include"libgbstd/instruction_queue.hpp"
 #include<list>
 #include<vector>
 #include<functional>
@@ -14,7 +15,6 @@
 namespace ww{
 
 
-using real_point = gbstd::basic_point<gbstd::fixed_t>;
 
 
 class
@@ -27,62 +27,49 @@ public:
   };
 
 private:
-  gbstd::fixed_t  m_target_length=0;
+  gbstd::fixed_t  m_desired_length=0;
   gbstd::fixed_t  m_length=0;
-
   gbstd::fixed_t  m_increment=0;
 
-  real_point  m_offset;
-  real_point  m_pos;
+  gbstd::real_point  m_pos;
+
+  uint32_t  m_time_to_reach=0;
 
   int  m_thickness=0;
 
   gbstd::color  m_color;
 
-  bool  m_frozen=false;
-
   mode  m_mode=mode::left_to_right;
-
-  static void  render(const bar&  b, const gbstd::canvas&  cv) noexcept;
-  static void   drive(gbstd::task_control&  ctrl, bar*  b) noexcept;
 
 public:
   bar() noexcept{}
 
-  void  set_mode(bar::mode  mode) noexcept{m_mode = mode;}
-
   bool  is_left_to_right() const noexcept{return m_mode == mode::left_to_right;}
   bool  is_right_to_left() const noexcept{return m_mode == mode::right_to_left;}
 
-  void               set_offset(real_point  pt)       noexcept{       m_offset = pt;}
-  const real_point&  get_offset(              ) const noexcept{return m_offset     ;}
+  bar&  set_position(int  x, int  y)   noexcept{  m_pos              = {x,y};  return *this;}
+  bar&  set_thickness(int  v)          noexcept{  m_thickness        =     v;  return *this;}
+  bar&  set_mode(bar::mode  mode)      noexcept{  m_mode             =  mode;  return *this;}
+  bar&  set_length(int  v)             noexcept{  m_length           =     v;  return *this;}
+  bar&  set_desired_length(int  v)     noexcept{  m_desired_length   =     v;  return *this;}
+  bar&  set_color(gbstd::color  color) noexcept{  m_color            = color;  return *this;}
+  bar&  set_time_to_reach(uint32_t  t) noexcept{  m_time_to_reach    =     t;  return *this;}
 
-  void               set_position(real_point  pt)       noexcept{       m_pos = pt;}
-  const real_point&  get_position(              ) const noexcept{return m_pos     ;}
+  uint32_t  get_time_to_reach() const noexcept{return m_time_to_reach;}
 
-  void        set_thickness(int  v)       noexcept{       m_thickness = v;}
-  const int&  get_thickness(      ) const noexcept{return m_thickness    ;}
+  int  get_thickness() const noexcept{return m_thickness;}
 
-  int   get_length(      ) const noexcept{return m_length    ;}
-  void  set_length(int  v)       noexcept{       m_length = v;}
+  gbstd::fixed_t  get_length()         const noexcept{return m_length;}
+  gbstd::fixed_t  get_desired_length() const noexcept{return m_desired_length;}
+  gbstd::fixed_t  get_increment()      const noexcept{return m_increment;}
+  gbstd::color    get_color()          const noexcept{return m_color;}
 
-  const gbstd::fixed_t&   get_increment(                            ) const noexcept{return m_increment;}
-  void                    set_increment(int  length, int  num_frames)       noexcept;
+  bool  is_finished() const noexcept{return m_length == m_desired_length;}
 
-  const gbstd::color&  get_color(                   ) const noexcept{return m_color        ;}
-  void                 set_color(gbstd::color  color)       noexcept{       m_color = color;}
+  void  update_increment() noexcept;
 
-  void    freeze() noexcept{m_frozen =  true;}
-  void  unfreeze() noexcept{m_frozen = false;}
-
-  bool  is_frozen()   const noexcept{return m_frozen;}
-  bool  is_finished() const noexcept{return m_length == m_target_length;}
-
-  void                   set_target_length(int  length)       noexcept;
-  const gbstd::fixed_t&  get_target_length(           ) const noexcept{return m_target_length;}
-
-  void  startup() noexcept;
-  void  cleanup() noexcept;
+  static void  draw(const gbstd::canvas&  cv, bar&  b) noexcept;
+  static void  tick(                          bar&  b) noexcept;
 
 };
 

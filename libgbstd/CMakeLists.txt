@@ -44,6 +44,7 @@ set(SOURCES
   sounds/short_noise_device.cpp
   sounds/scale_table.cpp
   weak_reference_counter.cpp
+  instruction_queue.cpp
   clock.cpp
   draw_task_list.cpp
   tick_task_list.cpp

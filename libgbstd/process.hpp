@@ -16,55 +16,60 @@ namespace gbstd{
 class execution;
 class process;
 
-using execution_callback = void(*)(execution&,void*);
-
-
+using execution_callback = void(*)(execution&,dummy&);
 
 
 class
-stop_sign
+interruption
 {
-  bool  m_value;
+  bool  m_data;
 
 public:
-  constexpr stop_sign(bool  v) noexcept: m_value(v){}
+  explicit constexpr interruption(bool  v=false) noexcept: m_data(v){}
 
-  constexpr operator bool() const noexcept{return m_value;}
-  constexpr operator uintptr_t() const noexcept{return m_value;}
+  constexpr operator bool() const noexcept{return m_data;}
 
 };
 
+
+namespace interruptions{
+constexpr interruption   on( true);
+constexpr interruption  off(false);
+}
 
 
 struct
 execution_entry
 {
   uintptr_t  m_nameptr;
-
   uintptr_t  m_callback;
-
   uintptr_t  m_data;
+  uintptr_t  m_interruption;
 
-  uintptr_t  m_stop_sign;
-
-  template<typename  T> constexpr uintptr_t  cast(T  v) noexcept{return reinterpret_cast<uintptr_t>(v);}
+  template<typename  T> constexpr uintptr_t  cast(T*  ptr) noexcept{return reinterpret_cast<uintptr_t>(ptr);}
+                        constexpr uintptr_t  cast(interruption  i) noexcept{return static_cast<uintptr_t>(i);}
 
   constexpr execution_entry() noexcept:
-  m_nameptr(0), m_callback(0), m_data(0), m_stop_sign(0){}
+  m_nameptr(0), m_callback(0), m_data(0), m_interruption(0){}
 
   template<typename  T>
-  constexpr execution_entry(void(*cb)(execution&,T*), T*  data, stop_sign  ss=false) noexcept:
-  m_nameptr(0), m_callback(cast(cb)), m_data(cast(data)), m_stop_sign(ss? 1:0){}
+  constexpr execution_entry(void(*cb)(execution&,T&), T&  data, interruption  i=interruptions::off) noexcept:
+  m_nameptr(0), m_callback(cast(cb)), m_data(cast(&data)), m_interruption(cast(i)){}
 
   template<typename  T>
-  constexpr execution_entry(const char*  name, void(*cb)(execution&,T*), T*  data, stop_sign  ss=false) noexcept:
-  m_nameptr(cast(name)), m_callback(cast(cb)), m_data(cast(data)), m_stop_sign(ss? 1:0){}
+  constexpr execution_entry(const char*  name, void(*cb)(execution&,T&), T&  data, interruption  i=interruptions::off) noexcept:
+  m_nameptr(cast(name)), m_callback(cast(cb)), m_data(cast(&data)), m_interruption(cast(i)){}
 
-  constexpr const char*  get_name()      const noexcept{return m_nameptr? reinterpret_cast<const char*>(m_nameptr):"";}
-  constexpr stop_sign    get_stop_sign() const noexcept{return stop_sign(m_stop_sign);}
+  template<typename  T>
+  constexpr execution_entry(const char*  name, T&  data, interruption  i=interruptions::off) noexcept:
+  m_nameptr(cast(name)), m_callback(cast(T::execute)), m_data(cast(&data)), m_interruption(cast(i)){}
+
+  constexpr const char*   get_name()         const noexcept{return m_nameptr? reinterpret_cast<const char*>(m_nameptr):"";}
+  constexpr interruption  get_interruption() const noexcept{return interruption(m_interruption);}
 
   execution_callback  get_callback()  const noexcept{return reinterpret_cast<execution_callback>(m_callback);}
-  void*               get_data()      const noexcept{return reinterpret_cast<void*>(m_data);}
+  dummy*                  get_data()      const noexcept{return reinterpret_cast<dummy*>(m_data);}
+
 };
 
 

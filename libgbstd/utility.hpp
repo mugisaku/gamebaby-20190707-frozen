@@ -174,51 +174,6 @@ public:
 
 
 class
-incremental
-{
-  int  m_value=0;
-  int  m_add_amount=1;
-
-public:
-  incremental() noexcept{}
-  incremental(int  v, int  add=1) noexcept: m_value(v), m_add_amount(add){}
-
-  void  reset(int  v) noexcept{m_value = v;}
-
-  int  operator ++() noexcept
-  {
-    m_value += m_add_amount;
-
-    return m_value;
-  }
-
-  int  operator ++(int) noexcept
-  {
-    int  v = m_value                ;
-             m_value += m_add_amount;
-
-    return v;
-  }
-
-  int  operator --() noexcept
-  {
-    m_value -= m_add_amount;
-
-    return m_value;
-  }
-
-  int  operator --(int) noexcept
-  {
-    int  v = m_value                ;
-             m_value -= m_add_amount;
-
-    return v;
-  }
-
-};
-
-
-class
 string_form
 {
   char  m_buffer[512] = {0};
@@ -271,9 +226,11 @@ public:
 class
 fixed_t
 {
-  static constexpr int  m_shift_amount = 16;
+public:
+  struct raw_value{  int  m_data;  explicit constexpr raw_value(int  v) noexcept: m_data(v){}};
 
-  struct raw_value{  int  m_data;  constexpr raw_value(int  v) noexcept: m_data(v){}};
+private:
+  static constexpr int  m_shift_amount = 16;
 
   int  m_data;
 
@@ -285,13 +242,14 @@ fixed_t
 
   static constexpr int  to_fpn(double  d) noexcept{return (to_int(d)<<m_shift_amount)|to_fract(d);}
 
-  explicit constexpr fixed_t(raw_value  rv) noexcept: m_data(rv.m_data){}
-
 public:
   constexpr fixed_t(int  v=0)  noexcept: m_data(to_fpn(v)){}
+  explicit constexpr fixed_t(raw_value  rv) noexcept: m_data(rv.m_data){}
   constexpr fixed_t(double  d) noexcept: m_data(to_fpn(d)){}
 
   constexpr operator int() const noexcept{return to_int(m_data);}
+
+  constexpr int  get_raw_integer() const noexcept{return m_data;}
 
   constexpr bool  operator==(fixed_t  rhs) const noexcept{return m_data == rhs.m_data;}
   constexpr bool  operator!=(fixed_t  rhs) const noexcept{return m_data != rhs.m_data;}

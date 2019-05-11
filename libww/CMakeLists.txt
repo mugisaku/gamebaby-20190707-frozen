@@ -1,12 +1,14 @@
 
 
 set(SOURCES
-#  ww_entry.cpp
-#  ww_company.cpp
+  ww_field.cpp
+  ww_character.cpp
   ww_bar.cpp
   ww_spilling_text.cpp
-#  ww_context.cpp
-#  ww_context_callbacks.cpp
+  ww_party.cpp
+  ww_battle_section.cpp
+  ww_context.cpp
+  ww_context_callbacks.cpp
 )
 
 

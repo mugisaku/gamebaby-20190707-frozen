@@ -16,6 +16,25 @@ void  write_to_file(const void*  ptr, size_t  size, const char*  filepath) noexc
 
 
 inline
+uint64_t
+bget_le64(const uint8_t*  p) noexcept
+{
+  uint64_t  i;
+
+  i  = (p[0]    );
+  i |= (p[1]<< 8);
+  i |= (p[2]<<16);
+  i |= (p[3]<<24);
+  i |= (static_cast<uint64_t>(p[4])<<32);
+  i |= (static_cast<uint64_t>(p[5])<<40);
+  i |= (static_cast<uint64_t>(p[6])<<48);
+  i |= (static_cast<uint64_t>(p[7])<<56);
+
+  return i;
+}
+
+
+inline
 uint32_t
 bget_le32(const uint8_t*  p) noexcept
 {
@@ -51,6 +70,21 @@ fput_le32(uint32_t  i, FILE*  f) noexcept
   fputc((i>> 8)&0xFF,f);
   fputc((i>>16)&0xFF,f);
   fputc((i>>24)&0xFF,f);
+}
+
+
+inline
+void
+fput_le64(uint64_t  i, FILE*  f) noexcept
+{
+  fputc((i    )&0xFF,f);
+  fputc((i>> 8)&0xFF,f);
+  fputc((i>>16)&0xFF,f);
+  fputc((i>>24)&0xFF,f);
+  fputc((i>>32)&0xFF,f);
+  fputc((i>>40)&0xFF,f);
+  fputc((i>>48)&0xFF,f);
+  fputc((i>>56)&0xFF,f);
 }
 
 
@@ -255,6 +289,35 @@ public:
   void  save_to_file(const char*  filepath) const noexcept;
 
   std::vector<uint8_t>  to_binary() const noexcept;
+
+  void  print() const noexcept;
+
+};
+
+
+
+
+struct
+ogg_page
+{
+  uint8_t  m_version=0;
+  uint8_t  m_header_type=0;
+
+  uint64_t  m_granule_position=0;
+
+  uint32_t  m_bitstream_serial_number=0;
+  uint32_t  m_sequence_number=0;
+  uint32_t  m_checksum=0;
+
+  uint8_t  m_number_of_segments=0;
+
+  uint8_t  m_segment_table[255];
+
+  std::vector<uint8_t>  m_segment_data;
+
+  static bool  test(const uint8_t*  p) noexcept;
+
+  const uint8_t*  read(const uint8_t*  p) noexcept;
 
   void  print() const noexcept;
 

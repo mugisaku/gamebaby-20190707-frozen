@@ -88,6 +88,8 @@ protected:
 
   bool  m_verbose_flag=false;
 
+  bool  m_pc_barrier;
+
    execution() noexcept: m_memory(800) {}
   ~execution() noexcept{}
 

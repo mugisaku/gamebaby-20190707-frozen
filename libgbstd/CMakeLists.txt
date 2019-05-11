@@ -35,6 +35,7 @@ set(SOURCES
   file_ops/riff_subchunk_view.cpp
   file_ops/wave.cpp
   file_ops/wave_format.cpp
+  file_ops/ogg_page.cpp
   sounds/sound_device.cpp
   sounds/sine_wave_device.cpp
   sounds/square_wave_device.cpp

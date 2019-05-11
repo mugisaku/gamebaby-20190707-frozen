@@ -40,7 +40,7 @@ if(EMSC)
 
   set(EXECUTABLE_EXTENSION ".html")
   set(CMAKE_CXX_COMPILER  em++)
-  set(CMAKE_CXX_FLAGS "-Werror -std=c++17 -Wno-switch -Wno-unused-command-line-argument -Os")
+  set(CMAKE_CXX_FLAGS "-Werror -std=c++1z -Wno-switch -Wno-unused-command-line-argument -Os")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS}")
   set(EMSC_PORTS "-s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s USE_SDL=2 -s USE_ZLIB=1")
   set(CMAKE_CXX_LINK_FLAGS  "${CMAKE_CXX_LINK_FLAGS} --shell-file ../shell.html ${PRELOADS} ${EMSC_PORTS}") 

@@ -22,7 +22,16 @@ execution&
 execution::
 operator++() noexcept
 {
-  m_pc += g_size_of_entry;
+    if(m_pc_barrier)
+    {
+      printf("execution error: pc is barriered\n");
+    }
+
+  else
+    {
+      m_pc += g_size_of_entry;
+    }
+
 
   return *this;
 }
@@ -62,6 +71,9 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 
       printf("\n*frame:\"%s\" pushed\n\n\n",name? name:"-noname-");
     }
+
+
+  m_pc_barrier = true;
 }
 
 
@@ -81,6 +93,9 @@ replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
       m_memory[m_sp++] = ent.m_data;
       m_memory[m_sp++] = static_cast<bool>(ent.m_interruption);
     }
+
+
+  m_pc_barrier = true;
 }
 
 
@@ -148,6 +163,8 @@ step() noexcept
 
     while(*this)
     {
+      m_pc_barrier = false;
+
         if(m_pc < m_sp)
         {
           auto&  ent = *reinterpret_cast<const execution_entry*>(&m_memory[m_pc]);

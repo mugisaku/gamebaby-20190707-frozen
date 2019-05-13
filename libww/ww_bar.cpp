@@ -29,11 +29,13 @@ void
 bar::
 draw(const gbstd::canvas&  cv, bar&  b) noexcept
 {
-    if(b.m_length)
-    {
-      int  x = (b.is_left_to_right()? b.m_pos.x:b.m_pos.x-b.m_length);
+  auto&  l = b.m_length;
 
-      cv.fill_rectangle(b.m_color,x,b.m_pos.y,b.m_length,b.m_thickness);
+    if(l)
+    {
+      int  x = (b.is_left_to_right()? b.m_pos.x:b.m_pos.x-l);
+
+      cv.fill_rectangle(b.m_color,x,b.m_pos.y,l,b.m_thickness);
     }
 }
 

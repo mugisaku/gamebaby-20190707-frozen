@@ -33,8 +33,7 @@ clear() noexcept
     }
 
 
-  m_draw_task_list.clear();
-  m_tick_task_list.clear();
+  m_task_list.clear();
 }
 
 
@@ -55,7 +54,11 @@ entry_party(const party&  p, battles::side  side) noexcept
 
       c.m_base_point.y = 32*n;
       c.m_field.m_hp_bar.set_position(0,32*n);
-      c.m_field.m_name_point = {side.is_left()? 32:120,32*n};
+      c.m_field.m_name_point = {side.is_left()? 32:120,48*n};
+      c.m_field.m_hp_bar.set_thickness(16)
+                        .set_length(0)
+                        .set_desired_length(0)
+                        .update_increment();
 
       c.m_field.m_side = side;
       c.m_head = pm.m_head;
@@ -63,11 +66,8 @@ entry_party(const party&  p, battles::side  side) noexcept
       c.copy_body();
       c.m_status.set(battles::character::flags::active);
 
-      m_draw_task_list.push(c        );
-      m_draw_task_list.push(c.m_field);
-
-      m_tick_task_list.push(m_clock_watch,20,c        );
-      m_tick_task_list.push(m_clock_watch,20,c.m_field);
+      m_task_list.push(c        ).set_draw<battles::character>().set_tick<battles::character>(m_clock_watch,20);
+      m_task_list.push(c.m_field).set_draw<battles::field    >().set_tick<battles::field    >(m_clock_watch,20);
 
       ++n;
     }

@@ -172,11 +172,10 @@ battle_section
 
   bool  m_command_request;
 
-  gbstd::draw_task_list  m_draw_task_list;
-  gbstd::tick_task_list  m_tick_task_list;
+  gbstd::task_list  m_task_list;
 
-  std::list<gbstd::tick_task_control>  m_active_ctrls;
-  std::list<gbstd::tick_task_control>  m_inactive_ctrls;
+  std::list<gbstd::task_control>  m_active_ctrls;
+  std::list<gbstd::task_control>  m_inactive_ctrls;
 
   battle_section() noexcept;
 

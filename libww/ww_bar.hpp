@@ -37,7 +37,7 @@ private:
 
   int  m_thickness=0;
 
-  gbstd::color  m_color;
+  gbstd::color  m_color=gbstd::colors::white;
 
   mode  m_mode=mode::left_to_right;
 
@@ -62,7 +62,7 @@ public:
   gbstd::fixed_t  get_length()         const noexcept{return m_length;}
   gbstd::fixed_t  get_desired_length() const noexcept{return m_desired_length;}
   gbstd::fixed_t  get_increment()      const noexcept{return m_increment;}
-  gbstd::color    get_color()          const noexcept{return m_color;}
+  gbstd::color    get_color()      const noexcept{return m_color;}
 
   bool  is_finished() const noexcept{return m_length == m_desired_length;}
 

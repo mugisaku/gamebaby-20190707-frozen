@@ -47,8 +47,7 @@ set(SOURCES
   weak_reference_counter.cpp
   instruction_queue.cpp
   clock.cpp
-  draw_task_list.cpp
-  tick_task_list.cpp
+  task_list.cpp
   process.cpp
   utility.cpp
   utility_sincos.cpp

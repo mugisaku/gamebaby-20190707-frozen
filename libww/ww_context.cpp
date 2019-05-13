@@ -11,12 +11,14 @@ namespace ww{
 context::
 context() noexcept
 {
-  s_clock_controls.system = m_clock_master.add("system",1000);
+  auto  sysclock = m_clock_master.add("system",1000);
 
-  s_battle.m_clock_watch = s_clock_controls.system;
+  sysclock.start();
 
-  s_draw_tasks.battle_ctrl = s_draw_tasks.root.push(                           s_battle.m_draw_task_list);
-  s_tick_tasks.battle_ctrl = s_tick_tasks.root.push(s_clock_controls.system,20,s_battle.m_tick_task_list);
+  s_clock_controls.system = sysclock;
+  s_battle.m_clock_watch  = sysclock;
+
+  s_tasks.battle_ctrl = s_tasks.root.push(s_battle.m_task_list);
 
 
   m_process.push({{"context::start",start,*this,gbstd::interruptions::on}},"");
@@ -27,21 +29,13 @@ context() noexcept
 
 void
 context::
-step() noexcept
+step(const gbstd::canvas&  cv) noexcept
 {
   m_clock_master.step();
 
-  s_tick_tasks.root.process();
+  s_tasks.root.process(cv);
 
   m_process.step();
-}
-
-
-void
-context::
-render(const gbstd::canvas&  cv) noexcept
-{
-  s_draw_tasks.root.process(cv);
 }
 
 

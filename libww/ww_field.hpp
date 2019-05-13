@@ -68,7 +68,12 @@ field
 
   bar  m_hp_bar;
 
+  int  m_last_hp=0;
+  int  m_last_hp_max=0;
+
   const character*  m_character=nullptr;
+
+  field() noexcept;
 
   static void  draw(const gbstd::canvas&  cv, field&  f) noexcept;
   static void  tick(                          field&  f) noexcept;

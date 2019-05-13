@@ -15,25 +15,24 @@ namespace ww{
 class
 context
 {
+  struct spilling_text_entry{
+    gbstd::task_control  ctrl;
+  };
+
   static constexpr int  m_screen_width  = ww::battles::g_center_space_width+(ww::battles::g_row_width*2);
   static constexpr int  m_screen_height = (ww::battles::g_column_height);
 
 
   gbstd::process  m_process;
 
-  struct{
-    gbstd::tick_task_list  root;
 
-    gbstd::tick_task_control  battle_ctrl;
-
-  } s_tick_tasks;
 
   struct{
-    gbstd::draw_task_list  root;
+    gbstd::task_list  root;
 
-    gbstd::draw_task_control  battle_ctrl;
+    gbstd::task_control  battle_ctrl;
 
-  } s_draw_tasks;
+  } s_tasks;
 
   struct{
     gbstd::clock_control  system;
@@ -73,9 +72,7 @@ context
 public:
   context() noexcept;
 
-  void  step() noexcept;
-
-  void  render(const gbstd::canvas&  cv) noexcept;
+  void  step(const gbstd::canvas&  cv) noexcept;
 
   static constexpr int  get_screen_width()  noexcept{return m_screen_width ;}
   static constexpr int  get_screen_height() noexcept{return m_screen_height;}

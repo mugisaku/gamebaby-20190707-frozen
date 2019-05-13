@@ -12,8 +12,21 @@ void
 context::
 start(gbstd::execution&  exec, context&  ctx) noexcept
 {
-  exec.push({{loop_battle,ctx,gbstd::interruptions::on}});
+  exec.push({
+//    {display_logo,ctx,gbstd::interruptions::on},
+    {loop_battle,ctx,gbstd::interruptions::on},
+  });
 }
+
+
+/*
+void
+context::
+display_logo(gbstd::execution&  exec, context&  ctx) noexcept
+{
+  ++exec;
+}
+*/
 
 
 void

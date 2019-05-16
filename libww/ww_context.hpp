@@ -15,30 +15,17 @@ namespace ww{
 class
 context
 {
-  struct spilling_text_entry{
-    gbstd::task_control  ctrl;
-  };
+  static constexpr int  m_screen_width  = 288;
+  static constexpr int  m_screen_height = 288;
 
-  static constexpr int  m_screen_width  = ww::battles::g_center_space_width+(ww::battles::g_row_width*2);
-  static constexpr int  m_screen_height = (ww::battles::g_column_height);
-
+  uint32_t  m_spilling_text_counter=0;
 
   gbstd::process  m_process;
 
+  gbstd::task_list     m_task_list;
+  gbstd::task_control  m_task_control;
 
-
-  struct{
-    gbstd::task_list  root;
-
-    gbstd::task_control  battle_ctrl;
-
-  } s_tasks;
-
-  struct{
-    gbstd::clock_control  system;
-
-  } s_clock_controls;
-
+  gbstd::clock_control  m_clock_control;
 
   gbstd::clock_master  m_clock_master;
 
@@ -47,6 +34,9 @@ context
   party  m_left_party;
   party  m_right_party;
 
+
+  static void  start_display_logo(gbstd::execution&  exec, context&  ctx) noexcept;
+  static void   wait_display_logo(gbstd::execution&  exec, context&  ctx) noexcept;
 
   static void  start(       gbstd::execution&  exec, context&  ctx) noexcept;
   static void  start_battle(gbstd::execution&  exec, context&  ctx) noexcept;
@@ -72,10 +62,17 @@ context
 public:
   context() noexcept;
 
+  bool  has_active_spilling_text() const noexcept{return m_spilling_text_counter;}
+
+  void  push_spilling_text(gbstd::color  color, std::u16string_view  sv, gbstd::point  center, uint32_t  time) noexcept;
+
   void  step(const gbstd::canvas&  cv) noexcept;
 
   static constexpr int  get_screen_width()  noexcept{return m_screen_width ;}
   static constexpr int  get_screen_height() noexcept{return m_screen_height;}
+
+  static void  tick(gbstd::task_control  ctrl,                           context&  ctx) noexcept;
+  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, context&  ctx) noexcept;
 
 };
 

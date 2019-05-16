@@ -297,15 +297,15 @@ public:
   void  draw_character_safely(const character&  c, int  x, int  y) const noexcept;
   void  draw_character_safely(const character&  c, point  pt) const noexcept{draw_character_safely(c,pt.x,pt.y);}
 
-  void  draw_string(const character_color&  color, const char*      s, int  x, int  y) const noexcept;
-  void  draw_string(const character_color&  color, const char16_t*  s, int  x, int  y) const noexcept;
-  void  draw_string(const character_color&  color, const char*      s, point  pt) const noexcept{draw_string(color,s,pt.x,pt.y);}
-  void  draw_string(const character_color&  color, const char16_t*  s, point  pt) const noexcept{draw_string(color,s,pt.x,pt.y);}
+  void  draw_string(const character_color&  color, std::string_view     sv, int  x, int  y) const noexcept;
+  void  draw_string(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string(const character_color&  color, std::string_view     sv, point  pt) const noexcept{draw_string(color,sv,pt.x,pt.y);}
+  void  draw_string(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string(color,sv,pt.x,pt.y);}
 
-  void  draw_string_safely(const character_color&  color, const char*      s, int  x, int  y) const noexcept;
-  void  draw_string_safely(const character_color&  color, const char16_t*  s, int  x, int  y) const noexcept;
-  void  draw_string_safely(const character_color&  color, const char*      s, point  pt) const noexcept{draw_string_safely(color,s,pt.x,pt.y);}
-  void  draw_string_safely(const character_color&  color, const char16_t*  s, point  pt) const noexcept{draw_string_safely(color,s,pt.x,pt.y);}
+  void  draw_string_safely(const character_color&  color, std::string_view     sv, int  x, int  y) const noexcept;
+  void  draw_string_safely(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string_safely(const character_color&  color, std::string_view     sv, point  pt) const noexcept{draw_string_safely(color,sv,pt.x,pt.y);}
+  void  draw_string_safely(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely(color,sv,pt.x,pt.y);}
 
   void  draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept;
   void  draw_typewriter(const typewriter&  tw, point  pt) const noexcept{draw_typewriter(tw,pt.x,pt.y);}

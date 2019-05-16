@@ -4,6 +4,7 @@ set(SOURCES
   ww_field.cpp
   ww_character.cpp
   ww_bar.cpp
+  ww_string_display.cpp
   ww_spilling_text.cpp
   ww_party.cpp
   ww_battle_section.cpp

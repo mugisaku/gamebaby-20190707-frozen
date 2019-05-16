@@ -20,21 +20,17 @@ field() noexcept
 
 void
 field::
-draw(const gbstd::canvas&  cv, field&  f) noexcept
+draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, field&  f) noexcept
 {
-  auto&  name = f.m_character->m_head.m_name;
-
-  cv.draw_string({gbstd::colors::white},name.data(),f.m_name_point.x,f.m_name_point.y);
-
-  f.m_hp_bar.draw(cv,f.m_hp_bar);
+  f.m_hp_bar.draw(ctrl,cv,f.m_hp_bar);
 }
 
 
 void
 field::
-tick(field&  f) noexcept
+tick(gbstd::task_control  ctrl, field&  f) noexcept
 {
-  constexpr gbstd::fixed_t  length_max = 200;
+  constexpr gbstd::fixed_t  length_max = 80;
 
   auto&  c = *f.m_character;
 
@@ -61,7 +57,7 @@ tick(field&  f) noexcept
 
   f.m_hp_bar.set_color(color);
 
-  f.m_hp_bar.tick(f.m_hp_bar);
+  f.m_hp_bar.tick(ctrl,f.m_hp_bar);
 }
 
 

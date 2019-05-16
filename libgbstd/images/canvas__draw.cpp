@@ -347,9 +347,9 @@ draw_character(const character&  c, int  x, int  y) const noexcept
 
 void
 canvas::
-draw_string(const character_color&  color, const char*  s, int  x, int  y) const noexcept
+draw_string(const character_color&  color, std::string_view  sv, int  x, int  y) const noexcept
 {
-  utf8_decoder  dec(s);
+  utf8_decoder  dec(sv.data());
 
   character  c;
 
@@ -376,21 +376,15 @@ draw_string(const character_color&  color, const char*  s, int  x, int  y) const
 
 void
 canvas::
-draw_string(const character_color&  color, const char16_t*  s, int  x, int  y) const noexcept
+draw_string(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept
 {
   character  c;
 
   c.color = color;
 
-    for(;;)
+    for(auto  u16: sv)
     {
-      c.unicode = *s++;
-
-        if(!c.unicode)
-        {
-          break;
-        }
-
+      c.unicode = u16;
 
       draw_character(c,x,y);
 
@@ -418,9 +412,9 @@ draw_character_safely(const character&  c, int  x, int  y) const noexcept
 
 void
 canvas::
-draw_string_safely(const character_color&  color, const char*  s, int  x, int  y) const noexcept
+draw_string_safely(const character_color&  color, std::string_view  sv, int  x, int  y) const noexcept
 {
-  utf8_decoder  dec(s);
+  utf8_decoder  dec(sv.data());
 
   character  c;
 
@@ -447,21 +441,15 @@ draw_string_safely(const character_color&  color, const char*  s, int  x, int  y
 
 void
 canvas::
-draw_string_safely(const character_color&  color, const char16_t*  s, int  x, int  y) const noexcept
+draw_string_safely(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept
 {
   character  c;
 
   c.color = color;
 
-    for(;;)
+    for(auto  u16: sv)
     {
-      c.unicode = *s++;
-
-        if(!c.unicode)
-        {
-          break;
-        }
-
+      c.unicode = u16;
 
       draw_character(c,x,y);
 

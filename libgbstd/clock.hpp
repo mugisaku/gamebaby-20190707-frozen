@@ -91,6 +91,8 @@ public:
 
   void  print() const noexcept;
 
+  static clock_watch  get_zero_clock_watch() noexcept;
+
 };
 
 

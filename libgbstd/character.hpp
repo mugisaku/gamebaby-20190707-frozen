@@ -149,6 +149,9 @@ utf8_encoder
 std::u16string  make_u16string(const std::string&  s) noexcept;
 
 
+void  print(std::u16string_view  sv) noexcept;
+
+
 class
 text
 {

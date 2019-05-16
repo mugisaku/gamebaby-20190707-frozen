@@ -166,6 +166,16 @@ print() const noexcept
 }
 
 
+clock_watch
+clock_master::
+get_zero_clock_watch() noexcept
+{
+  static const clock_entity  zero = {"!zero",0,0,0};
+
+  return clock_watch(zero);
+}
+
+
 
 
 }

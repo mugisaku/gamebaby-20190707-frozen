@@ -6,6 +6,7 @@
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
 #include"libww/ww_field.hpp"
+#include"libww/ww_string_display.hpp"
 
 
 
@@ -45,7 +46,7 @@ constexpr position  backup(2);
 struct
 character_head
 {
-  std::string  m_name;
+  std::u16string  m_name;
 
 };
 
@@ -82,14 +83,18 @@ character
   battles::character_body  m_product_body;
   battles::character_body  m_proof_body;
 
-  gbstd::real_point  m_base_point;
+  display_string  m_name_string;
+  display_string  m_hp_string;
+
+  string_display  m_name_display;
+  string_display  m_hp_display;
 
   int  m_ap=0;
 
   field  m_field;
 
-  static void  draw(const gbstd::canvas&  cv, character&  c) noexcept;
-  static void  tick(                          character&  c) noexcept;
+  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, character&  c) noexcept;
+  static void  tick(gbstd::task_control  ctrl,                           character&  c) noexcept;
 
   character() noexcept{m_field.m_character = this;}
 

@@ -13,17 +13,6 @@ namespace battles{
 
 
 
-constexpr int  g_center_space_width  = 64;
-constexpr int  g_cell_width  = 64;
-constexpr int  g_cell_height = 48;
-constexpr int  g_row_width  = g_cell_width*3;
-constexpr int  g_row_height = g_cell_height;
-constexpr int  g_column_width  = g_cell_width;
-constexpr int  g_column_height = g_cell_height*6;
-
-
-
-
 class
 side
 {
@@ -63,8 +52,6 @@ field
   side  m_side;
 
   gbstd::real_point  m_base_point;
-  gbstd::real_point  m_name_point;
-  gbstd::real_point  m_hp_point;
 
   bar  m_hp_bar;
 
@@ -75,8 +62,8 @@ field
 
   field() noexcept;
 
-  static void  draw(const gbstd::canvas&  cv, field&  f) noexcept;
-  static void  tick(                          field&  f) noexcept;
+  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, field&  f) noexcept;
+  static void  tick(gbstd::task_control  ctrl,                           field&  f) noexcept;
 
 };
 

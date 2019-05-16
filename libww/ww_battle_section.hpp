@@ -151,6 +151,9 @@ battle_section
 
   gbstd::clock_watch  m_clock_watch;
 
+  gbstd::task_control  m_task_control;
+  gbstd::task_list     m_task_list;
+
   battles::character  m_character_table[m_table_length];
 
   character_table  m_filtering_table;
@@ -171,11 +174,6 @@ battle_section
   gbstd::typewriter  m_typewriter;
 
   bool  m_command_request;
-
-  gbstd::task_list  m_task_list;
-
-  std::list<gbstd::task_control>  m_active_ctrls;
-  std::list<gbstd::task_control>  m_inactive_ctrls;
 
   battle_section() noexcept;
 

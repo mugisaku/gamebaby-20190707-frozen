@@ -13,20 +13,32 @@ context::
 start(gbstd::execution&  exec, context&  ctx) noexcept
 {
   exec.push({
-//    {display_logo,ctx,gbstd::interruptions::on},
+    {start_display_logo,ctx,gbstd::interruptions::on},
+    { wait_display_logo,ctx,gbstd::interruptions::on},
     {loop_battle,ctx,gbstd::interruptions::on},
   });
 }
 
 
-/*
 void
 context::
-display_logo(gbstd::execution&  exec, context&  ctx) noexcept
+start_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
 {
+  ctx.push_spilling_text(gbstd::colors::yellow,u"Game Baby",{m_screen_width/2,m_screen_height/2},1000);
+
   ++exec;
 }
-*/
+
+
+void
+context::
+wait_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
+{
+    if(!ctx.has_active_spilling_text())
+    {
+      ++exec;
+    }
+}
 
 
 void
@@ -44,8 +56,8 @@ start_battle(gbstd::execution&  exec, context&  ctx) noexcept
   ctx.m_left_party.clear();
   ctx.m_right_party.clear();
 
-  ctx.m_left_party.push( {{"ひだりぐんA",800,},{"ひだりぐんB",800,},{"ひだりぐんC",800,},});
-  ctx.m_right_party.push({{"みぎぐんA",800,},{"みぎぐんB",800,},{"みぎぐんC",800,},});
+  ctx.m_left_party.push( {{u"ひだりぐんA",800,},{u"ひだりぐんB",800,},{u"ひだりぐんC",800,},});
+  ctx.m_right_party.push({{u"みぎぐんA",800,},{u"みぎぐんB",800,},{u"みぎぐんC",800,},});
 
   ctx.s_battle.entry_party( ctx.m_left_party,battles::sides::left );
   ctx.s_battle.entry_party(ctx.m_right_party,battles::sides::right);

@@ -24,6 +24,20 @@ basic_point
   x(x_),
   y(y_){}
 
+  template<typename  U>
+  constexpr basic_point(basic_point<U>  rhs) noexcept:
+  x(rhs.x),
+  y(rhs.y){}
+
+  template<typename  U>
+  constexpr basic_point&  operator=(basic_point<U>  rhs) noexcept
+  {
+    x = static_cast<T>(rhs.x);
+    y = static_cast<T>(rhs.y);
+
+    return *this;
+  }
+
 
   constexpr bool  operator==(basic_point  rhs) const noexcept
   {

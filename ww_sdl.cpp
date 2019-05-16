@@ -63,7 +63,7 @@ main(int  argc, char**  argv)
   show_github_link();
 #endif
 
-  sdl::init(288,288,2.0);
+  sdl::init(g_context.get_screen_width(),g_context.get_screen_height(),1.0);
 //  sdl::init_sound(24000);
 
 //  sdl::add_sound("bashi","main = noise{\"p80:v20:f48:b3\"}");

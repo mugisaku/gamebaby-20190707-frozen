@@ -15,6 +15,7 @@ struct flags{
   static constexpr int   blink_major =  8;
   static constexpr int   blink_minor = 16;
   static constexpr int         child = 32;
+  static constexpr int         timer = 64;
 };
 
 
@@ -25,8 +26,9 @@ task
 {
   std::string  m_name;
 
-  void  (*m_draw_callback)(const canvas&,dummy&);
-  void  (*m_tick_callback)(              dummy&);
+  void  (*m_collect_callback)(dummy*);
+  void  (*m_draw_callback)(task_control,const canvas&,dummy&);
+  void  (*m_tick_callback)(task_control,              dummy&);
 
   void*  m_data;
 
@@ -37,12 +39,12 @@ task
   uint32_t  m_interval;
   uint32_t  m_next_time;
 
+  uint32_t  m_timer;
+
 
   uint32_t  m_blink_show_value;
   uint32_t  m_blink_hide_value;
   uint32_t  m_blink_counter=0;
-
-  task_control  m_control;
 
   task*  m_next;
 
@@ -62,7 +64,11 @@ unrefer(task*  ptr) noexcept
 {
     if(ptr)
     {
-      ptr->m_control.clear();
+        if(ptr->m_collect_callback)
+        {
+          ptr->m_collect_callback(static_cast<dummy*>(ptr->m_data));
+        }
+
 
       ptr->m_next = m_dead_node_top      ;
                     m_dead_node_top = ptr;
@@ -91,9 +97,9 @@ clear() noexcept
 }
 
 
-task_control&
+task_control
 task_list::
-push(void*  data, bool  is_child, std::string_view  name) noexcept
+internal_push(void*  data, bool  is_child, std::string_view  name) noexcept
 {
     if(!m_dead_node_top)
     {
@@ -111,12 +117,13 @@ push(void*  data, bool  is_child, std::string_view  name) noexcept
   node->m_blink_show_value = 0;
   node->m_blink_hide_value = 0;
   node->m_blink_counter = 0;
+  node->m_clock_watch = clock_master::get_zero_clock_watch();
   node->m_interval = 0;
   node->m_next_time = 0;
+  node->m_collect_callback = nullptr;
   node->m_draw_callback = nullptr;
   node->m_tick_callback = nullptr;
   node->m_status.clear();
-  node->m_control = task_control(node,weak_reference_counter());
 
   node->m_next = m_top_pointer       ;
                  m_top_pointer = node;
@@ -129,7 +136,7 @@ push(void*  data, bool  is_child, std::string_view  name) noexcept
     }
 
 
-  return node->m_control;
+  return node;
 }
 
 
@@ -191,9 +198,11 @@ tick_object(task&  tsk) noexcept
 {
   auto  now = tsk.m_clock_watch.get_time();
 
-    while((now >= tsk.m_next_time) && tsk.m_tick_callback && !tsk.m_status.test(flags::skip_tick))
+    while((now >= tsk.m_next_time) && tsk.m_tick_callback &&
+          !tsk.m_status.test(flags::remove) &&
+          !tsk.m_status.test(flags::skip_tick))
     {
-      tsk.m_tick_callback(*static_cast<dummy*>(tsk.m_data));
+      tsk.m_tick_callback(tsk,*static_cast<dummy*>(tsk.m_data));
 
         if(!tsk.m_interval)
         {
@@ -202,6 +211,11 @@ tick_object(task&  tsk) noexcept
 
 
       tsk.m_next_time += tsk.m_interval;
+
+        if(tsk.m_timer >= tsk.m_interval)
+        {
+          tsk.m_timer -= tsk.m_interval;
+        }
     }
 }
 
@@ -229,7 +243,7 @@ draw_object(const canvas&  cv, task&  tsk) noexcept
 
     if(tsk.m_draw_callback && !tsk.m_status.test(flags::blink_minor))
     {
-      tsk.m_draw_callback(cv,*reinterpret_cast<dummy*>(tsk.m_data));
+      tsk.m_draw_callback(tsk,cv,*reinterpret_cast<dummy*>(tsk.m_data));
     }
 }
 
@@ -318,76 +332,18 @@ clear_dead() noexcept
 
 
 
-task_control::
-task_control(task&  tsk) noexcept:
-m_pointer(&tsk),
-m_counter(tsk.m_control.get_counter())
-{
-}
+task_control    task_control::set_remove_flag() noexcept{  m_pointer->m_status.set(  flags::remove);  return *this;}
+task_control  task_control::unset_remove_flag() noexcept{  m_pointer->m_status.unset(flags::remove);  return *this;}
 
+task_control    task_control::set_skip_draw_flag() noexcept{  m_pointer->m_status.set(  flags::skip_draw);  return *this;}
+task_control  task_control::unset_skip_draw_flag() noexcept{  m_pointer->m_status.unset(flags::skip_draw);  return *this;}
 
+task_control    task_control::set_skip_tick_flag() noexcept{  m_pointer->m_status.set(  flags::skip_tick);  return *this;}
+task_control  task_control::unset_skip_tick_flag() noexcept{  m_pointer->m_status.unset(flags::skip_tick);  return *this;}
 
+task_control  task_control::set_blink_flag() noexcept{  m_pointer->m_status.set(  flags::blink_major);  return *this;}
 
-task_control::
-operator bool() const noexcept
-{
-  return m_pointer && m_counter;
-}
-
-
-void
-task_control::
-clear() noexcept
-{
-  m_pointer = nullptr;
-  m_counter.reset();
-}
-
-
-task_control&
-task_control::
-assign(const task_control&   rhs) noexcept
-{
-    if(this != &rhs)
-    {
-      m_pointer = rhs.m_pointer;
-      m_counter = rhs.m_counter;
-    }
-
-
-  return *this;
-}
-
-
-task_control&
-task_control::
-assign(task_control&&  rhs) noexcept
-{
-    if(this != &rhs)
-    {
-      m_pointer = rhs.m_pointer          ;
-                  rhs.m_pointer = nullptr;
-
-      m_counter = std::move(rhs.m_counter);
-    }
-
-
-  return *this;
-}
-
-
-task_control&    task_control::set_remove_flag() noexcept{  m_pointer->m_status.set(  flags::remove);  return *this;}
-task_control&  task_control::unset_remove_flag() noexcept{  m_pointer->m_status.unset(flags::remove);  return *this;}
-
-task_control&    task_control::set_skip_draw_flag() noexcept{  m_pointer->m_status.set(  flags::skip_draw);  return *this;}
-task_control&  task_control::unset_skip_draw_flag() noexcept{  m_pointer->m_status.unset(flags::skip_draw);  return *this;}
-
-task_control&    task_control::set_skip_tick_flag() noexcept{  m_pointer->m_status.set(  flags::skip_tick);  return *this;}
-task_control&  task_control::unset_skip_tick_flag() noexcept{  m_pointer->m_status.unset(flags::skip_tick);  return *this;}
-
-task_control&  task_control::set_blink_flag() noexcept{  m_pointer->m_status.set(  flags::blink_major);  return *this;}
-
-task_control&
+task_control
 task_control::
 unset_blink_flag() noexcept
 {
@@ -398,7 +354,7 @@ unset_blink_flag() noexcept
 }
 
 
-task_control&
+task_control
 task_control::
 set_blinking_rate(int  show, int  hide) noexcept
 {
@@ -414,11 +370,74 @@ bool  task_control::test_skip_draw_flag() const noexcept{return m_pointer->m_sta
 bool  task_control::test_skip_tick_flag() const noexcept{return m_pointer->m_status.test(flags::skip_tick  );}
 bool  task_control::test_blink_flag()     const noexcept{return m_pointer->m_status.test(flags::blink_major);}
 bool  task_control::test_child_flag()     const noexcept{return m_pointer->m_status.test(flags::child      );}
+bool  task_control::test_timer_flag()     const noexcept{return m_pointer->m_status.test(flags::timer      );}
 
 
-task_control&
+const std::string&  task_control::get_name() const noexcept{return m_pointer->m_name;}
+const void*  task_control::get_data() const noexcept{return m_pointer->m_data;}
+
+
+uint32_t
 task_control::
-set_draw(void  (*cb)(const canvas&,dummy&)) noexcept
+get_interval() const noexcept
+{
+  return m_pointer->m_interval;
+}
+
+
+task_control
+task_control::
+set_interval(uint32_t  t) noexcept
+{
+  m_pointer->m_interval = t;
+
+  return *this;
+}
+
+
+bool
+task_control::
+test_timer() const noexcept
+{
+  return m_pointer->m_timer;
+}
+
+
+task_control
+task_control::
+set_timer(uint32_t  t) noexcept
+{
+  m_pointer->m_timer = t;
+
+  m_pointer->m_status.set(flags::timer);
+
+  return *this;
+}
+
+
+task_control
+task_control::
+unset_timer() noexcept
+{
+  m_pointer->m_status.unset(flags::timer);
+
+  return *this;
+}
+
+
+task_control
+task_control::
+set_collect(void  (*cb)(dummy*)) noexcept
+{
+  m_pointer->m_collect_callback = cb;
+
+  return *this;
+}
+
+
+task_control
+task_control::
+set_draw(void  (*cb)(task_control,const canvas&,dummy&)) noexcept
 {
   m_pointer->m_draw_callback = cb;
 
@@ -426,9 +445,9 @@ set_draw(void  (*cb)(const canvas&,dummy&)) noexcept
 }
 
 
-task_control&
+task_control
 task_control::
-set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(dummy&)) noexcept
+set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(task_control,dummy&)) noexcept
 {
   m_pointer->m_clock_watch   =      w;
   m_pointer->m_interval      = intval;

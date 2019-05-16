@@ -214,6 +214,18 @@ operator()(char32_t  c) noexcept
 }
 
 
+void
+print(std::u16string_view  sv) noexcept
+{
+  utf8_encoder  enc;
+
+    for(auto  u16: sv)
+    {
+      printf("%s",enc(u16).codes);
+    }
+}
+
+
 }
 
 

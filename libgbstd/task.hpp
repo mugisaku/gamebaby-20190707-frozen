@@ -24,74 +24,84 @@ class task;
 class
 task_control
 {
-  task*                   m_pointer=nullptr;
-  weak_reference_counter  m_counter;
+  task*  m_pointer=nullptr;
 
 public:
-  task_control() noexcept{}
-  task_control(task*  ptr, weak_reference_counter&&  ctr) noexcept: m_pointer(ptr), m_counter(std::move(ctr)){}
-  task_control(task&  tsk) noexcept;
-  task_control(const task_control&   rhs) noexcept{assign(rhs);}
-  task_control(      task_control&&  rhs) noexcept{assign(std::move(rhs));}
+  task_control(task*  ptr=nullptr) noexcept: m_pointer(ptr){}
+  task_control(task&  tsk) noexcept: m_pointer(&tsk){}
 
-  task_control&  operator=(const task_control&   rhs) noexcept{return assign(rhs);}
-  task_control&  operator=(      task_control&&  rhs) noexcept{return assign(std::move(rhs));}
-
-  operator bool() const noexcept;
-
-  const weak_reference_counter&  get_counter() const noexcept{return m_counter;}
-
-  void  clear() noexcept;
-
-  task_control&  assign(const task_control&   rhs) noexcept;
-  task_control&  assign(      task_control&&  rhs) noexcept;
+  operator bool() const noexcept{return m_pointer;}
 
   const std::string&  get_name() const noexcept;
 
-  task_control&    set_remove_flag() noexcept;
-  task_control&  unset_remove_flag() noexcept;
+  const void*  get_data() const noexcept;
 
-  task_control&    set_skip_draw_flag() noexcept;
-  task_control&  unset_skip_draw_flag() noexcept;
+  task_control    set_remove_flag() noexcept;
+  task_control  unset_remove_flag() noexcept;
 
-  task_control&    set_skip_tick_flag() noexcept;
-  task_control&  unset_skip_tick_flag() noexcept;
+  task_control    set_skip_draw_flag() noexcept;
+  task_control  unset_skip_draw_flag() noexcept;
 
-  task_control&    set_blink_flag() noexcept;
-  task_control&  unset_blink_flag() noexcept;
+  task_control    set_skip_tick_flag() noexcept;
+  task_control  unset_skip_tick_flag() noexcept;
 
-  task_control&  set_blinking_rate(int  show, int  hide) noexcept;
+  task_control    set_blink_flag() noexcept;
+  task_control  unset_blink_flag() noexcept;
+
+  task_control  set_blinking_rate(int  show, int  hide) noexcept;
 
   bool  test_remove_flag() const noexcept;
   bool  test_skip_draw_flag()   const noexcept;
   bool  test_skip_tick_flag()   const noexcept;
   bool  test_blink_flag()   const noexcept;
   bool  test_child_flag()   const noexcept;
+  bool  test_timer_flag()   const noexcept;
 
-  task_control&  set_draw(void  (*cb)(const canvas&,dummy&)) noexcept;
+  uint32_t      get_interval(           ) const noexcept;
+  task_control  set_interval(uint32_t  t)       noexcept;
+
+  bool            test_timer(           ) const noexcept;
+  task_control     set_timer(uint32_t  t)       noexcept;
+  task_control   unset_timer(           )       noexcept;
+
+  task_control  set_collect(void  (*cb)(dummy*)) noexcept;
 
   template<typename  T>
-  task_control&  set_draw(void  (*cb)(const canvas&,T&)) noexcept
+  task_control  set_collect(void  (*cb)(T*)) noexcept
   {
-    return set_draw(reinterpret_cast<void(*)(const canvas&,dummy&)>(cb));
+    return set_collect(reinterpret_cast<void(*)(dummy*)>(cb));
   }
 
   template<typename  T>
-  task_control&  set_draw() noexcept
+  task_control  set_collect() noexcept
+  {
+    return set_collect(T::collect);
+  }
+
+  task_control  set_draw(void  (*cb)(task_control,const canvas&,dummy&)) noexcept;
+
+  template<typename  T>
+  task_control  set_draw(void  (*cb)(task_control,const canvas&,T&)) noexcept
+  {
+    return set_draw(reinterpret_cast<void(*)(task_control,const canvas&,dummy&)>(cb));
+  }
+
+  template<typename  T>
+  task_control  set_draw() noexcept
   {
     return set_draw(T::draw);
   }
 
-  task_control&  set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(dummy&)) noexcept;
+  task_control  set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(task_control,dummy&)) noexcept;
 
   template<typename  T>
-  task_control&  set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(T&)) noexcept
+  task_control  set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(task_control,T&)) noexcept
   {
-    return set_tick(w,intval,reinterpret_cast<void(*)(dummy&)>(cb));
+    return set_tick(w,intval,reinterpret_cast<void(*)(task_control,dummy&)>(cb));
   }
 
   template<typename  T>
-  task_control&  set_tick(clock_watch  w, uint32_t  intval) noexcept
+  task_control  set_tick(clock_watch  w, uint32_t  intval) noexcept
   {
     return set_tick(w,intval,T::tick);
   }
@@ -115,7 +125,7 @@ task_list
   static void  tick_object(                   task&  tsk) noexcept;
   static void  draw_object(const canvas&  cv, task&  tsk) noexcept;
 
-  task_control&  push(void*  data, bool  is_child, std::string_view  name) noexcept;
+  task_control  internal_push(void*  data, bool  is_child, std::string_view  name) noexcept;
 
 public:
   task_list() noexcept{}
@@ -125,11 +135,11 @@ public:
 
   int  get_number_of_tasks() const noexcept{return m_number_of_tasks;}
 
-  task_control&  push(task_list&  ls, std::string_view  name="") noexcept{return push(&ls,true,name);}
-  task_control&  push(void*  data, std::string_view  name="") noexcept{return push(data,false,name);}
+  task_control  push(task_list&  ls, std::string_view  name="") noexcept{return internal_push( &ls, true,name);}
+  task_control  push(                std::string_view  name="") noexcept{return internal_push(nullptr,false,name);}
 
   template<typename  T>
-  task_control&  push(T&  data, std::string_view  name="") noexcept{return push(&data,name);}
+  task_control  push(T&  data, std::string_view  name="") noexcept{return internal_push(&data,false,name);}
 
   void  enforce_remove() noexcept;
 

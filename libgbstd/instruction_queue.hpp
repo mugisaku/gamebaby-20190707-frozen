@@ -73,17 +73,6 @@ public:
 using real_point = basic_point<fixed_t>;
 
 
-struct
-visual_object
-{
-  real_point  m_offset;
-  real_point  m_base_pos;
-
-  instruction_queue  m_instruction_queue;
-
-};
-
-
 }
 
 

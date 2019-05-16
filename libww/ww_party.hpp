@@ -20,7 +20,7 @@ party
     battles::character_body  m_body;
 
     member() noexcept{}
-    member(std::string_view  name, int  hp_max, battles::position  pos=battles::positions::front) noexcept;
+    member(std::u16string_view  name, int  hp_max, battles::position  pos=battles::positions::front) noexcept;
 
   };
 

@@ -11,14 +11,14 @@ namespace battles{
 
 void
 character::
-draw(const gbstd::canvas&  cv, character&  c) noexcept
+draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, character&  c) noexcept
 {
 }
 
 
 void
 character::
-tick(character&  c) noexcept
+tick(gbstd::task_control  ctrl, character&  c) noexcept
 {
 }
 

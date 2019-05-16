@@ -43,10 +43,17 @@ string_display
 
   const display_string*  m_pointer;
 
+  enum class align{
+    left,
+    right
+  } m_align=align::left;
+
 public:
   string_display(const display_string*  ptr=nullptr) noexcept: m_pointer(ptr){}
 
   string_display&  set_position(gbstd::point  pos) noexcept{  m_pos = pos;  return *this;}
+  string_display&  set_align_to_left()  noexcept{  m_align =  align::left;  return *this;}
+  string_display&  set_align_to_right() noexcept{  m_align = align::right;  return *this;}
 
   static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, string_display&  strdsp) noexcept;
 

@@ -307,6 +307,12 @@ public:
   void  draw_string_safely(const character_color&  color, std::string_view     sv, point  pt) const noexcept{draw_string_safely(color,sv,pt.x,pt.y);}
   void  draw_string_safely(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely(color,sv,pt.x,pt.y);}
 
+  void  draw_string_as_right_align(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string_as_right_align(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_as_right_align(color,sv,pt.x,pt.y);}
+
+  void  draw_string_safely_as_right_align(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string_safely_as_right_align(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely_as_right_align(color,sv,pt.x,pt.y);}
+
   void  draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept;
   void  draw_typewriter(const typewriter&  tw, point  pt) const noexcept{draw_typewriter(tw,pt.x,pt.y);}
 

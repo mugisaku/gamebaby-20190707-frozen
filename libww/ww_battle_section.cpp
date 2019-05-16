@@ -1,4 +1,5 @@
 #include"libww/ww_battle_section.hpp"
+#include"libww/ww_context.hpp"
 
 
 
@@ -60,7 +61,8 @@ entry_party(const party&  p, battles::side  side) noexcept
 
       constexpr int  line_height = 48;
 
-      c.m_field.m_hp_bar.set_position(side.is_left()? 0:200,32*n+16)
+      c.m_field.m_hp_bar.set_position(side.is_left()? 0:context::get_screen_width(),line_height*n+16)
+                        .set_mode(side.is_left()? bar::mode::left_to_right: bar::mode::right_to_left)
                         .set_thickness(10)
                         .set_length(0)
                         .set_desired_length(0)
@@ -72,7 +74,11 @@ entry_party(const party&  p, battles::side  side) noexcept
       c.m_name_string.set_string(c.m_head.m_name)
                      .set_color(gbstd::colors::white);
 
-      c.m_name_display.set_position({side.is_left()? 32:120,48*n});
+        if(side.is_left()){c.m_name_display.set_align_to_left();}
+      else                {c.m_name_display.set_align_to_right();}
+
+
+      c.m_name_display.set_position({side.is_left()? 0:context::get_screen_width(),line_height*n});
 
       c.m_field.m_side = side;
 

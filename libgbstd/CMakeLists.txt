@@ -14,6 +14,7 @@ set(SOURCES
   images/image__png.cpp
   images/canvas.cpp
   images/canvas__draw.cpp
+  images/canvas__draw_string.cpp
   images/liner.cpp
   values/value.cpp
   values/value_array.cpp

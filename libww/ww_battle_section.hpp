@@ -2,7 +2,6 @@
 #define ww_battle_section_hpp_is_included
 
 
-#include"libww/ww_field.hpp"
 #include"libww/ww_character.hpp"
 #include"libww/ww_bar.hpp"
 #include"libww/ww_spilling_text.hpp"
@@ -125,19 +124,51 @@ battle_action
 
   int  m_code;
 
-  battles::field*   m_actor;
-  battles::field*  m_target;
+  battles::character*   m_actor;
+  battles::character*  m_target;
 
 public:
-  battle_action(battle_action_kind  k, int  c, battles::field&  actor, battles::field*  target=nullptr) noexcept:
+  battle_action(battle_action_kind  k, int  c, battles::character&  actor, battles::character*  target=nullptr) noexcept:
   m_kind(k), m_code(c), m_actor(&actor), m_target(target){}
 
   battle_action_kind  get_kind() const noexcept{return m_kind;}
 
   int  get_code() const noexcept{return m_code;}
 
-  battles::field&  get_actor()  const noexcept{return *m_actor;}
-  battles::field*  get_target() const noexcept{return m_target;}
+  battles::character&  get_actor()  const noexcept{return *m_actor;}
+  battles::character*  get_target() const noexcept{return m_target;}
+
+};
+
+
+struct
+square
+{
+  int  m_left_value=0;
+  int  m_right_value=0;
+
+  square() noexcept{}
+
+};
+
+
+struct
+piece
+{
+  square*  m_base;
+  square*  m_end;
+
+  double  m_offense_power;
+  double  m_defense_power;
+  double  m_movement_power;
+  double  m_weight;
+
+  double  m_previous_position;
+  double  m_position;
+
+  battles::side  m_side;
+
+  int  m_hp;
 
 };
 
@@ -145,6 +176,13 @@ public:
 struct
 battle_section
 {
+  static constexpr int  m_line_length = 30;
+
+  square  m_square_line[m_line_length];
+
+  piece  m_left_piece;
+  piece  m_right_piece;
+
   static constexpr int  m_table_length = 10;
 
   using character_table = filtering_table<battles::character,m_table_length>;
@@ -174,6 +212,7 @@ battle_section
   gbstd::typewriter  m_typewriter;
 
   bool  m_command_request;
+
 
   battle_section() noexcept;
 

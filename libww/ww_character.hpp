@@ -5,14 +5,44 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
-#include"libww/ww_field.hpp"
 #include"libww/ww_string_display.hpp"
+#include"libww/ww_bar.hpp"
 
 
 
 
 namespace ww{
 namespace battles{
+
+
+
+class
+side
+{
+  int  m_data;
+
+public:
+  static constexpr int   m_left_value = 0;
+  static constexpr int  m_right_value = 1;
+
+  constexpr side(int  v=0) noexcept: m_data(v){}
+
+  constexpr bool  operator==(side  rhs) const noexcept{return m_data == rhs.m_data;}
+  constexpr bool  operator!=(side  rhs) const noexcept{return m_data != rhs.m_data;}
+
+  constexpr bool  is_left()  const noexcept{return m_data == m_left_value;}
+  constexpr bool  is_right() const noexcept{return m_data == m_right_value;}
+
+  constexpr side  get_opposite() const noexcept{return side(is_left()? m_right_value:m_left_value);}
+
+};
+
+
+namespace sides{
+constexpr side   left = side(side::m_left_value);
+constexpr side  right = side(side::m_right_value);
+}
+
 
 
 
@@ -64,12 +94,11 @@ character_body
 
 
 
-class field;
-
-
 struct
 character
 {
+  static constexpr int  m_ap_max = 1000;
+
   struct flags{
     static constexpr int  active = 1;
   };
@@ -91,12 +120,21 @@ character
 
   int  m_ap=0;
 
-  field  m_field;
+
+  side  m_side;
+
+  bar  m_hp_bar;
+  bar  m_ap_bar;
+
+  int  m_last_hp=0;
+  int  m_last_hp_max=0;
+
+  int  m_last_ap=0;
 
   static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, character&  c) noexcept;
   static void  tick(gbstd::task_control  ctrl,                           character&  c) noexcept;
 
-  character() noexcept{m_field.m_character = this;}
+  character() noexcept{}
 
   operator bool() const noexcept{return m_status.test(flags::active);}
 

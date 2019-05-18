@@ -90,6 +90,10 @@ process_key_up(const SDL_KeyboardEvent&  evt) noexcept
   case(SDLK_t):
       screenshot();
       break;
+  case(SDLK_r):
+        if(test_screen_recording()){  end_screen_recording();}
+      else                         {start_screen_recording();}
+      break;
     }
 }
 

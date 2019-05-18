@@ -1,7 +1,6 @@
 
 
 set(SOURCES
-  ww_field.cpp
   ww_character.cpp
   ww_bar.cpp
   ww_string_display.cpp

@@ -48,6 +48,10 @@ void  resize_screen(int  w, int  h) noexcept;
 
 void  screenshot() noexcept;
 
+void  start_screen_recording() noexcept;
+void    end_screen_recording() noexcept;
+bool   test_screen_recording() noexcept;
+
 gbstd::canvas  make_screen_canvas() noexcept;
 
 void  update_control() noexcept;

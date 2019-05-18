@@ -1,6 +1,7 @@
 #include"sdl.hpp"
 #include<SDL.h>
 #include"libgbstd/file_op.hpp"
+#include"libgbpng/png.hpp"
 
 
 
@@ -13,6 +14,12 @@ namespace{
 SDL_Window*      g_window;
 SDL_Renderer*  g_renderer;
 SDL_Texture*    g_texture;
+
+bool  g_recording_flag;
+
+gbpng::animation_builder
+g_apng_builder;
+
 
 int  g_width;
 int  g_height;
@@ -72,6 +79,42 @@ update_screen(const gbstd::canvas&  cv) noexcept
       SDL_RenderPresent(g_renderer);
 
       gbstd::g_needed_to_redraw = false;
+    }
+
+
+    if(g_recording_flag)
+    {
+      gbpng::direct_color_image  img(g_width,g_height);
+
+      auto  dst = img.get_row_pointer(0);
+      auto  src = g_image.get_pixel_pointer(0,0);
+
+        for(int  y = 0;  y < g_height;  ++y)
+        {
+            for(int  x = 0;  x < g_width;  ++x)
+            {
+              auto  color = (*src++).color;
+
+                if(color)
+                {
+                  *dst++ = color.get_r255();
+                  *dst++ = color.get_g255();
+                  *dst++ = color.get_b255();
+                  *dst++ = 255;
+                }
+
+              else
+                {
+                  *dst++ = 0;
+                  *dst++ = 0;
+                  *dst++ = 0;
+                  *dst++ = 0;
+                }
+            }
+        }
+
+
+      g_apng_builder.append(img);
     }
 }
 
@@ -179,6 +222,43 @@ make_screen_canvas() noexcept
 }
 
 
+void
+start_screen_recording() noexcept
+{
+    if(!g_recording_flag)
+    {
+      gbpng::image_header  ihdr(g_width,g_height);
+
+      g_apng_builder.reset(ihdr,80);
+
+      g_recording_flag = true;
+
+      printf("[start screen recording]\n");
+    }
+}
+
+
+void
+end_screen_recording() noexcept
+{
+    if(g_recording_flag)
+    {
+      g_recording_flag = false;
+
+      printf("[end screen recording]\n");
+
+      auto  chkls = g_apng_builder.build();
+
+      chkls.write_png_to_file("__scrrec.apng");
+    }
+}
+
+
+bool
+test_screen_recording() noexcept
+{
+  return g_recording_flag;
+}
 
 
 }

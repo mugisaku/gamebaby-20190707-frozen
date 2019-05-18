@@ -59,7 +59,7 @@ start_battle(gbstd::execution&  exec, context&  ctx) noexcept
   ctx.m_left_party.push( {{u"ひだりぐんA",800,},{u"ひだりぐんB",800,},{u"ひだりぐんC",800,},});
   ctx.m_right_party.push({{u"みぎぐんA",800,},{u"みぎぐんB",800,},{u"みぎぐんC",800,},});
 
-  ctx.s_battle.entry_party( ctx.m_left_party,battles::sides::left );
+//  ctx.s_battle.entry_party( ctx.m_left_party,battles::sides::left );
   ctx.s_battle.entry_party(ctx.m_right_party,battles::sides::right);
 
 
@@ -77,7 +77,7 @@ void
 context::
 initialize_battle(gbstd::execution&  exec, context&  ctx) noexcept
 {
-  ++exec;
+//  ++exec;
 }
 
 
@@ -92,8 +92,8 @@ judge_battle() const noexcept
     {
         if(c.can_continue_battle())
         {
-            if(c.m_field.m_side.is_left()){++l;}
-          else                            {++r;}
+            if(c.m_side.is_left()){++l;}
+          else                    {++r;}
         }
     }
 
@@ -169,7 +169,7 @@ fight(gbstd::execution&  exec) noexcept
 
     bool  operator()(const battles::character&  c) const noexcept
     {
-      return (c.m_field.m_side == m_side);
+      return (c.m_side == m_side);
     }
 
   };
@@ -184,15 +184,13 @@ fight(gbstd::execution&  exec) noexcept
 START:
   auto  actor = get_battle_character_by_ap();
 
-  constexpr int  ap_max = 80;
-
-    if(actor && (actor->m_ap >= ap_max))
+    if(actor && (actor->m_ap >= battles::character::m_ap_max))
     {
-      actor->m_ap -= ap_max;
+      actor->m_ap -= battles::character::m_ap_max;
 
       static gbstd::uniform_rand  rand;
 
-      auto  opposite_side = actor->m_field.m_side.get_opposite();
+      auto  opposite_side = actor->m_side.get_opposite();
 
       auto&  table = s_battle.filter(tester{opposite_side});
 
@@ -249,7 +247,7 @@ run_battle(gbstd::execution&  exec, context&  ctx) noexcept
 
     bool  operator()(const battles::character&  c) const noexcept
     {
-      return (c.m_field.m_side == m_side);
+      return (c.m_side == m_side);
     }
 
   };

@@ -2,12 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 project(gmbb)
 
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "sleep 2; CCACHE_DIR=/tmp/ccachedir ccache")
-endif(CCACHE_FOUND)
-
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
@@ -45,6 +39,14 @@ if(EMSC)
   set(EMSC_PORTS "-s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0 -s USE_SDL=2 -s USE_ZLIB=1")
   set(CMAKE_CXX_LINK_FLAGS  "${CMAKE_CXX_LINK_FLAGS} --shell-file ../shell.html ${PRELOADS} ${EMSC_PORTS}") 
 endif()
+
+
+
+
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+#  set(CMAKE_CXX_COMPILER_LAUNCHER "sleep 2; CCACHE_DIR=/tmp/ccachedir ccache  ${CMAKE_CXX_COMPILER}")
+endif(CCACHE_FOUND)
 
 
 

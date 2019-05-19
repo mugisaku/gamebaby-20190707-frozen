@@ -129,6 +129,8 @@ class
 normal_rand
 {
   std::normal_distribution<>  m_dist;
+//mean平均
+//stddev標準偏差(+-)
 
 public:
   normal_rand() noexcept{}

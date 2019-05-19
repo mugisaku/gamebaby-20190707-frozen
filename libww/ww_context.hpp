@@ -20,6 +20,8 @@ context
 
   uint32_t  m_spilling_text_counter=0;
 
+  gbstd::color  m_background_color;
+
   gbstd::process  m_process;
 
   gbstd::task_list     m_task_list;

@@ -68,6 +68,8 @@ void
 context::
 step(const gbstd::canvas&  cv) noexcept
 {
+  cv.fill(m_background_color);
+
   m_clock_master.step();
 
   m_task_list.process(cv);

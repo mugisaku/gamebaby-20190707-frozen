@@ -53,6 +53,8 @@ void
 context::
 start_battle(gbstd::execution&  exec, context&  ctx) noexcept
 {
+  ctx.m_background_color = gbstd::colors::green;
+
   ctx.m_left_party.clear();
   ctx.m_right_party.clear();
 

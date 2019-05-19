@@ -327,43 +327,48 @@ correct(rectangle&  src_rect, int&  dst_x, int&  dst_y, int  dst_w, int  dst_h) 
 }
 
 
-template<typename  SRC, bool  COPY>
+template<int  INC, bool  COPY>
 void
-transfer(const SRC&  orig_src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
+transfer_line(const pixel*  src, pixel*  dst, int  n) noexcept
+{
+    while(n--)
+    {
+        if(COPY || *src)
+        {
+          *dst = *src;
+        }
+
+
+      dst +=   1;
+      src += INC;
+    }
+}
+
+
+template<bool  COPY, bool  REVERSE>
+void
+transfer(const canvas&  orig_src, const canvas&  dst, int  dst_x, int  dst_y) noexcept
 {
   rectangle  src_rect(0,0,orig_src.get_width(),orig_src.get_height());
 
     if(correct(src_rect,dst_x,dst_y,dst.get_width(),dst.get_height()))
     {
-      SRC  src(orig_src,src_rect);
+      auto  src_pixptr_base = orig_src(REVERSE? orig_src.get_width()-1-src_rect.x:src_rect.x,src_rect.y);
+      auto  dst_pixptr_base =      dst(dst_x,dst_y);
 
-      auto  src_pixptr_base = src(    0,    0);
-      auto  dst_pixptr_base = dst(dst_x,dst_y);
-
-      auto  src_w = src.get_width() ;
-      auto  src_h = src.get_height();
+      auto  src_w = src_rect.w;
+      auto  src_h = src_rect.h;
 
         for(int  y = 0;  y < src_h;  ++y)
         {
-          auto  dst_pixptr = dst_pixptr_base                         ;
+          auto  dst_pixptr = dst_pixptr_base                          ;
                              dst_pixptr_base += dst.get_source_width();
 
-          auto  src_pixptr = src_pixptr_base                         ;
-                             src_pixptr_base += src.get_source_width();
+          auto  src_pixptr = src_pixptr_base                               ;
+                             src_pixptr_base += orig_src.get_source_width();
 
-            for(int  x = 0;  x < src_w;  ++x)
-            {
-              auto&  pix = *src_pixptr;
-
-                if(COPY || pix)
-                {
-                  *dst_pixptr = pix;
-                }
-
-
-              ++dst_pixptr;
-              ++src_pixptr;
-            }
+            if(REVERSE){transfer_line<-1,COPY>(src_pixptr,dst_pixptr,src_w);}
+          else         {transfer_line< 1,COPY>(src_pixptr,dst_pixptr,src_w);}
         }
     }
 }
@@ -374,7 +379,7 @@ void
 canvas::
 draw_canvas(const canvas&  cv, int   x, int  y) const noexcept
 {
-  transfer<canvas,false>(cv,*this,x,y);
+  transfer<false,false>(cv,*this,x,y);
 }
 
 
@@ -382,23 +387,23 @@ void
 canvas::
 copy_canvas(const canvas&  cv, int   x, int  y) const noexcept
 {
-  transfer<canvas,true>(cv,*this,x,y);
+  transfer<true,false>(cv,*this,x,y);
 }
 
 
 void
 canvas::
-draw_picture_frame(const picture_frame&  frm, int  x, int  y) const noexcept
+draw_canvas_reversely(const canvas&  cv, int   x, int  y) const noexcept
 {
-  transfer<picture_frame,false>(frm,*this,x,y);
+  transfer<false,true>(cv,*this,x,y);
 }
 
 
 void
 canvas::
-copy_picture_frame(const picture_frame&  frm, int  x, int  y) const noexcept
+copy_canvas_reversely(const canvas&  cv, int   x, int  y) const noexcept
 {
-  transfer<picture_frame,true>(frm,*this,x,y);
+  transfer<true,true>(cv,*this,x,y);
 }
 
 

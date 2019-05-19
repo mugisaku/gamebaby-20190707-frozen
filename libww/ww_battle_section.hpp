@@ -141,34 +141,61 @@ public:
 };
 
 
-struct
-square
+struct field_line;
+
+
+enum class
+intensity
 {
-  int  m_left_value=0;
-  int  m_right_value=0;
-
-  square() noexcept{}
-
+  do_not,
+  do_weakly,
+  do_normaly,
+  do_strongly,
 };
 
 
 struct
 piece
 {
-  square*  m_base;
-  square*  m_end;
+  field_line*  m_line;
+
+  int  m_y_position;
+
+  intensity  m_offense_intensity;
+  intensity  m_defense_intensity;
+  intensity  m_movement_intensity;
+
+  double  m_offense_power_base;
+  double  m_defense_power_base;
+  double  m_movement_power_base;
 
   double  m_offense_power;
   double  m_defense_power;
   double  m_movement_power;
+
   double  m_weight;
 
   double  m_previous_position;
   double  m_position;
 
+  int  m_action_counter;
+
+  int  m_animation_counter;
+
   battles::side  m_side;
 
-  int  m_hp;
+  double  m_hp;
+
+};
+
+
+struct
+field_line
+{
+  int  m_y_position;
+
+  piece  m_left_piece;
+  piece  m_right_piece;
 
 };
 
@@ -176,12 +203,9 @@ piece
 struct
 battle_section
 {
-  static constexpr int  m_line_length = 30;
+  static constexpr int  m_number_of_lines = 12;
 
-  square  m_square_line[m_line_length];
-
-  piece  m_left_piece;
-  piece  m_right_piece;
+  field_line  m_lines[m_number_of_lines];
 
   static constexpr int  m_table_length = 10;
 

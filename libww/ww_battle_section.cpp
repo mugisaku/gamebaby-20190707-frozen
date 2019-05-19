@@ -9,35 +9,55 @@ namespace ww{
 
 
 
-constexpr double  g_standard_stride = 8.0;
+namespace{
+
+
+void
+initialize(piece&  p) noexcept
+{
+  p.m_offense_intensity  = intensity::do_normaly;
+  p.m_defense_intensity  = intensity::do_normaly;
+  p.m_movement_intensity = intensity::do_normaly;
+
+  p.m_offense_power_base  = 10.0;
+  p.m_defense_power_base  = 10.0;
+  p.m_movement_power_base = 1.0;
+  p.m_weight         = 1.0;
+
+  p.m_hp  = 1000;
+
+  p.m_action_counter = 0;
+  p.m_animation_counter = 0;
+}
+}
 
 
 battle_section::
 battle_section() noexcept
 {
-  m_left_piece.m_previous_position  = 12.5;
-  m_left_piece.m_position           = 12.5;
-  m_right_piece.m_previous_position = context::get_screen_width()-1-12.5;
-  m_right_piece.m_position          = context::get_screen_width()-1-12.5;
+  int  i = 48;
 
-  m_left_piece.m_offense_power  = 2.0;
-  m_left_piece.m_defense_power  = 20.0;
-  m_left_piece.m_movement_power = 4.0;
-  m_left_piece.m_weight         = 1.0;
+    for(auto&  ln: m_lines)
+    {
+      ln.m_y_position = i      ;
+                        i += 16;
 
-  m_right_piece.m_offense_power  = 20.0;
-  m_right_piece.m_defense_power  = 30.0;
-  m_right_piece.m_movement_power = 1.0;
-  m_right_piece.m_weight         = 5.0;
 
-  m_left_piece.m_hp  = 1000;
-  m_right_piece.m_hp = 1000;
+      ln.m_left_piece.m_line  = &ln;
+      ln.m_right_piece.m_line = &ln;
 
-  m_left_piece.m_base  = m_square_line;
-  m_right_piece.m_base = m_square_line;
+      ln.m_left_piece.m_side  = battles::sides::left;
+      ln.m_right_piece.m_side = battles::sides::right;
 
-  m_left_piece.m_side  = battles::sides::left;
-  m_right_piece.m_side = battles::sides::right;
+      ln.m_left_piece.m_previous_position  = 12.5;
+      ln.m_left_piece.m_position           = 12.5;
+
+      ln.m_right_piece.m_previous_position  = context::get_screen_width()-1-12.5;
+      ln.m_right_piece.m_position           = context::get_screen_width()-1-12.5;
+
+      initialize(ln.m_left_piece );
+      initialize(ln.m_right_piece);
+    }
 }
 
 
@@ -67,6 +87,16 @@ clear() noexcept
 
 
 namespace{
+const uint8_t  g_human_png[] =
+{
+#include"gra.png.txt"
+};
+
+
+gbstd::image
+gra_img(g_human_png);
+
+
 void
 draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, piece&  p) noexcept
 {
@@ -76,8 +106,17 @@ if(p.m_hp > 0)
 
   int  x = static_cast<int>(p.m_position);
 
-  cv.fill_rectangle(p.m_side.is_left()? gbstd::colors::red:gbstd::colors::yellow,
-    x-(size/2),80,size,size*p.m_weight);
+//  cv.fill_rectangle(p.m_side.is_left()? gbstd::colors::red:gbstd::colors::yellow,
+//    x-(size/2),80,size,size*p.m_weight);
+
+  constexpr int  table[] = {0,48,0,96};
+
+  int  i = table[p.m_animation_counter&3];
+
+  gbstd::canvas  src(gra_img,i,0,48,48);
+
+    if(p.m_side.is_left()){cv.draw_canvas(          src,x-8,p.m_line->m_y_position);}
+  else                    {cv.draw_canvas_reversely(src,x-8,p.m_line->m_y_position);}
 }
 }
 
@@ -85,59 +124,131 @@ if(p.m_hp > 0)
 void
 bdraw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, battle_section&  b) noexcept
 {
-  draw(ctrl,cv,b.m_left_piece);
-  draw(ctrl,cv,b.m_right_piece);
+    for(auto&  ln: b.m_lines)
+    {
+      draw(ctrl,cv,ln.m_left_piece );
+      draw(ctrl,cv,ln.m_right_piece);
+    }
 }
 
 
 void
 tick(gbstd::task_control  ctrl, piece&  p) noexcept
 {
-  constexpr double  rate = 4.0;
-
 if(p.m_hp <= 0){return;}
-
+++p.m_action_counter;
+++p.m_animation_counter;
   p.m_previous_position = p.m_position;
+
+  static gbstd::normal_rand    weak_r(0.4,0.3);
+  static gbstd::normal_rand  normal_r(0.9,0.3);
+  static gbstd::normal_rand  strong_r(1.4,0.3);
+
+  double  off_rate = (p.m_offense_intensity == intensity::do_weakly  )? weak_r()
+                    :(p.m_offense_intensity == intensity::do_normaly )? normal_r()
+                    :(p.m_offense_intensity == intensity::do_strongly)? strong_r()
+                    :0;
+
+  double  def_rate = (p.m_defense_intensity == intensity::do_weakly  )? weak_r()
+                    :(p.m_defense_intensity == intensity::do_normaly )? normal_r()
+                    :(p.m_defense_intensity == intensity::do_strongly)? strong_r()
+                    :0;
+
+  double  mov_rate = (p.m_movement_intensity == intensity::do_weakly  )? weak_r()
+                    :(p.m_movement_intensity == intensity::do_normaly )? normal_r()
+                    :(p.m_movement_intensity == intensity::do_strongly)? strong_r()
+                    :0;
+
+
+  p.m_offense_power  = p.m_offense_power_base *off_rate;
+  p.m_defense_power  = p.m_defense_power_base *def_rate;
+  p.m_movement_power = p.m_movement_power_base*mov_rate;
+
+  constexpr double  stroke = 4.0;
 
     if(p.m_side.is_left())
     {
-      p.m_position += p.m_movement_power*rate;
+      p.m_position += p.m_movement_power*stroke;
     }
 
   else
     {
-      p.m_position -= p.m_movement_power*rate;
+      p.m_position -= p.m_movement_power*stroke;
     }
 }
 
 
 void
+fix(piece&  p) noexcept
+{
+    if(p.m_position <= 0)
+    {
+      p.m_position = 0;
+
+      p.m_movement_intensity = intensity::do_not;
+    }
+
+  else
+    if(p.m_position >= context::get_screen_width())
+    {
+      p.m_position = context::get_screen_width();
+
+      p.m_movement_intensity = intensity::do_not;
+    }
+}
+
+void
 btick(gbstd::task_control  ctrl, battle_section&  b) noexcept
 {
-  tick(ctrl,b.m_left_piece);
-  tick(ctrl,b.m_right_piece);
-
-  auto  ll = b.m_left_piece.m_previous_position-8;
-  auto  lr = b.m_left_piece.m_position+8;
-  auto  rl = b.m_right_piece.m_position-8;
-  auto  rr = b.m_right_piece.m_previous_position+8;
-
-    if((lr >= rl) && (ll <= rr))
+    for(auto&  ln: b.m_lines)
     {
-      auto  lw = b.m_left_piece.m_weight +(b.m_left_piece.m_defense_power /2)-(b.m_right_piece.m_offense_power/2);
-      auto  rw = b.m_right_piece.m_weight+(b.m_right_piece.m_defense_power/2)-(b.m_left_piece.m_offense_power /2);
+      tick(ctrl,ln.m_left_piece );
+      tick(ctrl,ln.m_right_piece);
 
-      auto  l_dist = std::abs(b.m_left_piece.m_position-b.m_left_piece.m_previous_position);
-      auto  r_dist = std::abs(b.m_right_piece.m_position-b.m_right_piece.m_previous_position);
 
-      l_dist *= (lw < rw)? (lw/rw):1.0        ;
-      r_dist *= (lw < rw)?         1.0:(lw/rw);
+      auto&  l = ln.m_left_piece;
+      auto&  r = ln.m_right_piece;
 
-      auto  m = ((b.m_left_piece.m_previous_position +l_dist)
-                +(b.m_right_piece.m_previous_position-r_dist))/2;
+        if((l.m_hp > 0) && (r.m_hp > 0))
+        {
+          auto  ll = l.m_previous_position-8;
+          auto  lr = l.m_position+8;
+          auto  rl = r.m_position-8;
+          auto  rr = r.m_previous_position+8;
 
-      b.m_left_piece.m_position  = m-8;
-      b.m_right_piece.m_position = m+8;
+            if((lr >= rl) && (ll <= rr))
+            {
+              auto  r_off = r.m_offense_power-l.m_defense_power;
+              auto  l_off = l.m_offense_power-r.m_defense_power;
+
+                if(r_off < 0){r_off = 0.1;}
+                if(l_off < 0){l_off = 0.1;}
+
+              l.m_hp -= r_off;
+              r.m_hp -= l_off;
+
+                if((l.m_hp > 0) && (r.m_hp > 0))
+                {
+                  auto  lw = l.m_weight+(l.m_defense_power/2)-(r.m_offense_power/2);
+                  auto  rw = r.m_weight+(r.m_defense_power/2)-(l.m_offense_power /2);
+
+                  auto  l_dist = std::abs(l.m_position-l.m_previous_position);
+                  auto  r_dist = std::abs(r.m_position-r.m_previous_position);
+
+                  l_dist *= (lw < rw)? (lw/rw):1.0        ;
+                  r_dist *= (lw < rw)?         1.0:(lw/rw);
+
+                  auto  m = ((l.m_previous_position +l_dist)
+                            +(r.m_previous_position-r_dist))/2;
+
+                  l.m_position = m-8;
+                  r.m_position = m+8;
+
+                  fix(l);
+                  fix(r);
+                }
+            }
+        }
     }
 }
 }

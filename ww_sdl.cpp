@@ -37,8 +37,6 @@ main_loop() noexcept
 
     if(gbstd::g_time >= next)
     {
-      g_screen_canvas.fill(color());
-
       g_context.step(g_screen_canvas);
 
       sdl::update_screen(g_screen_canvas);

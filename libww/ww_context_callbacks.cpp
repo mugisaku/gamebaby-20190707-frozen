@@ -55,14 +55,16 @@ start_battle(gbstd::execution&  exec, context&  ctx) noexcept
 {
   ctx.m_background_color = gbstd::colors::green;
 
-  ctx.m_left_party.clear();
-  ctx.m_right_party.clear();
+//  ctx.m_left_party.clear();
+//  ctx.m_right_party.clear();
 
-  ctx.m_left_party.push( {{u"ひだりぐんA",800,},{u"ひだりぐんB",800,},{u"ひだりぐんC",800,},});
-  ctx.m_right_party.push({{u"みぎぐんA",800,},{u"みぎぐんB",800,},{u"みぎぐんC",800,},});
+//  ctx.m_left_party.push( {{u"ひだりぐんA",800,},{u"ひだりぐんB",800,},{u"ひだりぐんC",800,},});
+//  ctx.m_right_party.push({{u"みぎぐんA",800,},{u"みぎぐんB",800,},{u"みぎぐんC",800,},});
 
 //  ctx.s_battle.entry_party( ctx.m_left_party,battles::sides::left );
-  ctx.s_battle.entry_party(ctx.m_right_party,battles::sides::right);
+//  ctx.s_battle.entry_party(ctx.m_right_party,battles::sides::right);
+
+  ctx.s_battle.clear();
 
 
   ++exec;
@@ -79,7 +81,9 @@ void
 context::
 initialize_battle(gbstd::execution&  exec, context&  ctx) noexcept
 {
-//  ++exec;
+  ctx.s_battle.reset();
+
+  ++exec;
 }
 
 
@@ -177,12 +181,6 @@ fight(gbstd::execution&  exec) noexcept
   };
 
 
-//  auto&  q = s_battle.m_action_queue;
-
-//  q.clear();
-
-  s_battle.m_action_index = 0;
-
 START:
   auto  actor = get_battle_character_by_ap();
 
@@ -244,6 +242,12 @@ void
 context::
 run_battle(gbstd::execution&  exec, context&  ctx) noexcept
 {
+    if(!gbstd::g_input.test_p() && gbstd::g_modified_input.test_p())
+    {
+      ++exec;
+    }
+
+return;
   struct tester{
     battles::side  m_side;
 
@@ -297,28 +301,6 @@ void
 context::
 wait_until_end_movie(gbstd::execution&  exec, context&  ctx) noexcept
 {
-    if(ctx.s_battle.m_action_index >= ctx.s_battle.m_action_queue.size())
-    {
-      ++exec;
-
-      return;
-    }
-
-
-  auto&  a = ctx.s_battle.m_action_queue[ctx.s_battle.m_action_index++];
-
-    switch(a.get_kind())
-    {
-  case(battle_action_kind::null):
-      break;
-  case(battle_action_kind::attack):
-      break;
-  case(battle_action_kind::avoid):
-      break;
-  case(battle_action_kind::receive):
-      break;
-  default:;
-    }
 }
 
 

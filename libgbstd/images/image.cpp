@@ -179,11 +179,16 @@ make_txt_stream() const noexcept
 }
 
 
+namespace{
 const uint8_t
 g_misc_png[] =
 {
 #include"misc.png.txt"
 };
+}
+
+
+const image  g_misc_image(g_misc_png);
 
 
 }

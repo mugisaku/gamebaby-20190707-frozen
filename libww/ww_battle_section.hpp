@@ -6,7 +6,9 @@
 #include"libww/ww_bar.hpp"
 #include"libww/ww_spilling_text.hpp"
 #include"libww/ww_party.hpp"
+#include"libww/ww_menu.hpp"
 #include<list>
+#include<vector>
 
 
 
@@ -145,12 +147,52 @@ struct field_line;
 
 
 enum class
+command_what
+{
+  attack,
+  guard,
+  move,
+};
+
+
+enum class
+command_move
+{
+  stop,
+  forward,
+  back,
+
+};
+
+
+enum class
+movement_kind
+{
+  stay,
+  go_to_left,
+  go_to_right,
+
+};
+
+
+enum class
 intensity
 {
   do_not,
   do_weakly,
   do_normaly,
   do_strongly,
+};
+
+
+class
+command
+{
+  command_what  m_what;
+  command_move  m_move;
+
+  intensity  m_intensity;
+
 };
 
 
@@ -178,13 +220,28 @@ piece
   double  m_previous_position;
   double  m_position;
 
+  movement_kind  m_movement_kind;
+
+  battles::side  m_body_direction;
+  battles::side  m_move_direction;
+
   int  m_action_counter;
 
-  int  m_animation_counter;
+  gbstd::rectangle  m_image_rect;
 
-  battles::side  m_side;
+  int  m_animation_index;
+  int  m_animation_step_counter;
+  int  m_animation_frame_counter;
+
+  battles::side      m_side;
+  battles::position  m_battle_position;
+
+  piece*  m_friend;
 
   double  m_hp;
+
+  double  minpos() const noexcept{return std::min(m_previous_position,m_position);}
+  double  maxpos() const noexcept{return std::max(m_previous_position,m_position);}
 
 };
 
@@ -194,18 +251,28 @@ field_line
 {
   int  m_y_position;
 
-  piece  m_left_piece;
-  piece  m_right_piece;
+  piece  m_piece;
 
+};
+
+
+struct
+command_menu
+{
+  gbstd::point  m_cursor;
+
+  
 };
 
 
 struct
 battle_section
 {
-  static constexpr int  m_number_of_lines = 12;
+  static constexpr int  m_line_table_length = 20;
 
-  field_line  m_lines[m_number_of_lines];
+  field_line  m_line_table[m_line_table_length];
+
+  int  m_number_of_lines=0;
 
   static constexpr int  m_table_length = 10;
 
@@ -215,6 +282,10 @@ battle_section
 
   gbstd::task_control  m_task_control;
   gbstd::task_list     m_task_list;
+
+  gbstd::task_control  m_cursor_control;
+
+  menu  m_menu;
 
   battles::character  m_character_table[m_table_length];
 
@@ -227,19 +298,10 @@ battle_section
 
   int  m_number_of_playing_characters;
 
-  std::vector<battle_action>  m_action_queue;
-
-  int  m_action_index;
-
-  gbstd::text  m_text;
-
-  gbstd::typewriter  m_typewriter;
-
-  bool  m_command_request;
-
 
   battle_section() noexcept;
 
+  void  reset() noexcept;
   void  clear() noexcept;
 
   template<typename  TESTER>

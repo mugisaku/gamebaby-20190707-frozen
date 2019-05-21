@@ -122,6 +122,8 @@ update_screen(const gbstd::canvas&  cv) noexcept
 void
 quit() noexcept
 {
+  end_screen_recording();
+
   quit_sound();
 
     if(test_sound_recording())

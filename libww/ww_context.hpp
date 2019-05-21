@@ -68,7 +68,7 @@ public:
 
   void  push_spilling_text(gbstd::color  color, std::u16string_view  sv, gbstd::point  center, uint32_t  time) noexcept;
 
-  void  step(const gbstd::canvas&  cv) noexcept;
+  void  step(const gbstd::canvas*  cv) noexcept;
 
   static constexpr int  get_screen_width()  noexcept{return m_screen_width ;}
   static constexpr int  get_screen_height() noexcept{return m_screen_height;}

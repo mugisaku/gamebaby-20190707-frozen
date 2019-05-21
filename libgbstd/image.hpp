@@ -264,7 +264,7 @@ public:
 };
 
 
-extern const uint8_t  g_misc_png[];
+extern const image  g_misc_image;
 
 
 }

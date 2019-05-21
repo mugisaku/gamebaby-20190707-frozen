@@ -143,7 +143,7 @@ public:
 
   void  enforce_remove() noexcept;
 
-  void  process(const canvas&  cv, bool  tick=true, bool  draw=true) noexcept;
+  void  process(const canvas*  cv, bool  tick=true) noexcept;
 
   static void  print_dead() noexcept;
   static void  clear_dead() noexcept;

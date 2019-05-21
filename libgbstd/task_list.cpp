@@ -250,7 +250,7 @@ draw_object(const canvas&  cv, task&  tsk) noexcept
 
 void
 task_list::
-process(const canvas&  cv, bool  tick, bool  draw) noexcept
+process(const canvas*  cv, bool  tick) noexcept
 {
   auto  ptr = m_top_pointer;
 
@@ -267,14 +267,14 @@ process(const canvas&  cv, bool  tick, bool  draw) noexcept
         {
             if(ptr->m_status.test(flags::child))
             {
-              static_cast<task_list*>(ptr->m_data)->process(cv,(tick && !ptr->m_status.test(flags::skip_tick)),
-                                                               (draw && !ptr->m_status.test(flags::skip_draw)));
+              static_cast<task_list*>(ptr->m_data)->process(ptr->m_status.test(flags::skip_draw)? nullptr:cv,
+                                                            (tick && !ptr->m_status.test(flags::skip_tick)));
             }
 
           else
             {
-                if(tick){tick_object(   *ptr);}
-                if(draw){draw_object(cv,*ptr);}
+                if(tick){tick_object(    *ptr);}
+                if(  cv){draw_object(*cv,*ptr);}
             }
 
 
@@ -399,7 +399,7 @@ bool
 task_control::
 test_timer() const noexcept
 {
-  return m_pointer->m_timer;
+  return !m_pointer->m_timer;
 }
 
 

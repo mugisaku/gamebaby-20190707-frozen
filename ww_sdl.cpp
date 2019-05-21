@@ -3,6 +3,7 @@
 #include"libgbstd/process.hpp"
 #include"libww/ww_context.hpp"
 #include"sdl.hpp"
+#include<cstring>
 
 
 
@@ -35,9 +36,11 @@ main_loop() noexcept
 
   sdl::update_control();
 
+  g_context.step(nullptr);
+
     if(gbstd::g_time >= next)
     {
-      g_context.step(g_screen_canvas);
+      g_context.step(&g_screen_canvas);
 
       sdl::update_screen(g_screen_canvas);
 
@@ -62,6 +65,14 @@ main(int  argc, char**  argv)
 #endif
 
   sdl::init(g_context.get_screen_width(),g_context.get_screen_height(),1.0);
+
+    if(argc == 2)
+    {
+        if(std::strcmp(argv[1],"-rec") == 0)
+        {
+          sdl::start_screen_recording();
+        }
+    }
 //  sdl::init_sound(24000);
 
 //  sdl::add_sound("bashi","main = noise{\"p80:v20:f48:b3\"}");

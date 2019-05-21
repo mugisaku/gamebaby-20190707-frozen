@@ -66,13 +66,17 @@ draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, context&  ctx) noexcep
 
 void
 context::
-step(const gbstd::canvas&  cv) noexcept
+step(const gbstd::canvas*  cv) noexcept
 {
-  cv.fill(m_background_color);
+    if(cv)
+    {
+      cv->fill(m_background_color);
+    }
+
 
   m_clock_master.step();
 
-  m_task_list.process(cv);
+  m_task_list.process(cv,true);
 
   m_process.step();
 }

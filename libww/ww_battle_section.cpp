@@ -72,16 +72,39 @@ reset() noexcept
 }
 
 
+void
+draw_entry(const menus::entry&  ent, std::u16string_view&  sv, const gbstd::canvas&  cv) noexcept
+{
+  cv.draw_string({gbstd::colors::white},sv,0,0);
+}
+
+
 battle_section::
 battle_section() noexcept
 {
-  m_menu.m_window.m_color = gbstd::colors::blue;
+  m_menu_table.resize(2,3)
+              .set_entry_width(gbstd::g_font_width*5)
+              .set_entry_height(gbstd::g_font_height);
 
-  m_menu.push_entry({
-    {u"こうげき"},
-    {u"ぼうぎょ"},
-    {u"いどう"},
-  });
+  auto  p = m_menu_table.get_entry_pointer(0,0);
+
+  static std::u16string_view  attack_sv(u"こうげき");
+  static std::u16string_view   guard_sv(u"ぼうぎょ");
+  static std::u16string_view    move_sv(u"いどう");
+
+  *p++ = {attack_sv};
+  *p++ = { guard_sv};
+  *p++ = {  move_sv};
+  *p++ = {attack_sv};
+  *p++ = { guard_sv};
+  *p++ = {  move_sv};
+
+
+  m_menu_view.assign(m_menu_table)
+             .set_window_color(gbstd::colors::blue)
+             .set_x(32)
+             .set_y(180)
+             .set_callback(draw_entry).get_first_cursor().show();
 }
 
 
@@ -121,6 +144,9 @@ bdraw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, battle_section&  b) n
 
       draw(ctrl,cv,ln.m_piece);
     }
+
+
+  b.m_menu_view.draw(cv);
 }
 
 
@@ -331,6 +357,14 @@ btick(gbstd::task_control  ctrl, battle_section&  b) noexcept
 
       process(lnptr1->m_piece,lnptr0->m_piece);
     }
+
+
+  auto&  cur = b.m_menu_view.get_first_cursor();
+
+    if(gbstd::g_input.test_up()   ){cur.add_y(-1);}
+    if(gbstd::g_input.test_down() ){cur.add_y( 1);}
+    if(gbstd::g_input.test_left() ){cur.add_x(-1);}
+    if(gbstd::g_input.test_right()){cur.add_x( 1);}
 }
 }
 
@@ -417,10 +451,6 @@ clear() noexcept
   reset();
 
   m_task_list.push(*this).set_draw(bdraw).set_tick(m_clock_watch,80,btick);
-  m_task_list.push(m_menu).set_draw<menu>().set_tick<menu>(m_clock_watch,20);
-
-  m_menu.m_window.x = 32;
-  m_menu.m_window.y = 180;
 }
 
 

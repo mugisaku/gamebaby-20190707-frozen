@@ -285,7 +285,8 @@ battle_section
 
   gbstd::task_control  m_cursor_control;
 
-  menu  m_menu;
+  menus::table  m_menu_table;
+  menus::view   m_menu_view;
 
   battles::character  m_character_table[m_table_length];
 

@@ -73,7 +73,7 @@ reset() noexcept
 
 
 void
-draw_entry(const menus::entry&  ent, std::u16string_view&  sv, const gbstd::canvas&  cv) noexcept
+draw_entry(const gbstd::menus::entry&  ent, std::u16string_view&  sv, const gbstd::canvas&  cv) noexcept
 {
   cv.draw_string({gbstd::colors::white},sv,0,0);
 }
@@ -144,9 +144,6 @@ bdraw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, battle_section&  b) n
 
       draw(ctrl,cv,ln.m_piece);
     }
-
-
-  b.m_menu_view.draw(cv);
 }
 
 
@@ -330,6 +327,28 @@ process(piece&  l, piece&  r) noexcept
 
 
 void
+menu_cb(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, gbstd::menus::view&  view, battle_section&  b) noexcept
+{
+  auto&  cur = view.get_first_cursor();
+
+    if(!gbstd::test_input_barrier())
+    {
+        if(gbstd::g_input.test_p())
+        {
+    //      stk.close_top(0);
+        }
+
+      else
+        if(gbstd::g_input.test_n()    ){stk.close_top(0);}
+        if(gbstd::g_input.test_up()   ){cur.add_y(-1);  gbstd::barrier_input();}
+        if(gbstd::g_input.test_down() ){cur.add_y( 1);  gbstd::barrier_input();}
+        if(gbstd::g_input.test_left() ){cur.add_x(-1);  gbstd::barrier_input();}
+        if(gbstd::g_input.test_right()){cur.add_x( 1);  gbstd::barrier_input();}
+    }
+}
+
+
+void
 btick(gbstd::task_control  ctrl, battle_section&  b) noexcept
 {
     for(int  i = 0;  i < b.m_number_of_lines;  ++i)
@@ -359,12 +378,12 @@ btick(gbstd::task_control  ctrl, battle_section&  b) noexcept
     }
 
 
-  auto&  cur = b.m_menu_view.get_first_cursor();
+    if(gbstd::g_input.test_p() && !b.m_menu_view.test_busy_flag())
+    {
+      b.m_menu_stack.ready(b.m_clock_watch,20,b.m_task_list);
 
-    if(gbstd::g_input.test_up()   ){cur.add_y(-1);}
-    if(gbstd::g_input.test_down() ){cur.add_y( 1);}
-    if(gbstd::g_input.test_left() ){cur.add_x(-1);}
-    if(gbstd::g_input.test_right()){cur.add_x( 1);}
+      b.m_menu_stack.open(0,b.m_menu_view,b,menu_cb);
+    }
 }
 }
 

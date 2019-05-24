@@ -16,10 +16,13 @@ set(SOURCES
   images/canvas__draw.cpp
   images/canvas__draw_string.cpp
   images/liner.cpp
-  values/value.cpp
-  values/value_array.cpp
-  values/value_list.cpp
-  values/variable.cpp
+  values/object.cpp
+  values/array.cpp
+  values/object.cpp
+  menus/cursor.cpp
+  menus/table.cpp
+  menus/view.cpp
+  menus/stack.cpp
   windows/window.cpp
   windows/widget.cpp
   windows/components/frame.cpp

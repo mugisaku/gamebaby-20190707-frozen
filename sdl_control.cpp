@@ -259,6 +259,11 @@ update_control() noexcept
 
 
   gbstd::g_modified_input = previous_input^gbstd::g_input;
+
+    if(gbstd::g_modified_input)
+    {
+      gbstd::barrier_input(0);
+    }
 }
 
 

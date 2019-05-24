@@ -4,13 +4,14 @@
 
 
 namespace gbstd{
+namespace values{
 
 
 
 
-value_array&
-value_array::
-assign(std::initializer_list<value>  ls) noexcept
+array&
+array::
+assign(std::initializer_list<object>  ls) noexcept
 {
   resize(ls.size());
 
@@ -26,9 +27,9 @@ assign(std::initializer_list<value>  ls) noexcept
 }
 
 
-value_array&
-value_array::
-assign(const value_array&   rhs) noexcept
+array&
+array::
+assign(const array&   rhs) noexcept
 {
     if(this != &rhs)
     {
@@ -49,9 +50,9 @@ assign(const value_array&   rhs) noexcept
 }
 
 
-value_array&
-value_array::
-assign(value_array&&  rhs) noexcept
+array&
+array::
+assign(array&&  rhs) noexcept
 {
     if(this != &rhs)
     {
@@ -68,7 +69,7 @@ assign(value_array&&  rhs) noexcept
 
 
 void
-value_array::
+array::
 clear() noexcept
 {
   delete[] m_data          ;
@@ -81,13 +82,13 @@ clear() noexcept
 
 
 void
-value_array::
+array::
 reallocate(size_t  n) noexcept
 {
     if(m_number_of_elements < n)
     {
       auto  old_data = m_data               ;
-                       m_data = new value[n];
+                       m_data = new object[n];
 
         for(int  i = 0;  i < m_length;  ++i)
         {
@@ -104,7 +105,7 @@ reallocate(size_t  n) noexcept
 
 
 void
-value_array::
+array::
 resize(size_t  n) noexcept
 {
   reallocate(n);
@@ -113,9 +114,9 @@ resize(size_t  n) noexcept
 }
 
 
-value&
-value_array::
-push(value&&  v) noexcept
+object&
+array::
+push(object&&  v) noexcept
 {
     if(m_length >= m_number_of_elements)
     {
@@ -133,8 +134,8 @@ push(value&&  v) noexcept
 }
 
 
-value&
-value_array::
+object&
+array::
 pop() noexcept
 {
   return m_data[--m_length];
@@ -143,22 +144,15 @@ pop() noexcept
 
 
 
-variable*
-value_array::
-find_variable(const char*  name) const noexcept
+object*
+array::
+find(std::string_view  name) const noexcept
 {
-  std::string  name_s(name);
-
-    for(auto&  v: *this)
+    for(auto&  o: *this)
     {
-        if(v.is_variable())
+        if(o.has_name() && (o.get_name() == name))
         {
-          auto&  var = v.get_variable();
-
-            if(var.get_name() == name_s)
-            {
-              return &var;
-            }
+          return &o;
         }
     }
 
@@ -170,14 +164,14 @@ find_variable(const char*  name) const noexcept
 
 
 void
-value_array::
+array::
 print() const noexcept
 {
   printf("[");
 
-    for(auto&  v: *this)
+    for(auto&  o: *this)
     {
-      v.print();
+      o.print();
 
       printf(", ");
     }
@@ -189,7 +183,7 @@ print() const noexcept
 
 
 
-}
+}}
 
 
 

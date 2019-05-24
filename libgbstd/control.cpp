@@ -18,6 +18,8 @@ std::vector<uint8_t>  g_dropped_file;
 
 bool  g_needed_to_redraw;
 
+bool  g_restain;
+
 user_input  g_modified_input;
 user_input           g_input;
 
@@ -28,6 +30,21 @@ uint32_t  g_anti_time;
 uint32_t  g_stop_time;
 uint32_t  g_vtime;
 bool  g_user_time_flowing;
+uint32_t  g_unbarrier_time;
+}
+
+
+void
+barrier_input(uint32_t  interval) noexcept
+{
+  g_unbarrier_time = g_time+interval;
+}
+
+
+bool
+test_input_barrier() noexcept
+{
+  return (g_time <= g_unbarrier_time);
 }
 
 

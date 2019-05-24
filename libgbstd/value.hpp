@@ -6,143 +6,126 @@
 #include"libgbstd/control.hpp"
 #include<new>
 #include<utility>
-#include<array>
-#include<list>
-#include<vector>
 #include<string>
 #include<cstdint>
 
 
-namespace gbstd{
+namespace  gbstd{
+namespace values{
 
 
-class variable;
-class value_array;
-class value_list;
+class array;
+class list;
 
 
 class
-value
+object
 {
+  bool  m_has_name=false;
+
+  std::string  m_name;
+
   enum class kind{
     null,
     boolean,
     integer,
     string,
+    u16string,
     real_number,
-    user_input,
-    variable,
     list,
     array,
 
-  } m_kind=kind::null;
+    undefined,
+
+  } m_kind=kind::undefined;
 
   union data{
-    bool           b;
-    int            i;
-    std::string    s;
-    double         r;
-    user_input    ui;
+    bool                 b;
+    int                  i;
+    std::string          s;
+    std::u16string    u16s;
+    double               r;
 
-    variable*        var;
-    value_array*     arr;
-    value_list*       ls;
+    array*     arr;
+    list*       ls;
 
     data(){}
    ~data(){}
 
   } m_data;
 
+  object(kind  k) noexcept: m_kind(k){}
+
 public:
-  value() noexcept{}
-  value(bool  b) noexcept{assign(b);}
-  value(int  i) noexcept{*this = i;}
-  value(const char*  s) noexcept{*this = s;}
-  value(user_input  ui)      noexcept{*this = ui;}
-  value(variable&&  var) noexcept{assign(std::move(var));}
-  value(value_array&&  arr) noexcept{assign(std::move(arr));}
-  value(value_list&&  ls) noexcept{assign(std::move(ls));}
-  value(const value&   rhs) noexcept{*this = rhs;}
-  value(      value&&  rhs) noexcept{*this = std::move(rhs);}
- ~value(){clear();}
+  object() noexcept{}
+  object(bool  b) noexcept{assign(b);}
+  object(int  i) noexcept{assign(i);}
+  object(std::string_view  sv) noexcept{assign(sv);}
+  object(std::u16string_view  sv) noexcept{assign(sv);}
+  object(array&&  arr) noexcept{assign(std::move(arr));}
+  object(list&&  ls) noexcept{assign(std::move(ls));}
+  object(const object&   rhs) noexcept{*this = rhs;}
+  object(      object&&  rhs) noexcept{*this = std::move(rhs);}
+ ~object(){clear();}
 
-  value&  operator=(bool  b) noexcept{return assign(b);}
-  value&  operator=(int  i) noexcept{return assign(i);}
-  value&  operator=(const char*  s) noexcept{return assign(s);}
-  value&  operator=(user_input  ui) noexcept{return assign(ui);}
-  value&  operator=(variable&&  var) noexcept{return assign(std::move(var));}
-  value&  operator=(value_array&&  arr) noexcept{return assign(std::move(arr));}
-  value&  operator=(value_list&&  ls) noexcept{return assign(std::move(ls));}
-  value&  operator=(const value&   rhs) noexcept{return assign(rhs);}
-  value&  operator=(      value&&  rhs) noexcept{return assign(std::move(rhs));}
+  object&  operator=(bool  b) noexcept{return assign(b);}
+  object&  operator=(int  i) noexcept{return assign(i);}
+  object&  operator=(std::string_view  sv) noexcept{return assign(sv);}
+  object&  operator=(std::u16string_view  sv) noexcept{return assign(sv);}
+  object&  operator=(array&&  arr) noexcept{return assign(std::move(arr));}
+  object&  operator=(list&&  ls) noexcept{return assign(std::move(ls));}
+  object&  operator=(const object&   rhs) noexcept{return assign(rhs);}
+  object&  operator=(      object&&  rhs) noexcept{return assign(std::move(rhs));}
 
-  value&  assign(bool  b) noexcept;
-  value&  assign(int  i) noexcept;
-  value&  assign(const char*  s) noexcept;
-  value&  assign(user_input  ui) noexcept;
-  value&  assign(variable&&  var) noexcept;
-  value&  assign(value_array&&  arr) noexcept;
-  value&  assign(value_list&&  ls) noexcept;
-  value&  assign(const value&   rhs) noexcept;
-  value&  assign(      value&&  rhs) noexcept;
+  object&  assign(bool  b) noexcept;
+  object&  assign(int  i) noexcept;
+  object&  assign(std::string_view  sv) noexcept;
+  object&  assign(std::u16string_view  sv) noexcept;
+  object&  assign(array&&  arr) noexcept;
+  object&  assign(list&&  ls) noexcept;
+  object&  assign(const object&   rhs) noexcept;
+  object&  assign(      object&&  rhs) noexcept;
 
   void  clear() noexcept;
 
+  const std::string&  get_name(                      ) const noexcept{return m_name;}
+  object&             set_name(std::string_view  name)       noexcept;
+  object&           unset_name(                      )       noexcept;
+
+  bool  has_name() const noexcept{return m_has_name;}
+
   bool  is_null()       const noexcept{return m_kind == kind::null;}
+  bool  is_undefined()  const noexcept{return m_kind == kind::undefined;}
   bool  is_boolean()    const noexcept{return m_kind == kind::boolean;}
   bool  is_integer()    const noexcept{return m_kind == kind::integer;}
   bool  is_string()     const noexcept{return m_kind == kind::string;}
-  bool  is_user_input() const noexcept{return m_kind == kind::user_input;}
-  bool  is_variable()   const noexcept{return m_kind == kind::variable;}
+  bool  is_u16string()  const noexcept{return m_kind == kind::u16string;}
   bool  is_array()      const noexcept{return m_kind == kind::array;}
   bool  is_list()       const noexcept{return m_kind == kind::list;}
 
-  bool                get_boolean()    const noexcept{return m_data.b;}
-  int                 get_integer()    const noexcept{return m_data.i;}
-  const std::string&  get_string()     const noexcept{return m_data.s;}
-  user_input          get_user_input() const noexcept{return m_data.ui;}
-  variable&           get_variable()   const noexcept{return *m_data.var;}
-  value_array&        get_array()      const noexcept{return *m_data.arr;}
-  value_list&         get_list()       const noexcept{return *m_data.ls;}
+  bool                   get_boolean()    const noexcept{return m_data.b;}
+  int                    get_integer()    const noexcept{return m_data.i;}
+  const std::string&     get_string()     const noexcept{return m_data.s;}
+  const std::u16string&  get_u16string()  const noexcept{return m_data.u16s;}
+  array&                 get_array()      const noexcept{return *m_data.arr;}
+  list&                  get_list()       const noexcept{return *m_data.ls;}
+
+  static object  make_null() noexcept{return object(kind::null);}
+  static object  make_undefined() noexcept{return object(kind::undefined);}
 
   void  print() const noexcept;
 
 };
 
 
-class
-variable
-{
-  std::string  m_name;
-
-  value  m_value;
-
-public:
-  variable() noexcept{}
-  variable(const char*  name, const value&   v) noexcept{assign(name,          v );}
-  variable(const char*  name,       value&&  v) noexcept{assign(name,std::move(v));}
-
-  variable&  assign(const char*  name, const value&   v) noexcept;
-  variable&  assign(const char*  name,       value&&  v) noexcept;
-
-  const std::string&  get_name(                 ) const noexcept{return m_name       ;}
-  void                set_name(const char*  name)       noexcept{       m_name = name;}
-
-        value&  get_value()       noexcept{return m_value;}
-  const value&  get_value() const noexcept{return m_value;}
-
-  void  set_value(const value&   v) noexcept{m_value =           v ;}
-  void  set_value(      value&&  v) noexcept{m_value = std::move(v);}
-
-  void  print() const noexcept;
-
-};
+extern const object       null;
+extern const object  undefined;
 
 
 class
-value_array
+array
 {
-  value*  m_data=nullptr;
+  object*  m_data=nullptr;
 
   size_t  m_number_of_elements=0;
 
@@ -151,38 +134,38 @@ value_array
   void  reallocate(size_t  n) noexcept;
 
 public:
-  value_array() noexcept{}
-  value_array(std::initializer_list<value>  ls) noexcept{assign(ls);}
-  value_array(const value_array&   rhs) noexcept{assign(rhs);}
-  value_array(      value_array&&  rhs) noexcept{assign(std::move(rhs));}
- ~value_array(){clear();}
+  array() noexcept{}
+  array(std::initializer_list<object>  ls) noexcept{assign(ls);}
+  array(const array&   rhs) noexcept{assign(rhs);}
+  array(      array&&  rhs) noexcept{assign(std::move(rhs));}
+ ~array(){clear();}
 
-  value_array&  operator=(std::initializer_list<value>  ls) noexcept{return assign(ls);}
-  value_array&  operator=(const value_array&   rhs) noexcept{return assign(rhs);}
-  value_array&  operator=(      value_array&&  rhs) noexcept{return assign(std::move(rhs));}
+  array&  operator=(std::initializer_list<object>  ls) noexcept{return assign(ls);}
+  array&  operator=(const array&   rhs) noexcept{return assign(rhs);}
+  array&  operator=(      array&&  rhs) noexcept{return assign(std::move(rhs));}
 
-  value&  operator[](int  i) const noexcept{return m_data[i];}
+  object&  operator[](int  i) const noexcept{return m_data[i];}
 
-  value_array&  assign(std::initializer_list<value>  ls) noexcept;
-  value_array&  assign(const value_array&   rhs) noexcept;
-  value_array&  assign(      value_array&&  rhs) noexcept;
+  array&  assign(std::initializer_list<object>  ls) noexcept;
+  array&  assign(const array&   rhs) noexcept;
+  array&  assign(      array&&  rhs) noexcept;
 
   void  clear() noexcept;
 
   void  resize(size_t  n) noexcept;
 
-  value&  push(const value&   v) noexcept{return push(value(v));}
-  value&  push(      value&&  v) noexcept;
+  object&  push(const object&   v) noexcept{return push(object(v));}
+  object&  push(      object&&  v) noexcept;
 
-  value&   pop()       noexcept;
-  value&  back() const noexcept{return m_data[m_length-1];}
+  object&   pop()       noexcept;
+  object&  back() const noexcept{return m_data[m_length-1];}
 
-  variable*  find_variable(const char*  name) const noexcept;
+  object*  find(std::string_view  name) const noexcept;
 
   size_t  size() const noexcept{return m_length;}
 
-  value*  begin() const noexcept{return m_data;}
-  value*    end() const noexcept{return m_data+m_length;}
+  object*  begin() const noexcept{return m_data;}
+  object*    end() const noexcept{return m_data+m_length;}
 
   void  print() const noexcept;
 
@@ -190,15 +173,15 @@ public:
 
 
 class
-value_list
+list
 {
   struct node{
-    value  m_value;
+    object  m_object;
 
     node*  m_prev;
     node*  m_next;
 
-    node(value&&  v) noexcept: m_value(std::move(v)){}
+    node(object&&  v) noexcept: m_object(std::move(v)){}
   };
 
   node*  m_first=nullptr;
@@ -207,37 +190,37 @@ value_list
   size_t  m_length=0;
 
 public:
-  value_list() noexcept{}
-  value_list(std::initializer_list<value>  ls) noexcept{assign(ls);}
-  value_list(const value_list&   rhs) noexcept{assign(rhs);}
-  value_list(      value_list&&  rhs) noexcept{assign(std::move(rhs));}
- ~value_list(){clear();}
+  list() noexcept{}
+  list(std::initializer_list<object>  ls) noexcept{assign(ls);}
+  list(const list&   rhs) noexcept{assign(rhs);}
+  list(      list&&  rhs) noexcept{assign(std::move(rhs));}
+ ~list(){clear();}
 
-  value_list&  operator=(std::initializer_list<value>  ls) noexcept{return assign(ls);}
-  value_list&  operator=(const value_list&   rhs) noexcept{return assign(rhs);}
-  value_list&  operator=(      value_list&&  rhs) noexcept{return assign(std::move(rhs));}
+  list&  operator=(std::initializer_list<object>  ls) noexcept{return assign(ls);}
+  list&  operator=(const list&   rhs) noexcept{return assign(rhs);}
+  list&  operator=(      list&&  rhs) noexcept{return assign(std::move(rhs));}
 
-  value_list&  assign(std::initializer_list<value>  ls) noexcept;
-  value_list&  assign(const value_list&   rhs) noexcept;
-  value_list&  assign(      value_list&&  rhs) noexcept;
+  list&  assign(std::initializer_list<object>  ls) noexcept;
+  list&  assign(const list&   rhs) noexcept;
+  list&  assign(      list&&  rhs) noexcept;
 
   void  clear() noexcept;
 
   void  resize(size_t  n) noexcept;
 
-  value&  push_front(const value&   v) noexcept{return push_front(value(v));}
-  value&  push_front(      value&&  v) noexcept;
+  object&  push_front(const object&   v) noexcept{return push_front(object(v));}
+  object&  push_front(      object&&  v) noexcept;
 
-  value&  push_back(const value&   v)  noexcept{return push_back(value(v));}
-  value&  push_back(      value&&  v)  noexcept;
+  object&  push_back(const object&   v)  noexcept{return push_back(object(v));}
+  object&  push_back(      object&&  v)  noexcept;
 
-  value   pop_back()  noexcept;
-  value   pop_front() noexcept;
+  object   pop_back()  noexcept;
+  object   pop_front() noexcept;
 
-  value&  front() const noexcept{return m_first->m_value;}
-  value&   back() const noexcept{return m_last->m_value;}
+  object&  front() const noexcept{return m_first->m_object;}
+  object&   back() const noexcept{return m_last->m_object;}
 
-  variable*  find_variable(const char*  name) const noexcept;
+  object*  find(std::string_view  name) const noexcept;
 
   size_t  size() const noexcept{return m_length;}
 
@@ -247,7 +230,7 @@ public:
   class iterator{
     node*  m_node=nullptr;
 
-    friend class value_list;
+    friend class list;
 
   public:
     constexpr iterator() noexcept{}
@@ -258,7 +241,7 @@ public:
     constexpr bool  operator==(node*  nd) const noexcept{return m_node == nd;}
     constexpr bool  operator!=(node*  nd) const noexcept{return m_node != nd;}
 
-    value&  operator*() const noexcept{return m_node->m_value;}
+    object&  operator*() const noexcept{return m_node->m_object;}
 
     iterator&  operator++() noexcept
     {
@@ -299,8 +282,8 @@ public:
   iterator    end() const noexcept{return iterator(       );}
 
 
-  value&  insert_before(iterator  it, value  v) noexcept;
-  value&  insert_after( iterator  it, value  v) noexcept;
+  object&  insert_before(iterator  it, object  v) noexcept;
+  object&  insert_after( iterator  it, object  v) noexcept;
 
   iterator  erase(iterator  it) noexcept;
 
@@ -309,7 +292,7 @@ public:
 
 
 
-}
+}}
 
 
 

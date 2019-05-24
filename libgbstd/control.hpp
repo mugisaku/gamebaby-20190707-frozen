@@ -189,6 +189,10 @@ public:
 
   user_input  operator^(user_input  rhs) const noexcept{return user_input(m_state^rhs.m_state);}
 
+  operator bool() const noexcept{return m_state;}
+
+  void  clear() noexcept{m_state = 0;}
+
   int  get_code() const noexcept{return m_state;}
 
   bool    test_all() const noexcept{return m_state;}
@@ -257,6 +261,8 @@ extern bool  g_needed_to_redraw;
 extern user_input  g_modified_input;
 extern user_input           g_input;
 
+void  barrier_input(uint32_t  interval=240) noexcept;
+bool  test_input_barrier() noexcept;
 
 bool  is_user_time_flowing() noexcept;
 

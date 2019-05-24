@@ -242,7 +242,7 @@ void
 context::
 run_battle(gbstd::execution&  exec, context&  ctx) noexcept
 {
-    if(!gbstd::g_input.test_p() && gbstd::g_modified_input.test_p())
+    if(!gbstd::g_input.test_start() && gbstd::g_modified_input.test_start())
     {
       ++exec;
     }

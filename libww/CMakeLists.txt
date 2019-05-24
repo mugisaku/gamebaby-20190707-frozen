@@ -6,9 +6,6 @@ set(SOURCES
   ww_string_display.cpp
   ww_spilling_text.cpp
   ww_party.cpp
-  ww_menu_cursor.cpp
-  ww_menu_table.cpp
-  ww_menu_view.cpp
   ww_battle_section.cpp
   ww_context.cpp
   ww_context_callbacks.cpp

@@ -1,18 +1,16 @@
-#ifndef ww_menu_hpp_is_included
-#define ww_menu_hpp_is_included
+#ifndef gbstd_menu_hpp_is_included
+#define gbstd_menu_hpp_is_included
 
 
-#include"libww/ww_character.hpp"
-#include"libww/ww_bar.hpp"
-#include"libww/ww_spilling_text.hpp"
-#include"libww/ww_party.hpp"
-#include<list>
+#include"libgbstd/utility.hpp"
+#include"libgbstd/task.hpp"
+#include"libgbstd/clock.hpp"
 #include<vector>
 
 
 
 
-namespace ww{
+namespace gbstd{
 namespace menus{
 
 
@@ -76,7 +74,8 @@ public:
   int  get_entry_width()  const noexcept{return m_entry_width ;}
   int  get_entry_height() const noexcept{return m_entry_height;}
 
-  entry*  get_entry_pointer(int  x, int  y) noexcept{return &m_container[m_width*y+x];}
+        entry*  get_entry_pointer(int  x, int  y)       noexcept{return &m_container[m_width*y+x];}
+  const entry*  get_entry_pointer(int  x, int  y) const noexcept{return &m_container[m_width*y+x];}
 
   void  draw(int  x, int  y, int  w, int  h, void  (*cb)(const entry&,gbstd::dummy&,const gbstd::canvas&), const gbstd::canvas&  cv) noexcept;
 
@@ -113,6 +112,9 @@ public:
   cursor&  set_y(int  n) noexcept;
   cursor&  add_y(int  n) noexcept;
 
+  template<typename  T>
+  T&  get_data() const noexcept;
+
   const gbstd::point&  get_point() const noexcept{return m_point;}
 
   cursor&  show() noexcept{  m_visible =  true;  return *this;}
@@ -140,11 +142,13 @@ view
 
   void  draw_cursor(const cursor&  cur, const gbstd::canvas&  cv) noexcept;
 
+  bool  m_busy_flag=false;
+
 public:
   view() noexcept{}
   view(table&  tbl) noexcept{assign(tbl);}
 
-  view&  oprator(table&  tbl) noexcept{return assign(tbl);}
+  view&  operator=(table&  tbl) noexcept{return assign(tbl);}
 
   view&  assign(table&  tbl) noexcept;
 
@@ -154,10 +158,19 @@ public:
   view&  set_width( int  n) noexcept;
   view&  set_height(int  n) noexcept;
 
+  bool  test_busy_flag() const noexcept{return m_busy_flag;}
+
+  view&    set_busy_flag() noexcept{  m_busy_flag =  true;  return *this;}
+  view&  unset_busy_flag() noexcept{  m_busy_flag = false;  return *this;}
+
   cursor&   get_first_cursor() noexcept{return  m_first_cursor;}
   cursor&  get_second_cursor() noexcept{return m_second_cursor;}
 
+        table&  get_table()       noexcept{return *m_table;}
   const table&  get_table() const noexcept{return *m_table;}
+
+  int  get_x_offset() const noexcept{return m_offset.x;}
+  int  get_y_offset() const noexcept{return m_offset.y;}
 
   view&  set_x_offset(int  n) noexcept;
   view&  add_x_offset(int  n) noexcept;
@@ -179,18 +192,76 @@ public:
 };
 
 
+template<typename  T>
+T&
+cursor::
+get_data() const noexcept
+{
+  int  x = m_view->get_x_offset()+m_point.x;
+  int  y = m_view->get_y_offset()+m_point.y;
+
+  return m_view->get_table().get_entry_pointer(x,y)->get_data<T>();
+}
+
+
+class
+result
+{
+  int  m_opening_value=0;
+  int  m_closing_value=0;
+
+public:
+  result(int  op=0, int  cl=0) noexcept:
+  m_opening_value(op), m_closing_value(cl){}
+
+  int  get_opening_value() const noexcept{return m_opening_value;}
+  int  get_closing_value() const noexcept{return m_closing_value;}
+
+};
+
+
 class
 stack
 {
+public:
+  template<typename  T>
+  using callback = void(*)(stack&,const result*,view&,T&);
+
+private:
   struct element{
-    table*  m_table;
-    view*    m_view;
+    int  m_opening_value;
+
+    view*  m_view;
+    void*  m_data;
+
+    callback<dummy>  m_callback;
 
   };
 
+
+  result  m_result;
+
   std::vector<element>  m_container;
 
+  task_control  m_control;
+
+  stack&  internal_open(int  opening_value, view&  v, void*  data, callback<dummy>  cb) noexcept;
+
 public:
+  int  get_number_of_elements() const noexcept{return m_container.size();}
+
+  stack&  ready(clock_watch  w, uint32_t  intval, gbstd::task_list&  ls) noexcept;
+
+  template<typename  T>
+  stack&  open(int  opening_value, view&  v, T&  data, callback<T>  cb) noexcept
+  {
+    return internal_open(opening_value,v,&data,reinterpret_cast<callback<dummy>>(cb));
+  }
+
+  stack&  close_top(int  closing_value) noexcept;
+
+  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, stack&  stk) noexcept;
+  static void  tick(gbstd::task_control  ctrl,                           stack&  stk) noexcept;
 
 };
 

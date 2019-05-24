@@ -32,6 +32,8 @@ public:
 
   operator bool() const noexcept{return m_pointer;}
 
+  task_control&  clear() noexcept{  m_pointer = nullptr;  return *this;}
+
   const std::string&  get_name() const noexcept;
 
   const void*  get_data() const noexcept;

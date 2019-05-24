@@ -1,10 +1,9 @@
-#include"libww/ww_menu.hpp"
-#include"libww/ww_context.hpp"
+#include"libgbstd/menu.hpp"
 
 
 
 
-namespace ww{
+namespace gbstd{
 namespace menus{
 
 

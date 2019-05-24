@@ -4,13 +4,14 @@
 
 
 namespace gbstd{
+namespace values{
 
 
 
 
-value_list&
-value_list::
-assign(std::initializer_list<value>  ls) noexcept
+list&
+list::
+assign(std::initializer_list<object>  ls) noexcept
 {
   clear();
 
@@ -24,9 +25,9 @@ assign(std::initializer_list<value>  ls) noexcept
 }
 
 
-value_list&
-value_list::
-assign(const value_list&   rhs) noexcept
+list&
+list::
+assign(const list&   rhs) noexcept
 {
     if(this != &rhs)
     {
@@ -43,9 +44,9 @@ assign(const value_list&   rhs) noexcept
 }
 
 
-value_list&
-value_list::
-assign(value_list&&  rhs) noexcept
+list&
+list::
+assign(list&&  rhs) noexcept
 {
     if(this != &rhs)
     {
@@ -62,7 +63,7 @@ assign(value_list&&  rhs) noexcept
 
 
 void
-value_list::
+list::
 clear() noexcept
 {
   auto  next = m_first;
@@ -81,7 +82,7 @@ clear() noexcept
 
 
 void
-value_list::
+list::
 resize(size_t  n) noexcept
 {
     if(n < m_length)
@@ -97,7 +98,7 @@ resize(size_t  n) noexcept
     {
         while(n < m_length)
         {
-          push_back(value());
+          push_back(object());
         }
     }
 }
@@ -105,9 +106,9 @@ resize(size_t  n) noexcept
 
 
 
-value&
-value_list::
-push_front(value&&  v) noexcept
+object&
+list::
+push_front(object&&  v) noexcept
 {
   auto  nd = new node(std::move(v));
 
@@ -130,13 +131,13 @@ push_front(value&&  v) noexcept
   ++m_length;
 
 
-  return nd->m_value;
+  return nd->m_object;
 }
 
 
-value&
-value_list::
-push_back(value&&  v)  noexcept
+object&
+list::
+push_back(object&&  v)  noexcept
 {
   auto  nd = new node(std::move(v));
 
@@ -159,17 +160,17 @@ push_back(value&&  v)  noexcept
   ++m_length;
 
 
-  return nd->m_value;
+  return nd->m_object;
 }
 
 
-value
-value_list::
+object
+list::
 pop_back()  noexcept
 {
     if(m_last)
     {
-      auto  v = std::move(m_last->m_value);
+      auto  v = std::move(m_last->m_object);
 
       auto  new_last = m_last->m_prev;
 
@@ -189,17 +190,17 @@ pop_back()  noexcept
     }
 
 
-  return value();
+  return object();
 }
 
 
-value
-value_list::
+object
+list::
 pop_front() noexcept
 {
     if(m_first)
     {
-      auto  v = std::move(m_first->m_value);
+      auto  v = std::move(m_first->m_object);
 
       auto  new_first = m_first->m_next;
 
@@ -218,15 +219,15 @@ pop_front() noexcept
     }
 
 
-  return value();
+  return object();
 }
 
 
 
 
-value&
-value_list::
-insert_before(iterator  it, value  v) noexcept
+object&
+list::
+insert_before(iterator  it, object  v) noexcept
 {
   auto  nd = new node(std::move(v));
 
@@ -238,13 +239,13 @@ insert_before(iterator  it, value  v) noexcept
   ++m_length;
 
 
-  return nd->m_value;
+  return nd->m_object;
 }
 
 
-value&
-value_list::
-insert_after(iterator  it, value  v) noexcept
+object&
+list::
+insert_after(iterator  it, object  v) noexcept
 {
   auto  nd = new node(std::move(v));
 
@@ -256,12 +257,12 @@ insert_after(iterator  it, value  v) noexcept
   ++m_length;
 
 
-  return nd->m_value;
+  return nd->m_object;
 }
 
 
-value_list::iterator
-value_list::
+list::iterator
+list::
 erase(iterator  it) noexcept
 {
     if(it)
@@ -278,22 +279,15 @@ erase(iterator  it) noexcept
 }
 
 
-variable*
-value_list::
-find_variable(const char*  name) const noexcept
+object*
+list::
+find(std::string_view  name) const noexcept
 {
-  std::string  name_s(name);
-
-    for(auto&  v: *this)
+    for(auto&  o: *this)
     {
-        if(v.is_variable())
+        if(o.has_name() && (o.get_name() == name))
         {
-          auto&  var = v.get_variable();
-
-            if(var.get_name() == name_s)
-            {
-              return &var;
-            }
+          return &o;
         }
     }
 
@@ -305,14 +299,14 @@ find_variable(const char*  name) const noexcept
 
 
 void
-value_list::
+list::
 print() const noexcept
 {
   printf("{");
 
-    for(auto&  v: *this)
+    for(auto&  o: *this)
     {
-      v.print();
+      o.print();
 
       printf(", ");
     }
@@ -324,7 +318,7 @@ print() const noexcept
 
 
 
-}
+}}
 
 
 

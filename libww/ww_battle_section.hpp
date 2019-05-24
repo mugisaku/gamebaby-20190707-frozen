@@ -6,7 +6,7 @@
 #include"libww/ww_bar.hpp"
 #include"libww/ww_spilling_text.hpp"
 #include"libww/ww_party.hpp"
-#include"libww/ww_menu.hpp"
+#include"libgbstd/menu.hpp"
 #include<list>
 #include<vector>
 
@@ -285,8 +285,9 @@ battle_section
 
   gbstd::task_control  m_cursor_control;
 
-  menus::table  m_menu_table;
-  menus::view   m_menu_view;
+  gbstd::menus::stack  m_menu_stack;
+  gbstd::menus::table  m_menu_table;
+  gbstd::menus::view   m_menu_view;
 
   battles::character  m_character_table[m_table_length];
 

@@ -55,7 +55,7 @@ close_top(int  closing_value) noexcept
 {
     if(m_container.size())
     {
-      m_result = result(m_container.back().m_opening_value,closing_value);
+      result  res(m_container.back().m_opening_value,closing_value);
 
       m_container.back().m_view->unset_busy_flag();
 
@@ -65,7 +65,7 @@ close_top(int  closing_value) noexcept
         {
           auto&  e = m_container.back();
 
-          e.m_callback(*this,&m_result,*e.m_view,*static_cast<dummy*>(e.m_data));
+          e.m_callback(*this,&res,*e.m_view,*static_cast<dummy*>(e.m_data));
         }
     }
 

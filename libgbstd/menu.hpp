@@ -115,6 +115,9 @@ public:
   template<typename  T>
   T&  get_data() const noexcept;
 
+  int  get_x() const noexcept{return m_point.x;}
+  int  get_y() const noexcept{return m_point.y;}
+
   const gbstd::point&  get_point() const noexcept{return m_point;}
 
   cursor&  show() noexcept{  m_visible =  true;  return *this;}
@@ -239,8 +242,6 @@ private:
   };
 
 
-  result  m_result;
-
   std::vector<element>  m_container;
 
   task_control  m_control;
@@ -259,6 +260,8 @@ public:
   }
 
   stack&  close_top(int  closing_value) noexcept;
+
+  int  get_opening_value() const noexcept{return m_container.back().m_opening_value;}
 
   static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, stack&  stk) noexcept;
   static void  tick(gbstd::task_control  ctrl,                           stack&  stk) noexcept;

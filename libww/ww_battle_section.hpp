@@ -285,9 +285,18 @@ battle_section
 
   gbstd::task_control  m_cursor_control;
 
+
   gbstd::menus::stack  m_menu_stack;
-  gbstd::menus::table  m_menu_table;
-  gbstd::menus::view   m_menu_view;
+
+  gbstd::menus::table  m_first_menu_table;
+  gbstd::menus::view   m_first_menu_view;
+
+  gbstd::menus::table  m_second_menu_table;
+  gbstd::menus::view   m_second_menu_view;
+
+  gbstd::menus::table  m_third_menu_table;
+  gbstd::menus::view   m_third_menu_view;
+
 
   battles::character  m_character_table[m_table_length];
 
@@ -300,6 +309,15 @@ battle_section
 
   int  m_number_of_playing_characters;
 
+  using menu_view   = gbstd::menus::view;
+  using menu_stack  = gbstd::menus::stack;
+  using menu_result = gbstd::menus::result;
+
+  static void  manage_first_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
+  static void  manage_second_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
+  static void  manage_third_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
+
+  void  initialize_menu() noexcept;
 
   battle_section() noexcept;
 

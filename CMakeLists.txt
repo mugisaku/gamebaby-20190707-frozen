@@ -5,8 +5,21 @@ project(gmbb)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+  set(CCACHE_CMD "CCACHE_DIR=/tmp/ccachedir ccache")
+
+  if(SLOW)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "sleep 1;  ${CCACHE_CMD}")
+  else()
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_CMD}")
+  endif()
+endif(CCACHE_FOUND)
+
+
+
+
 if(OPT)
-  set(CMAKE_BUILD_TYPE Release)
 endif()
 
 

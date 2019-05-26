@@ -147,58 +147,25 @@ struct field_line;
 
 
 enum class
-command_what
-{
-  attack,
-  guard,
-  move,
-};
-
-
-enum class
-command_move
-{
-  stop,
-  forward,
-  back,
-
-};
-
-
-enum class
-movement_kind
-{
-  stay,
-  go_to_left,
-  go_to_right,
-
-};
-
-
-enum class
 intensity
 {
   do_not,
   do_weakly,
-  do_normaly,
+  do_normally,
   do_strongly,
-};
-
-
-class
-command
-{
-  command_what  m_what;
-  command_move  m_move;
-
-  intensity  m_intensity;
-
 };
 
 
 struct
 piece
 {
+  struct flags{
+    static constexpr int  be_pressed_from_left  = 1;
+    static constexpr int  be_pressed_from_right = 2;
+  };
+
+  gbstd::status_value<int>  m_status;
+
   field_line*  m_line;
 
   int  m_y_position;
@@ -219,8 +186,6 @@ piece
 
   double  m_previous_position;
   double  m_position;
-
-  movement_kind  m_movement_kind;
 
   battles::side  m_body_direction;
   battles::side  m_move_direction;
@@ -253,15 +218,6 @@ field_line
 
   piece  m_piece;
 
-};
-
-
-struct
-command_menu
-{
-  gbstd::point  m_cursor;
-
-  
 };
 
 

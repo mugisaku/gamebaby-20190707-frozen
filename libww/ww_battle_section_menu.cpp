@@ -94,11 +94,40 @@ manage_first_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, g
 
 
 void
+move_strongly(piece&  p) noexcept
+{
+}
+
+
+void
 battle_section::
 manage_second_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, gbstd::menus::view&  view, battle_section&  b) noexcept
 {
     if(res)
     {
+        for(auto&  ln: b.m_line_table)
+        {
+          auto&  p = ln.m_piece;
+
+          auto&  movi = p.m_movement_intensity;
+          auto&  movd = p.m_move_direction;
+
+            switch(res->get_closing_value())
+            {
+          case(0): movi = intensity::do_strongly;break;
+          case(1): movi = intensity::do_normally;break;
+          case(2): movi = intensity::do_weakly  ;break;
+            }
+
+
+            switch(res->get_opening_value())
+            {
+          case(0): movd = p.m_side               ;break;
+          case(1): movd = p.m_side.get_opposite();break;
+            }
+        }
+
+
       return;
     }
 
@@ -137,6 +166,12 @@ manage_second_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, 
 
               else
                 {
+                    for(auto&  ln: b.m_line_table)
+                    {
+                      ln.m_piece.m_movement_intensity = intensity::do_not;
+                    }
+
+
                   stk.close_top(-1);
                 }
             }

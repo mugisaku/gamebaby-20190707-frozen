@@ -249,6 +249,8 @@ private:
   stack&  internal_open(int  opening_value, view&  v, void*  data, callback<dummy>  cb) noexcept;
 
 public:
+  stack&  clear() noexcept;
+
   int  get_number_of_elements() const noexcept{return m_container.size();}
 
   stack&  ready(clock_watch  w, uint32_t  intval, gbstd::task_list&  ls) noexcept;

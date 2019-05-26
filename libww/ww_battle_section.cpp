@@ -17,12 +17,13 @@ initialize(piece&  p, int  side_counter) noexcept
 {
   bool  flag = (side_counter&1);
 
+  p.m_status.clear();
   p.m_side  = flag? battles::sides::left:battles::sides::right;
   p.m_position  = flag? 24.5:(context::get_screen_width()-1-24.5);
   p.m_previous_position = p.m_position;
 
-  p.m_offense_intensity  = intensity::do_normaly;
-  p.m_defense_intensity  = intensity::do_normaly;
+  p.m_offense_intensity  = intensity::do_normally;
+  p.m_defense_intensity  = intensity::do_normally;
   p.m_movement_intensity = intensity::do_not;
 
   p.m_offense_power_base  = 20.0;
@@ -36,9 +37,6 @@ initialize(piece&  p, int  side_counter) noexcept
   p.m_animation_index         = 0;
   p.m_animation_step_counter  = 0;
   p.m_animation_frame_counter = 0;
-
-  p.m_movement_kind = p.m_side.is_left()? movement_kind::go_to_right
-                     :                    movement_kind::go_to_left;
 
   p.m_body_direction = p.m_side;
   p.m_move_direction = p.m_side;
@@ -172,17 +170,17 @@ if(p.m_hp <= 0){return;}
   static gbstd::normal_rand  strong_r(1.4,0.3);
 
   double  off_rate = (p.m_offense_intensity == intensity::do_weakly  )? weak_r()
-                    :(p.m_offense_intensity == intensity::do_normaly )? normal_r()
+                    :(p.m_offense_intensity == intensity::do_normally)? normal_r()
                     :(p.m_offense_intensity == intensity::do_strongly)? strong_r()
                     :0;
 
   double  def_rate = (p.m_defense_intensity == intensity::do_weakly  )? weak_r()
-                    :(p.m_defense_intensity == intensity::do_normaly )? normal_r()
+                    :(p.m_defense_intensity == intensity::do_normally)? normal_r()
                     :(p.m_defense_intensity == intensity::do_strongly)? strong_r()
                     :0;
 
   double  mov_rate = (p.m_movement_intensity == intensity::do_weakly  )? weak_r()
-                    :(p.m_movement_intensity == intensity::do_normaly )? normal_r()
+                    :(p.m_movement_intensity == intensity::do_normally)? normal_r()
                     :(p.m_movement_intensity == intensity::do_strongly)? strong_r()
                     :0;
 
@@ -197,6 +195,9 @@ if(p.m_hp <= 0){return;}
 
     if(p.m_move_direction.is_left()){p.m_position += stroke;}
   else                              {p.m_position -= stroke;}
+
+
+  p.m_status.clear();
 }
 
 
@@ -213,12 +214,12 @@ fix(piece&  p) noexcept
     {
       p.m_position = 24.0;
 
-        if(p.m_side.is_left()){p.m_hp = 0;}
+        if(p.m_side.is_left() && p.m_status.test(piece::flags::be_pressed_from_right)){p.m_hp = 0;}
       else
+        if(p.m_side.is_right())
         {
           p.m_movement_intensity = intensity::do_not;
-          p.m_movement_kind      = movement_kind::stay;
-          p.m_animation_index = 2;
+          p.m_animation_index    = 2;
         }
     }
 
@@ -227,12 +228,12 @@ fix(piece&  p) noexcept
     {
       p.m_position = context::get_screen_width()-24.0;
 
-        if(p.m_side.is_right()){p.m_hp = 0;}
+        if(p.m_side.is_right() && p.m_status.test(piece::flags::be_pressed_from_left)){p.m_hp = 0;}
       else
+        if(p.m_side.is_left())
         {
           p.m_movement_intensity = intensity::do_not;
-          p.m_movement_kind      = movement_kind::stay;
-          p.m_animation_index = 2;
+          p.m_animation_index    = 2;
         }
     }
 
@@ -240,7 +241,6 @@ fix(piece&  p) noexcept
     if((p.m_hp <= 0) && (p.m_animation_index != 1))
     {
       p.m_movement_intensity = intensity::do_not;
-      p.m_movement_kind      = movement_kind::stay;
 
       p.m_animation_index = 1;
       p.m_animation_step_counter = 0;
@@ -291,6 +291,9 @@ process(piece&  l, piece&  r) noexcept
 
               l.m_position = m-8;
               r.m_position = m+8;
+
+              l.m_status.set(piece::flags::be_pressed_from_right);
+              r.m_status.set(piece::flags::be_pressed_from_left );
             }
         }
     }
@@ -427,6 +430,8 @@ clear() noexcept
   reset();
 
   m_task_list.push(*this).set_draw(bdraw).set_tick(m_clock_watch,80,btick);
+
+  m_menu_stack.clear();
 }
 
 

@@ -11,6 +11,28 @@ namespace menus{
 
 stack&
 stack::
+clear() noexcept
+{
+    for(auto&  e: m_container)
+    {
+      e.m_view->unset_busy_flag();
+    }
+
+
+  m_container.clear();
+
+    if(m_control)
+    {
+      m_control.set_remove_flag().clear();
+    }
+
+
+  return *this;
+}
+
+
+stack&
+stack::
 ready(clock_watch  w, uint32_t  intval, gbstd::task_list&  ls) noexcept
 {
     if(m_container.empty())

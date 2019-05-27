@@ -47,6 +47,27 @@ manage_first_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, g
 {
     if(res)
     {
+      auto  opv = res->get_opening_value();
+
+        if(opv > 0)
+        {
+            for(auto&  ln: b.m_line_table)
+            {
+              auto&  p = ln.m_piece;
+
+              auto&  i = (opv == 1)? p.m_offense_intensity
+                        :            p.m_defense_intensity;
+
+                switch(res->get_closing_value())
+                {
+              case(0): i = intensity::do_strongly;break;
+              case(1): i = intensity::do_normally;break;
+              case(2): i = intensity::do_weakly  ;break;
+                }
+            }
+        }
+
+
       return;
     }
 
@@ -67,22 +88,23 @@ manage_first_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, g
 
           auto  p = b.m_second_menu_table.get_entry_pointer(0,0);
 
-            if(cur.get_y() <= 1)
-            {
-              *p++ = {strongly_sv};
-              *p++ = {normally_sv};
-              *p++ = {  weakly_sv};
-            }
-
-          else
+            if(cur.get_y() == 0)
             {
               *p++ = {advance_sv};
               *p++ = {   back_sv};
               *p++ = {   stop_sv};
+
+              stk.open(cur.get_y(),b.m_second_menu_view,b,battle_section::manage_footwork_menu);
             }
 
+          else
+            {
+              *p++ = {strongly_sv};
+              *p++ = {normally_sv};
+              *p++ = {  weakly_sv};
 
-          stk.open(cur.get_y(),b.m_second_menu_view,b,battle_section::manage_second_menu);
+              stk.open(cur.get_y(),b.m_second_menu_view,b,battle_section::manage_handwork_menu);
+            }
         }
 
       else
@@ -94,14 +116,41 @@ manage_first_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, g
 
 
 void
-move_strongly(piece&  p) noexcept
+battle_section::
+manage_handwork_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, gbstd::menus::view&  view, battle_section&  b) noexcept
 {
+    if(res)
+    {
+      return;
+    }
+
+
+  auto&  cur = view.get_first_cursor();
+
+    if(!gbstd::test_input_barrier())
+    {
+        if(gbstd::g_input)
+        {
+          gbstd::barrier_input();
+        }
+
+
+        if(gbstd::g_input.test_p())
+        {
+          stk.close_top(cur.get_y());
+        }
+
+      else
+        if(gbstd::g_input.test_n()    ){stk.close_top(-1);}
+        if(gbstd::g_input.test_up()   ){cur.add_y(-1);}
+        if(gbstd::g_input.test_down() ){cur.add_y( 1);}
+    }
 }
 
 
 void
 battle_section::
-manage_second_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, gbstd::menus::view&  view, battle_section&  b) noexcept
+manage_footwork_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, gbstd::menus::view&  view, battle_section&  b) noexcept
 {
     if(res)
     {
@@ -144,36 +193,28 @@ manage_second_menu(gbstd::menus::stack&  stk, const gbstd::menus::result*  res, 
 
         if(gbstd::g_input.test_p())
         {
-            if(stk.get_opening_value() <= 1)
+            if(cur.get_y() <= 1)
             {
-              stk.close_top(-1);
+              b.m_third_menu_view.get_first_cursor().set_y(0);
+
+              auto  p = b.m_third_menu_table.get_entry_pointer(0,0);
+
+              *p++ = {  fastly_sv};
+              *p++ = {normally_sv};
+              *p++ = {  slowly_sv};
+
+              stk.open(cur.get_y(),b.m_third_menu_view,b,battle_section::manage_third_menu);
             }
 
           else
             {
-                if(cur.get_y() <= 1)
+                for(auto&  ln: b.m_line_table)
                 {
-                  b.m_third_menu_view.get_first_cursor().set_y(0);
-
-                  auto  p = b.m_third_menu_table.get_entry_pointer(0,0);
-
-                  *p++ = {  fastly_sv};
-                  *p++ = {normally_sv};
-                  *p++ = {  slowly_sv};
-
-                  stk.open(cur.get_y(),b.m_third_menu_view,b,battle_section::manage_third_menu);
+                  ln.m_piece.m_movement_intensity = intensity::do_not;
                 }
 
-              else
-                {
-                    for(auto&  ln: b.m_line_table)
-                    {
-                      ln.m_piece.m_movement_intensity = intensity::do_not;
-                    }
 
-
-                  stk.close_top(-1);
-                }
+              stk.close_top(-1);
             }
         }
 
@@ -237,9 +278,9 @@ initialize_menu() noexcept
   {
     auto  p = m_first_menu_table.get_entry_pointer(0,0);
 
+    *p++ = {  move_sv};
     *p++ = {attack_sv};
     *p++ = { guard_sv};
-    *p++ = {  move_sv};
   }
 
 

@@ -259,7 +259,7 @@ process(piece&  l, piece&  r) noexcept
       auto  rl = r.minpos()-8;
       auto  rr = r.maxpos()+8;
 
-        if((lr >= rl) && (ll <= rr))
+        if((lr > rl) && (ll < rr))
         {
           auto  r_off = r.m_offense_power-l.m_defense_power;
           auto  l_off = l.m_offense_power-r.m_defense_power;

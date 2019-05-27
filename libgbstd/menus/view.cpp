@@ -104,7 +104,7 @@ draw_cursor(const cursor&  cur, const gbstd::canvas&  cv) noexcept
     if(cur.is_visible())
     {
       cv.draw_canvas({gbstd::g_misc_image,0,0,24,24},
-        m_window.x-12      +(m_table->get_entry_width() *cur.get_point().x),
+        m_window.x-16      +(m_table->get_entry_width() *cur.get_point().x),
         m_window.y+g_margin+(m_table->get_entry_height()*cur.get_point().y)+4);
     }
 }

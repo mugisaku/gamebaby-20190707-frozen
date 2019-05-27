@@ -270,7 +270,8 @@ battle_section
   using menu_result = gbstd::menus::result;
 
   static void  manage_first_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
-  static void  manage_second_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
+  static void  manage_handwork_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
+  static void  manage_footwork_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
   static void  manage_third_menu(menu_stack&  stk, const menu_result*  res, menu_view&  view, battle_section&  b) noexcept;
 
   void  initialize_menu() noexcept;

@@ -16,9 +16,11 @@ context() noexcept
   sysclock.start();
 
   m_clock_control = sysclock;
+  s_manage.m_clock_watch  = sysclock;
   s_battle.m_clock_watch  = sysclock;
 
-  s_battle.m_task_control = m_task_list.push(s_battle.m_task_list);
+  s_manage.m_task_control = m_task_list.push(s_manage.m_task_list);
+//  s_battle.m_task_control = m_task_list.push(s_battle.m_task_list);
 
   m_task_list.push(*this)
              .set_draw<context>()

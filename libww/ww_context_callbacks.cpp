@@ -15,7 +15,7 @@ start(gbstd::execution&  exec, context&  ctx) noexcept
   exec.push({
     {start_display_logo,ctx,gbstd::interruptions::on},
     { wait_display_logo,ctx,gbstd::interruptions::on},
-    {loop_battle,ctx,gbstd::interruptions::on},
+    {loop_manage,ctx,gbstd::interruptions::on},
   });
 }
 
@@ -36,8 +36,17 @@ wait_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
 {
     if(!ctx.has_active_spilling_text())
     {
+      ctx.s_manage.reset();
+
       ++exec;
     }
+}
+
+
+void
+context::
+loop_manage(gbstd::execution&  exec, context&  ctx) noexcept
+{
 }
 
 

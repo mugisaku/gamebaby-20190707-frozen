@@ -11,6 +11,79 @@
 
 
 namespace gbstd{
+
+
+
+
+namespace windows{
+
+
+struct
+style
+{
+  int     m_top_width;
+  int  m_bottom_width;
+
+  int   m_left_side_width;
+  int  m_right_side_width;
+
+  style&  set_top_width(       int  n) noexcept{  m_top_width        = n;  return *this;}
+  style&  set_bottom_width(    int  n) noexcept{  m_bottom_width     = n;  return *this;}
+  style&  set_left_side_width( int  n) noexcept{  m_left_side_width  = n;  return *this;}
+  style&  set_right_side_width(int  n) noexcept{  m_right_side_width = n;  return *this;}
+
+};
+
+
+struct
+content
+{
+  int  m_width ;
+  int  m_height;
+
+  void*  m_data;
+
+  void  (*m_callback)(const canvas&,const style&,dummy&);
+
+  template<typename  T>
+  content&  set_callback(void  (*cb)(const canvas&,const style&,T&), T&  t) noexcept
+  {
+    m_data     = &t;
+    m_callback = reinterpret_cast<void(*)(const canvas&,const style&,dummy&)>(cb);
+
+    return *this;
+  }
+
+};
+
+
+struct
+frame
+{
+  point  m_position;
+
+  content  m_content;
+
+  style*  m_style;
+
+  void  (*m_top       )(const canvas&  cv, const style&  s);
+  void  (*m_bottom    )(const canvas&  cv, const style&  s);
+  void  (*m_left_side )(const canvas&  cv, const style&  s);
+  void  (*m_right_side)(const canvas&  cv, const style&  s);
+
+  int  get_width()  const noexcept;
+  int  get_height() const noexcept;
+
+  void  draw(const canvas&  cv) noexcept;
+
+};
+
+
+}
+
+
+
+
 namespace menus{
 
 
@@ -82,14 +155,6 @@ public:
 };
 
 
-struct
-window: public gbstd::rectangle
-{
-  gbstd::color  m_color;
-
-};
-
-
 class view;
 
 
@@ -139,13 +204,15 @@ view
   cursor  m_first_cursor;
   cursor  m_second_cursor;
 
-  window  m_window;
+  windows::frame  m_frame;
 
   void  (*m_callback)(const entry&,gbstd::dummy&,const gbstd::canvas&  cv)=nullptr;
 
   void  draw_cursor(const cursor&  cur, const gbstd::canvas&  cv) noexcept;
 
   bool  m_busy_flag=false;
+
+  static void  draw_content(const canvas&  cv, const windows::style&  style, view&  v) noexcept;
 
 public:
   view() noexcept{}
@@ -155,9 +222,9 @@ public:
 
   view&  assign(table&  tbl) noexcept;
 
-  view&  set_x(int  n) noexcept{  m_window.x = n;  return *this;}
-  view&  set_y(int  n) noexcept{  m_window.y = n;  return *this;}
-  view&  set_window_color(gbstd::color  color) noexcept{  m_window.m_color = color;  return *this;}
+  view&  set_x(int  n) noexcept{  m_frame.m_position.x = n;  return *this;}
+  view&  set_y(int  n) noexcept{  m_frame.m_position.y = n;  return *this;}
+  view&  set_window_color(gbstd::color  color) noexcept{ /* m_window.m_color = color;*/  return *this;}
   view&  set_width( int  n) noexcept;
   view&  set_height(int  n) noexcept;
 
@@ -187,8 +254,6 @@ public:
 
   int  get_width()  const noexcept{return m_width;}
   int  get_height() const noexcept{return m_height;}
-
-  const window&  get_window() const noexcept{return m_window;}
 
   void  draw(const gbstd::canvas&  cv) noexcept;
 

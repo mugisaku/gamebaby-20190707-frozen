@@ -2,6 +2,7 @@
 #define ww_context_hpp_is_included
 
 
+#include"libww/ww_manage_section.hpp"
 #include"libww/ww_battle_section.hpp"
 
 
@@ -31,6 +32,7 @@ context
 
   gbstd::clock_master  m_clock_master;
 
+  manage_section  s_manage;
   battle_section  s_battle;
 
   party  m_left_party;
@@ -43,6 +45,8 @@ context
   static void  start(       gbstd::execution&  exec, context&  ctx) noexcept;
   static void  start_battle(gbstd::execution&  exec, context&  ctx) noexcept;
   static void  loop_battle( gbstd::execution&  exec, context&  ctx) noexcept;
+
+  static void  loop_manage( gbstd::execution&  exec, context&  ctx) noexcept;
 
 
   static void  initialize_battle(gbstd::execution&  exec, context&  ctx) noexcept;

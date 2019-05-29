@@ -9,7 +9,48 @@ namespace menus{
 
 
 
-constexpr int  g_margin = 8;
+namespace{
+void
+top(const canvas&  cv, const windows::style&  style) noexcept
+{
+  cv.fill(gbstd::colors::red);
+}
+void
+left(const canvas&  cv, const windows::style&  style) noexcept
+{
+  cv.fill(gbstd::colors::gray);
+}
+void
+right(const canvas&  cv, const windows::style&  style) noexcept
+{
+  cv.fill(gbstd::colors::green);
+}
+void
+bottom(const canvas&  cv, const windows::style&  style) noexcept
+{
+  cv.fill(gbstd::colors::yellow);
+}
+
+
+windows::style
+g_style = {8,8,8,8};
+
+
+}
+
+
+void
+view::
+draw_content(const canvas&  cv, const windows::style&  style, view&  v) noexcept
+{
+  cv.fill(gbstd::colors::blue);
+
+  v.m_table->draw(v.m_offset.x,
+                  v.m_offset.y,
+                  v.m_width,
+                  v.m_height,
+                  v.m_callback,cv);
+}
 
 
 view&
@@ -17,6 +58,13 @@ view::
 assign(table&  tbl) noexcept
 {
   m_table = &tbl;
+
+  m_frame.m_top        =    top;
+  m_frame.m_bottom     = bottom;
+  m_frame.m_left_side  =   left;
+  m_frame.m_right_side =  right;
+  m_frame.m_content.set_callback(draw_content,*this);
+  m_frame.m_style = &g_style;
 
   set_width( tbl.get_width() );
   set_height(tbl.get_height());
@@ -36,7 +84,7 @@ set_width(int  w) noexcept
 {
   m_width = w;
 
-  m_window.w = (m_table->get_entry_width()*w)+(g_margin*2);
+  m_frame.m_content.m_width = (m_table->get_entry_width()*w);
 
   return *this;
 }
@@ -48,7 +96,7 @@ set_height(int  h) noexcept
 {
   m_height = h;
 
-  m_window.h = (m_table->get_entry_height()*h)+(g_margin*2);
+  m_frame.m_content.m_height = (m_table->get_entry_height()*h);
 
   return *this;
 }
@@ -104,8 +152,8 @@ draw_cursor(const cursor&  cur, const gbstd::canvas&  cv) noexcept
     if(cur.is_visible())
     {
       cv.draw_canvas({gbstd::g_misc_image,0,0,24,24},
-        m_window.x-16      +(m_table->get_entry_width() *cur.get_point().x),
-        m_window.y+g_margin+(m_table->get_entry_height()*cur.get_point().y)+4);
+        m_frame.m_position.x-16                             +(m_table->get_entry_width() *cur.get_point().x),
+        m_frame.m_position.y   +m_frame.m_style->m_top_width+(m_table->get_entry_height()*cur.get_point().y)+4);
     }
 }
 
@@ -114,26 +162,7 @@ void
 view::
 draw(const gbstd::canvas&  cv) noexcept
 {
-  cv.fill_rectangle(m_window.m_color,
-    m_window.x+1,
-    m_window.y+1,
-    m_window.w-2,
-    m_window.h-2);
-
-
-  cv.draw_rectangle(gbstd::colors::white,
-    m_window.x,
-    m_window.y,
-    m_window.w,
-    m_window.h);
-
-
-  gbstd::canvas  dst_cv(cv,m_window.x+g_margin,
-                           m_window.y+g_margin,
-                           cv.get_width() -(g_margin*2),
-                           cv.get_height()-(g_margin*2));
-
-  m_table->draw(m_offset.x,m_offset.y,m_width,m_height,m_callback,dst_cv);
+  m_frame.draw(cv);
 
   draw_cursor( m_first_cursor,cv);
   draw_cursor(m_second_cursor,cv);

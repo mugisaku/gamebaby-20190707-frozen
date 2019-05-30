@@ -9,36 +9,6 @@ namespace menus{
 
 
 
-namespace{
-void
-top(const canvas&  cv, const windows::style&  style) noexcept
-{
-  cv.fill(gbstd::colors::red);
-}
-void
-left(const canvas&  cv, const windows::style&  style) noexcept
-{
-  cv.fill(gbstd::colors::gray);
-}
-void
-right(const canvas&  cv, const windows::style&  style) noexcept
-{
-  cv.fill(gbstd::colors::green);
-}
-void
-bottom(const canvas&  cv, const windows::style&  style) noexcept
-{
-  cv.fill(gbstd::colors::yellow);
-}
-
-
-windows::style
-g_style = {8,8,8,8};
-
-
-}
-
-
 void
 view::
 draw_content(const canvas&  cv, const windows::style&  style, view&  v) noexcept
@@ -59,12 +29,9 @@ assign(table&  tbl) noexcept
 {
   m_table = &tbl;
 
-  m_frame.m_top        =    top;
-  m_frame.m_bottom     = bottom;
-  m_frame.m_left_side  =   left;
-  m_frame.m_right_side =  right;
-  m_frame.m_content.set_callback(draw_content,*this);
-  m_frame.m_style = &g_style;
+  m_content.set_callback(draw_content,*this);
+
+  m_frame.set_content(&m_content);
 
   set_width( tbl.get_width() );
   set_height(tbl.get_height());
@@ -84,7 +51,7 @@ set_width(int  w) noexcept
 {
   m_width = w;
 
-  m_frame.m_content.m_width = (m_table->get_entry_width()*w);
+  m_content.m_width = (m_table->get_entry_width()*w);
 
   return *this;
 }
@@ -96,7 +63,7 @@ set_height(int  h) noexcept
 {
   m_height = h;
 
-  m_frame.m_content.m_height = (m_table->get_entry_height()*h);
+  m_content.m_height = (m_table->get_entry_height()*h);
 
   return *this;
 }
@@ -152,8 +119,8 @@ draw_cursor(const cursor&  cur, const gbstd::canvas&  cv) noexcept
     if(cur.is_visible())
     {
       cv.draw_canvas({gbstd::g_misc_image,0,0,24,24},
-        m_frame.m_position.x-16                             +(m_table->get_entry_width() *cur.get_point().x),
-        m_frame.m_position.y   +m_frame.m_style->m_top_width+(m_table->get_entry_height()*cur.get_point().y)+4);
+        m_frame.get_x()-16                                +(m_table->get_entry_width() *cur.get_point().x),
+        m_frame.get_y()   +m_frame.get_style().m_top_width+(m_table->get_entry_height()*cur.get_point().y)+4);
     }
 }
 

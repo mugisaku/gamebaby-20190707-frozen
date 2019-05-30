@@ -23,7 +23,7 @@ set(SOURCES
   menus/table.cpp
   menus/view.cpp
   menus/stack.cpp
-  menus/window_frame.cpp
+  menus/window.cpp
   windows/window.cpp
   windows/widget.cpp
   windows/components/frame.cpp

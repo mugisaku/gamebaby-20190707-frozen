@@ -38,12 +38,14 @@ style
 struct
 content
 {
-  int  m_width ;
-  int  m_height;
+  int  m_width =0;
+  int  m_height=0;
 
-  void*  m_data;
+  void*  m_data=0;
 
-  void  (*m_callback)(const canvas&,const style&,dummy&);
+  void  (*m_callback)(const canvas&,const style&,dummy&)=nullptr;
+
+  content() noexcept{}
 
   template<typename  T>
   content&  set_callback(void  (*cb)(const canvas&,const style&,T&), T&  t) noexcept
@@ -54,25 +56,53 @@ content
     return *this;
   }
 
+  void  draw(const canvas&  cv, const style&  s, int  x, int  y) noexcept;
+
 };
 
 
 struct
-frame
+frame_assembler
 {
-  point  m_position;
-
-  content  m_content;
-
-  style*  m_style;
-
   void  (*m_top       )(const canvas&  cv, const style&  s);
   void  (*m_bottom    )(const canvas&  cv, const style&  s);
   void  (*m_left_side )(const canvas&  cv, const style&  s);
   void  (*m_right_side)(const canvas&  cv, const style&  s);
+  void  (*m_background)(const canvas&  cv, const style&  s);
+
+};
+
+
+extern style            g_default_style;
+extern frame_assembler  g_default_frame_assembler;
+
+
+class
+frame
+{
+  point  m_position;
+
+  content*  m_content_pointer=nullptr;
+
+  const style*            m_style_pointer=&g_default_style;
+  const frame_assembler*  m_assembler_pointer=&g_default_frame_assembler;
+
+public:
+  frame() noexcept{}
+
+  frame&  set_x(int  n) noexcept{  m_position.x = n;  return *this;}
+  frame&  set_y(int  n) noexcept{  m_position.y = n;  return *this;}
+
+  int  get_x() const noexcept{return m_position.x;}
+  int  get_y() const noexcept{return m_position.y;}
 
   int  get_width()  const noexcept;
   int  get_height() const noexcept;
+
+  content*  get_content(              ) const noexcept{return  m_content_pointer                      ;}
+  frame&    set_content(content*  cont)       noexcept{        m_content_pointer = cont;  return *this;}
+
+  const style&  get_style() const noexcept{return *m_style_pointer;}
 
   void  draw(const canvas&  cv) noexcept;
 
@@ -204,7 +234,8 @@ view
   cursor  m_first_cursor;
   cursor  m_second_cursor;
 
-  windows::frame  m_frame;
+  windows::frame    m_frame;
+  windows::content  m_content;
 
   void  (*m_callback)(const entry&,gbstd::dummy&,const gbstd::canvas&  cv)=nullptr;
 
@@ -222,8 +253,8 @@ public:
 
   view&  assign(table&  tbl) noexcept;
 
-  view&  set_x(int  n) noexcept{  m_frame.m_position.x = n;  return *this;}
-  view&  set_y(int  n) noexcept{  m_frame.m_position.y = n;  return *this;}
+  view&  set_x(int  n) noexcept{  m_frame.set_x(n);  return *this;}
+  view&  set_y(int  n) noexcept{  m_frame.set_y(n);  return *this;}
   view&  set_window_color(gbstd::color  color) noexcept{ /* m_window.m_color = color;*/  return *this;}
   view&  set_width( int  n) noexcept;
   view&  set_height(int  n) noexcept;
@@ -296,6 +327,11 @@ public:
   using callback = void(*)(stack&,const result*,view&,T&);
 
 private:
+  struct subelement{
+    windows::frame      m_frame;
+    windows::content  m_content;
+  };
+
   struct element{
     int  m_opening_value;
 
@@ -303,6 +339,8 @@ private:
     void*  m_data;
 
     callback<dummy>  m_callback;
+
+    std::vector<subelement>  m_sub_list;
 
   };
 

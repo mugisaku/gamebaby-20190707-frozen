@@ -16,7 +16,7 @@ m_default_color = colors::white;
 
 
 label::
-label() noexcept
+label(operating_node&  root) noexcept
 {
   m_style.set_left_padding(4)
          .set_right_padding(4)

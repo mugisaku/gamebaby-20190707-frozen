@@ -8,6 +8,14 @@ namespace widgets{
 
 
 
+operating_node::
+operating_node() noexcept
+{
+}
+
+
+
+
 void
 operating_node::
 relay_redraw_request(node&  nd) noexcept

@@ -95,6 +95,8 @@ class operating_node;
 class
 node
 {
+  friend class operating_node;
+
   point  m_relative_position;
   point  m_absolute_position;
 
@@ -283,24 +285,26 @@ class label;
 class
 frame: public node
 {
-  label*  m_label;
+  friend class operating_node;
 
-  color  m_color;
-
-  color  m_line_color;
-
-  static color  m_default_character_color;
+  static color  m_default_color;
   static color  m_default_line_color;
 
-public:
-  frame() noexcept{}
+  std::u16string  m_string;
 
+  color  m_color=m_default_color;
+  color  m_line_color=m_default_line_color;
+
+  frame(operating_node&  root) noexcept;
+
+public:
   std::string_view  get_class_name() const noexcept override{return "frame";}
 
-  void  insert_content(node*  nd, int  x, int  y) noexcept;
+  frame&  set_content(node&  nd) noexcept;
 
-  void  set_text(const char*  s) noexcept;
-  void  set_line_color(color  new_color) noexcept;
+  frame&  set_string(std::string_view     sv) noexcept;
+  frame&  set_string(std::u16string_view  sv) noexcept;
+  frame&  set_line_color(color  new_color) noexcept;
 
   void  render(const canvas&  cv) noexcept override;
 
@@ -320,7 +324,7 @@ label: public node
 
   std::u16string  m_string;
 
-  label() noexcept;
+  label(operating_node&  root) noexcept;
 
 public:
   std::string_view  get_class_name() const noexcept override{return "label";}
@@ -401,7 +405,7 @@ button: public node
   } m_state=state::released;
 
 
-  button() noexcept;
+  button(operating_node&  root) noexcept;
 
 public:
   button&  set_content(node&  nd) noexcept{  clear();  add_child(nd,{});  return *this;}
@@ -440,6 +444,8 @@ operating_node: public node
   void  process_by_mouse_position(point  pt) noexcept;
 
 public:
+  operating_node() noexcept;
+
   const image&  get_image() const noexcept{return m_image;}
 
   std::string_view  get_class_name() const noexcept override{return "operating node";}
@@ -450,8 +456,10 @@ public:
   void  process_user_input(point  pt) noexcept;
 
 
-  label&   create_label() noexcept{return *(new label);}
-  button&  create_button() noexcept{return *(new button);}
+  node&      create_node() noexcept{return *(new   node(     ));}
+  label&    create_label() noexcept{return *(new  label(*this));}
+  button&  create_button() noexcept{return *(new button(*this));}
+  frame&    create_frame() noexcept{return *(new  frame(*this));}
 
 };
 

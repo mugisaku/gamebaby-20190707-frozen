@@ -68,10 +68,10 @@ make_png_stream() const noexcept
 
           else
             {
-              *p++ = 0;
-              *p++ = 0;
-              *p++ = 0;
-              *p++ = 0;
+              *p++ =   0;
+              *p++ =   0;
+              *p++ =   0;
+              *p++ = 255;
             }
         }
 

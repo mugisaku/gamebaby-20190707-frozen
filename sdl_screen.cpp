@@ -105,10 +105,10 @@ update_screen(const gbstd::canvas&  cv) noexcept
 
               else
                 {
-                  *dst++ = 0;
-                  *dst++ = 0;
-                  *dst++ = 0;
-                  *dst++ = 0;
+                  *dst++ =   0;
+                  *dst++ =   0;
+                  *dst++ =   0;
+                  *dst++ = 255;
                 }
             }
         }

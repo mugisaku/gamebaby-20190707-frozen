@@ -146,7 +146,7 @@ utf8_encoder
 };
 
 
-std::u16string  make_u16string(const std::string&  s) noexcept;
+std::u16string  make_u16string(std::string_view  sv) noexcept;
 
 
 void  print(std::u16string_view  sv) noexcept;
@@ -155,91 +155,102 @@ void  print(std::u16string_view  sv) noexcept;
 class
 text
 {
-  character*  m_data=nullptr;
+private:
+  struct line{
+    static constexpr int  m_buffer_length = 80;
 
-  int  m_width =0;
-  int  m_height=0;
+    char16_t  m_buffer[m_buffer_length];
 
-public:
-  text(              ) noexcept{}
-  text(int  w, int  h) noexcept{resize(w,h);}
- ~text(){resize(0,0);}
+    int  m_length;
 
-  int  get_width()  const noexcept{return m_width;}
-  int  get_height() const noexcept{return m_height;}
+    line*  m_next;
 
-  int  get_image_width()  const noexcept{return g_font_width*m_width;}
-  int  get_image_height() const noexcept{return g_font_height*m_height;}
+    std::u16string  get_view(      ) const noexcept{return std::u16string(m_buffer,m_length);}
+    std::u16string  get_view(int  l) const noexcept{return std::u16string(m_buffer,l);}
 
-  void  resize(int  w, int  h) noexcept;
+    const char16_t*  begin() const noexcept{return m_buffer         ;}
+    const char16_t*    end() const noexcept{return m_buffer+m_length;}
 
-  character*  get_character_pointer(int  x, int  y) const noexcept{return m_data+(m_width*y)+x;}
-
-  void  fill(character  c=character()) noexcept;
-
-};
-
-
-class
-typewriter
-{
-  character*  m_base_pointer=nullptr;
-
-  int  m_text_width=0;
-
-  int  m_width =0;
-  int  m_height=0;
-
-  point  m_cursor_pos;
-
-  std::queue<character>  m_queue;
+  };
 
 public:
-  typewriter() noexcept{}
-  typewriter(const text&  txt) noexcept{assign(txt);}
+  class iterator{
+    const line*  m_pointer=nullptr;
 
-  typewriter&  operator=(const text&  txt) noexcept{return assign(txt);}
-  typewriter&     assign(const text&  txt) noexcept;
+  public:
+    iterator(const line*  ptr) noexcept: m_pointer(ptr){}
 
-  int  get_text_width()  const noexcept{return m_text_width;}
+    const line&  operator *() const noexcept{return *m_pointer;}
+    const line*  operator->() const noexcept{return  m_pointer;}
 
-  int  get_width()  const noexcept{return m_width;}
-  int  get_height() const noexcept{return m_height;}
+    operator bool() const noexcept{return m_pointer;}
 
-  int  get_image_width()  const noexcept{return g_font_width*m_width;}
-  int  get_image_height() const noexcept{return g_font_height*m_height;}
+    bool  operator==(iterator  rhs) noexcept{return m_pointer == rhs.m_pointer;}
+    bool  operator!=(iterator  rhs) noexcept{return m_pointer != rhs.m_pointer;}
 
-  character*  get_character_pointer(int  x, int  y) const noexcept{return m_base_pointer+(m_text_width*y)+x;}
+    iterator&  operator++() noexcept{  m_pointer = m_pointer->m_next;  return *this;}
 
-  bool  has_cursor_reached_right()  const noexcept{return m_cursor_pos.x == (m_width -1);}
-  bool  has_cursor_reached_bottom() const noexcept{return m_cursor_pos.y == (m_height-1);}
+    iterator  operator+(int  n) const noexcept
+    {
+      auto  ptr = m_pointer;
 
-  void  newline() noexcept;
+        while(n--)
+        {
+          ptr = ptr->m_next;
+        }
 
-  const std::queue<character>&  get_queue() const noexcept{return m_queue;}
 
-  void  clear_queue() noexcept{m_queue = std::queue<character>();}
+      return iterator(ptr);
+    }
 
-  point  get_cursor_position() const noexcept{return m_cursor_pos;}
+    iterator&  operator+=(int  n) noexcept
+    {
+        while(n--)
+        {
+          m_pointer = m_pointer->m_next;
+        }
 
-  void  set_cursor_position(point  pos) noexcept{m_cursor_pos  = pos;}
-  void  add_cursor_position(point  pos) noexcept{m_cursor_pos += pos;}
 
-  void  clear_line(      ) noexcept{clear_line(m_cursor_pos.y);}
-  void  clear_line(int  n) noexcept;
+      return *this;
+    }
 
-  void  scroll_up() noexcept;
+  };
 
-  operator bool() const noexcept{return m_queue.size();}
 
-  void  push(const character*  s, int  l) noexcept;
+private:
+  line*     m_top_pointer=nullptr;
+  line*  m_bottom_pointer=nullptr;
 
-  void  push(const char*      s, gbstd::color  color) noexcept;
-  void  push(const char16_t*  s, gbstd::color  color) noexcept;
+  int  m_number_of_lines=0;
 
-  void  pump() noexcept;
+  static line*  m_stock_pointer;
 
-  void  fill(character  c=character()) const noexcept;
+  line*  new_line() noexcept;
+
+public:
+  text() noexcept{}
+  text(const text&   rhs) noexcept{assign(rhs);}
+  text(      text&&  rhs) noexcept{assign(std::move(rhs));}
+ ~text(){clear();}
+
+  text&  operator=(const text&   rhs) noexcept{return assign(rhs);}
+  text&  operator=(      text&&  rhs) noexcept{return assign(std::move(rhs));}
+
+  text&  assign(const text&   rhs) noexcept;
+  text&  assign(      text&&  rhs) noexcept;
+
+  text&  clear() noexcept;
+
+  int  get_number_of_lines() const noexcept{return m_number_of_lines;}
+
+  text&  push(std::string_view     sv) noexcept;
+  text&  push(std::u16string_view  sv) noexcept;
+  text&   pop() noexcept;
+
+  iterator  bottom() const noexcept{return iterator(m_bottom_pointer);}
+
+  iterator  begin() const noexcept{return iterator(m_top_pointer);}
+  iterator    end() const noexcept{return iterator(nullptr);}
 
 };
 

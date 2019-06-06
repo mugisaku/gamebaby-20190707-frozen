@@ -73,6 +73,22 @@ internal_open(int  opening_value, view&  v, void*  data, callback<dummy>  cb) no
 
 stack&
 stack::
+add_subwindow(windows::frame&  frm) noexcept
+{
+    if(m_container.size())
+    {
+      auto&  top = m_container.back();
+
+      top.m_subwindow_list.emplace_back(&frm);
+    }
+
+
+  return *this;
+}
+
+
+stack&
+stack::
 close_top(int  closing_value) noexcept
 {
     if(m_container.size())
@@ -109,6 +125,11 @@ draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, stack&  stk) noexcept
     for(auto&  e: stk.m_container)
     {
       e.m_view->draw(cv);
+
+        for(auto  frmptr: e.m_subwindow_list)
+        {
+          frmptr->draw(cv);
+        }
     }
 }
 

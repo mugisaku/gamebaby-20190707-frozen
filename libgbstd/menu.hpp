@@ -35,7 +35,7 @@ style
 };
 
 
-struct
+class
 content
 {
   int  m_width =0;
@@ -45,7 +45,14 @@ content
 
   void  (*m_callback)(const canvas&,const style&,dummy&)=nullptr;
 
+public:
   content() noexcept{}
+
+  int  get_width()  const noexcept{return m_width ;}
+  int  get_height() const noexcept{return m_height;}
+
+  content&  set_width( int  n) noexcept{  m_width  = n;  return *this;}
+  content&  set_height(int  n) noexcept{  m_height = n;  return *this;}
 
   template<typename  T>
   content&  set_callback(void  (*cb)(const canvas&,const style&,T&), T&  t) noexcept
@@ -104,7 +111,7 @@ public:
 
   const style&  get_style() const noexcept{return *m_style_pointer;}
 
-  void  draw(const canvas&  cv) noexcept;
+  void  draw(const canvas&  cv) const noexcept;
 
 };
 
@@ -327,11 +334,6 @@ public:
   using callback = void(*)(stack&,const result*,view&,T&);
 
 private:
-  struct subelement{
-    windows::frame      m_frame;
-    windows::content  m_content;
-  };
-
   struct element{
     int  m_opening_value;
 
@@ -340,7 +342,7 @@ private:
 
     callback<dummy>  m_callback;
 
-    std::vector<subelement>  m_sub_list;
+    std::vector<windows::frame*>  m_subwindow_list;
 
   };
 
@@ -363,6 +365,8 @@ public:
   {
     return internal_open(opening_value,v,&data,reinterpret_cast<callback<dummy>>(cb));
   }
+
+  stack&  add_subwindow(windows::frame&  frm) noexcept;
 
   stack&  close_top(int  closing_value) noexcept;
 

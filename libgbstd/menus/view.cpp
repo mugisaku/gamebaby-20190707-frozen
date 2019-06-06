@@ -51,7 +51,7 @@ set_width(int  w) noexcept
 {
   m_width = w;
 
-  m_content.m_width = (m_table->get_entry_width()*w);
+  m_content.set_width(m_table->get_entry_width()*w);
 
   return *this;
 }
@@ -63,7 +63,7 @@ set_height(int  h) noexcept
 {
   m_height = h;
 
-  m_content.m_height = (m_table->get_entry_height()*h);
+  m_content.set_height(m_table->get_entry_height()*h);
 
   return *this;
 }

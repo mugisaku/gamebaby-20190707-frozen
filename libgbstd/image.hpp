@@ -77,17 +77,14 @@ public:
   image(const uint8_t*  ptr) noexcept{read_png_stream(ptr);}
   image(int  w, int  h, std::initializer_list<int>  ls) noexcept;
   image(int  w, int  h, std::initializer_list<color>  ls={}) noexcept;
-  image(const typewriter&  tw) noexcept{assign(tw);}
  ~image(){resize(0,0);}
 
 
   image&  operator=(const image&   rhs) noexcept{return assign(rhs);}
   image&  operator=(      image&&  rhs) noexcept{return assign(std::move(rhs));}
-  image&  operator=(const typewriter&  tw) noexcept{return assign(tw);}
 
   image&  assign(const image&   rhs) noexcept;
   image&  assign(      image&&  rhs) noexcept;
-  image&  assign(const typewriter&  tw) noexcept;
 
   void  resize(int  w, int  h) noexcept;
 
@@ -240,8 +237,8 @@ public:
   void  draw_string_safely_as_right_align(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
   void  draw_string_safely_as_right_align(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely_as_right_align(color,sv,pt.x,pt.y);}
 
-  void  draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept;
-  void  draw_typewriter(const typewriter&  tw, point  pt) const noexcept{draw_typewriter(tw,pt.x,pt.y);}
+//  void  draw_text(const text&  tw, int  x, int  y) const noexcept;
+//  void  draw_text(const typewriter&  tw, point  pt) const noexcept{draw_typewriter(tw,pt.x,pt.y);}
 
   void  draw_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  draw_canvas(const canvas&  cv, point  pt) const noexcept{draw_canvas(cv,pt.x,pt.y);}

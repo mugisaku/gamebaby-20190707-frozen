@@ -6,7 +6,6 @@
 #include"libgbstd/control.hpp"
 #include"libgbstd/sound.hpp"
 #include"libgbstd/file_op.hpp"
-#include"libonch/onch.hpp"
 
 
 namespace sdl{
@@ -409,11 +408,13 @@ play_sound(const char*  name) noexcept
 void
 add_sound(const char*  name, const char*  text) noexcept
 {
+/*
   gbstd::onch_space  sp;
 
   sp.load_from_string(text);
 
   g_sound_map.emplace(name,sp.make_f32_raw_binary(g_sampling_rate,0.05));
+*/
 }
 
 

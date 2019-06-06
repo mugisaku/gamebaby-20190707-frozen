@@ -46,11 +46,11 @@ u8slen(const char*  s) noexcept
 
 
 std::u16string
-make_u16string(const std::string&  s) noexcept
+make_u16string(std::string_view  sv) noexcept
 {
   std::u16string  u16s;
 
-  utf8_decoder  dec(s.data());
+  utf8_decoder  dec(sv.data());
 
     while(dec)
     {

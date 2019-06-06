@@ -9,7 +9,6 @@ set(SOURCES
   characters/unicode.cpp
   characters/font.cpp
   characters/text.cpp
-  characters/typewriter.cpp
   images/image.cpp
   images/image__png.cpp
   images/canvas.cpp
@@ -23,7 +22,14 @@ set(SOURCES
   menus/table.cpp
   menus/view.cpp
   menus/stack.cpp
-  menus/window.cpp
+  menus/window__.cpp
+  widgets/operating_node.cpp
+  widgets/node.cpp
+  widgets/node_iterator.cpp
+  widgets/label.cpp
+  widgets/button.cpp
+  widgets/frame.cpp
+  widgets/icon.cpp
   windows/window.cpp
   windows/widget.cpp
   windows/components/frame.cpp

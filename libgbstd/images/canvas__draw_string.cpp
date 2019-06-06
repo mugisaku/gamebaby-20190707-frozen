@@ -254,6 +254,7 @@ draw_string_safely_as_right_align(const character_color&  color, std::u16string_
 
 
 
+/*
 void
 canvas::
 draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept
@@ -278,6 +279,7 @@ draw_typewriter(const typewriter&  tw, int  x, int  y) const noexcept
       y += g_font_height;
     }
 }
+*/
 
 
 

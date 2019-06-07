@@ -531,8 +531,8 @@ checkbox: public node
 
   shared_data*  m_data;
 
-  iconshow*  m_iconshow;
-  label*     m_label;
+  std::reference_wrapper<iconshow>  m_iconshow;
+  std::reference_wrapper<label>     m_label;
 
   uint32_t  m_entry_number=0;
 
@@ -543,18 +543,22 @@ checkbox: public node
 protected:
   void  revise_to_radio() noexcept;
 
-  checkbox(                         const char16_t*  text, void  (*callback)(checkbox_event)) noexcept;
-  checkbox(const checkbox&  member, const char16_t*  text) noexcept;
+  checkbox(operating_node&  root                         ) noexcept;
+  checkbox(operating_node&  root, const checkbox&  member) noexcept;
 
 public:
- ~checkbox();
+  ~checkbox();
+
+  checkbox&  set_string(std::string_view     sv) noexcept;
+  checkbox&  set_string(std::u16string_view  sv) noexcept;
+  checkbox&  set_callback(void  (*cb)(checkbox_event)) noexcept;
 
   void    check() noexcept;
   void  uncheck() noexcept;
 
   std::string_view  get_class_name() const noexcept override{return "checkbox";}
 
-  bool  is_checked() const noexcept{return m_iconshow->get_index();}
+  bool  is_checked() const noexcept{return m_iconshow.get().get_index();}
 
   operator bool() const noexcept{return is_checked();}
 
@@ -577,8 +581,8 @@ radio_button: public checkbox
 {
   friend class operating_node;
 
-  radio_button(                             const char16_t*  text, void  (*callback)(checkbox_event)) noexcept;
-  radio_button(const radio_button&  member, const char16_t*  text) noexcept;
+  radio_button(operating_node&  root                             ) noexcept;
+  radio_button(operating_node&  root, const radio_button&  member) noexcept;
 
 public:
   std::string_view  get_class_name() const noexcept override{return "radio_button";}
@@ -761,12 +765,18 @@ public:
   void  process_user_input(point  pt) noexcept;
 
 
-  node&      create_node() noexcept{return *(new   node(     ));}
-  label&    create_label() noexcept{return *(new  label(*this));}
-  button&  create_button() noexcept{return *(new button(*this));}
-  frame&    create_frame() noexcept{return *(new  frame(*this));}
-  iconshow&    create_iconshow() noexcept{return *(new iconshow(*this));}
-  dial&        create_dial() noexcept{return *(new  dial(*this));}
+  node&          create_node() noexcept{return *(new     node(     ));}
+  label&        create_label() noexcept{return *(new    label(*this));}
+  button&      create_button() noexcept{return *(new   button(*this));}
+  frame&        create_frame() noexcept{return *(new    frame(*this));}
+  iconshow&  create_iconshow() noexcept{return *(new iconshow(*this));}
+  dial&          create_dial() noexcept{return *(new     dial(*this));}
+
+  checkbox&  create_checkbox(                 ) noexcept{return *(new checkbox(*this       ));}
+  checkbox&  create_checkbox(checkbox&  member) noexcept{return *(new checkbox(*this,member));}
+
+  radio_button&  create_radio_button(                     ) noexcept{return *(new radio_button(*this       ));}
+  radio_button&  create_radio_button(radio_button&  member) noexcept{return *(new radio_button(*this,member));}
 
 };
 

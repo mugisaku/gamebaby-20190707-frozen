@@ -37,7 +37,7 @@ frame&
 frame::
 set_content(node&  nd) noexcept
 {
-  add_child(nd,{0,16});
+  add_child(nd,{4,20});
 
   return *this;
 }

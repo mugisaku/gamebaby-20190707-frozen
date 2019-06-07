@@ -30,6 +30,11 @@ set(SOURCES
   widgets/button.cpp
   widgets/frame.cpp
   widgets/icon.cpp
+  widgets/iconshow.cpp
+  widgets/dial.cpp
+#  widgets/checkbox.cpp
+#  widgets/radio_button.cpp
+#  widgets/menu.cpp
   windows/window.cpp
   windows/widget.cpp
   windows/components/frame.cpp

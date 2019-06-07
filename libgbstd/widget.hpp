@@ -103,6 +103,9 @@ node
   int  m_content_width =0;
   int  m_content_height=0;
 
+  int  m_minimal_content_width =0;
+  int  m_minimal_content_height=0;
+
 
   std::string  m_id;
   std::string  m_name;
@@ -116,6 +119,8 @@ node
 
   node*  m_previous_sibling=nullptr;
   node*  m_next_sibling=nullptr;
+
+  void*  m_userdata=nullptr;
 
 protected:
   enum class follow_style{
@@ -140,8 +145,8 @@ protected:
 
   status_value<int>  m_status;
 
-  virtual void  relay_redraw_request(node&  nd) noexcept{m_parent->relay_redraw_request(nd);}
-  virtual void  relay_reform_request(         ) noexcept{m_parent->relay_reform_request(  );}
+  virtual void  relay_redraw_request(node&  nd) noexcept{if(m_parent){m_parent->relay_redraw_request(nd);}}
+  virtual void  relay_reform_request(         ) noexcept{if(m_parent){m_parent->relay_reform_request(  );}}
 
   virtual void  process_before_reform() noexcept{}
 
@@ -221,10 +226,16 @@ public:
   int  get_content_width()  const noexcept{return m_content_width ;}
   int  get_content_height() const noexcept{return m_content_height;}
 
+  int  get_minimal_content_width()  const noexcept{return m_minimal_content_width ;}
+  int  get_minimal_content_height() const noexcept{return m_minimal_content_height;}
+
   rectangle  get_content_rectangle() const noexcept;
 
   node&  set_content_width( int  v) noexcept{  m_content_width  = v;  return *this;}
   node&  set_content_height(int  v) noexcept{  m_content_height = v;  return *this;}
+
+  node&  set_minimal_content_width( int  v) noexcept{  m_minimal_content_width  = v;  return *this;}
+  node&  set_minimal_content_height(int  v) noexcept{  m_minimal_content_height = v;  return *this;}
 
   int  get_width()  const noexcept{return m_style.get_left_padding()+m_content_width +m_style.get_right_padding();}
   int  get_height() const noexcept{return m_style.get_top_padding() +m_content_height+m_style.get_bottom_padding();}
@@ -273,6 +284,9 @@ public:
 
   void  fill(const canvas&  cv, gbstd::color  color) const noexcept;
   void  fill(const canvas&  cv, color  color0, color  color1, int  interval) const noexcept;
+
+  node&                    set_userdata(void*   ptr)       noexcept{  m_userdata = ptr;  return *this;}
+  template<typename  T>T&  get_userdata(           ) const noexcept{return *static_cast<T*>(m_userdata);}
 
 };
 
@@ -427,6 +441,297 @@ public:
 
 
 
+class iconshow;
+
+
+class
+iconshow_event: public event<iconshow>
+{
+public:
+  using event::event; 
+
+  enum class kind{
+    enter,
+    leave,
+    click,
+  };
+
+  bool  is_enter() const noexcept{return *this == kind::enter;}
+  bool  is_leave() const noexcept{return *this == kind::leave;}
+  bool  is_click() const noexcept{return *this == kind::click;}
+
+};
+
+
+class
+iconshow: public node
+{
+  friend class operating_node;
+
+  std::vector<const icon*>  m_icons;
+
+  int  m_index=0;
+
+  bool  m_whether_touched=false;
+
+  void  (*m_callback)(iconshow_event  evt)=nullptr;
+
+  iconshow(operating_node&  root) noexcept;
+
+public:
+  const icon*  operator*() const noexcept{return m_icons[m_index];}
+
+  int        get_index(      ) const noexcept{return m_index;}
+  iconshow&  set_index(int  i)       noexcept;
+
+  iconshow&  set_icon_list(std::initializer_list<const icon*>  ls) noexcept;
+  iconshow&  set_callback(void  (*cb)(iconshow_event)) noexcept;
+
+  std::string_view  get_class_name() const noexcept override{return "iconshow";}
+
+  void  on_mouse_enter() noexcept override{if(m_callback){m_callback({*this,iconshow_event::kind::enter});}}
+  void  on_mouse_leave() noexcept override;
+  void  on_mouse_act(point  mouse_pos) noexcept override;
+
+  void  render(const canvas&  cv) noexcept override;
+
+};
+
+
+
+
+class checkbox;
+
+
+class
+checkbox_event: public event<checkbox>
+{
+public:
+  enum class kind{
+      set,
+    unset,
+  };
+
+  using event::event;
+
+  bool  is_set()   const noexcept{return *this == kind::set;}
+  bool  is_unset() const noexcept{return *this == kind::unset;}
+
+};
+
+
+
+
+class
+checkbox: public node
+{
+  friend class operating_node;
+
+  struct shared_data;
+
+  shared_data*  m_data;
+
+  iconshow*  m_iconshow;
+  label*     m_label;
+
+  uint32_t  m_entry_number=0;
+
+  checkbox*  m_next=nullptr;
+
+  void*  get_common_userdata_internal() const noexcept;
+
+protected:
+  void  revise_to_radio() noexcept;
+
+  checkbox(                         const char16_t*  text, void  (*callback)(checkbox_event)) noexcept;
+  checkbox(const checkbox&  member, const char16_t*  text) noexcept;
+
+public:
+ ~checkbox();
+
+  void    check() noexcept;
+  void  uncheck() noexcept;
+
+  std::string_view  get_class_name() const noexcept override{return "checkbox";}
+
+  bool  is_checked() const noexcept{return m_iconshow->get_index();}
+
+  operator bool() const noexcept{return is_checked();}
+
+  uint32_t  get_entry_number() const noexcept{return m_entry_number;}
+
+  void  set_common_userdata(void*  ptr) const noexcept;
+
+  template<typename  T>
+  T*  get_common_userdata() const noexcept{return static_cast<T*>(get_common_userdata_internal());}
+
+  void  on_mouse_act(point  mouse_pos) noexcept override;
+
+};
+
+
+
+
+class
+radio_button: public checkbox
+{
+  friend class operating_node;
+
+  radio_button(                             const char16_t*  text, void  (*callback)(checkbox_event)) noexcept;
+  radio_button(const radio_button&  member, const char16_t*  text) noexcept;
+
+public:
+  std::string_view  get_class_name() const noexcept override{return "radio_button";}
+
+};
+
+
+
+
+class dial;
+
+
+class
+dial_event: public event<dial>
+{
+public:
+  using event::event;
+
+  int  get_new_value() const noexcept;
+  int  get_old_value() const noexcept{return get_value();}
+
+};
+
+
+class
+dial: public node
+{
+  friend class operating_node;
+
+  int  m_current=0;
+
+  int  m_min=0;
+  int  m_max=0;
+
+  void  (*m_callback)(dial_event  evt)=nullptr;
+
+  std::reference_wrapper<iconshow>     m_up_show;
+  std::reference_wrapper<iconshow>   m_down_show;
+
+  std::reference_wrapper<button>     m_up_button;
+  std::reference_wrapper<button>   m_down_button;
+
+  std::reference_wrapper<label>   m_label;
+
+  static void    up(button_event  evt) noexcept;
+  static void  down(button_event  evt) noexcept;
+
+  void  update_label() noexcept;
+
+  dial(operating_node&  root) noexcept;
+
+public:
+  dial&  set_callback(void  (*cb)(dial_event)) noexcept{  m_callback = cb;  return *this;}
+
+  dial&  set_max(int  v) noexcept;
+  dial&  set_min(int  v) noexcept;
+
+  dial&  set_current(int  v) noexcept;
+
+  int  get_current() const noexcept{return m_current;}
+
+  int  get_min() const noexcept{return m_min;}
+  int  get_max() const noexcept{return m_max;}
+
+};
+
+
+
+
+/*
+class menu;
+
+
+class
+menu_event: public event<menu>
+{
+public:
+  using event::event;
+
+  enum class kind{
+    enter,
+    leave,
+    press,
+    release,
+  };
+
+  bool  is_enter() const noexcept{return *this == kind::enter;}
+  bool  is_leave() const noexcept{return *this == kind::leave;}
+  bool  is_press() const noexcept{return *this == kind::press;}
+  bool  is_release() const noexcept{return *this == kind::release;}
+
+};
+
+
+class
+menu: public node
+{
+  friend class operating_node;
+
+  table_size  m_table_size;
+  item_size    m_item_size;
+
+  int  m_number_of_columns=0;
+  int  m_number_of_rows=0;
+
+  item_cursor  m_cursor;
+
+public:
+  using callback = void(*)(menu_event  evt);
+
+private:
+  callback  m_callback=nullptr;
+
+  void  call(menu_event::kind  k) noexcept{if(m_callback){m_callback({*this,k});}}
+
+public:
+  menu(                        callback  cb=nullptr) noexcept: m_callback(cb){}
+  menu(int  ncols, int  nrows, callback  cb=nullptr) noexcept: m_callback(cb){resize(ncols,nrows);}
+
+  int  get_number_of_columns() const noexcept{return m_number_of_columns;}
+  int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
+
+  const item_size&    get_item_size() const noexcept{return m_item_size;}
+  const table_size&  get_table_size() const noexcept{return m_table_size;}
+
+  void  process_before_reform() noexcept override;
+
+  void  revise_cursor() noexcept;
+
+  void  resize(int  ncols, int  nrows) noexcept;
+
+  void  set_item_size(item_size  itm_sz) noexcept;
+  void  set_table_size(table_size  tbl_sz) noexcept;
+
+  const item_cursor&  get_item_cursor()  const noexcept{return m_cursor;}
+
+  bool  move_x_offset(int  n) noexcept;
+  bool  move_y_offset(int  n) noexcept;
+
+  void  move_base(int  x, int  y) noexcept;
+
+  void  do_on_mouse_act(point  mouse_pos) noexcept override;
+
+  void  render(const canvas&  cv) noexcept override;
+
+  virtual void  render_background(const canvas&  cv) noexcept{}
+  virtual void  render_item(point  item_index, const canvas&  cv) noexcept=0;
+
+};
+*/
+
+
+
 class
 operating_node: public node
 {
@@ -460,9 +765,10 @@ public:
   label&    create_label() noexcept{return *(new  label(*this));}
   button&  create_button() noexcept{return *(new button(*this));}
   frame&    create_frame() noexcept{return *(new  frame(*this));}
+  iconshow&    create_iconshow() noexcept{return *(new iconshow(*this));}
+  dial&        create_dial() noexcept{return *(new  dial(*this));}
 
 };
-
 
 
 

@@ -308,8 +308,8 @@ reform(point  parent_content_position) noexcept
     }
 
 
-  int  w = 0;
-  int  h = 0;
+  int  w = m_minimal_content_width ;
+  int  h = m_minimal_content_height;
 
   const node*  previous = nullptr;
 

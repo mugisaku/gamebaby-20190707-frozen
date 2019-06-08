@@ -7,9 +7,9 @@ namespace gbstd{
 
 
 
-character_color
+color
 label::
-m_default_color(colors::null,colors::white,colors::null,colors::null);
+m_default_color(colors::white);
 
 
 label::
@@ -19,16 +19,6 @@ widget(0,16+4)
   set_text(s);
 
   set_color(m_default_color);
-}
-
-
-label::
-label(const char*  s, const character_color&  color) noexcept:
-widget(0,16+4)
-{
-  set_text(s);
-
-  set_color(color);
 }
 
 
@@ -44,16 +34,6 @@ widget(0,16+4)
 
 label::
 label(const char16_t*  s, gbstd::color  color) noexcept:
-widget(0,16+4)
-{
-  set_text(s);
-
-  set_color(color);
-}
-
-
-label::
-label(const char16_t*  s, const character_color&  color) noexcept:
 widget(0,16+4)
 {
   set_text(s);
@@ -110,7 +90,7 @@ modify_text(const char*  s) noexcept
 
 void
 label::
-set_color(const character_color&  color) noexcept
+set_color(color  color) noexcept
 {
   m_color = color;
 

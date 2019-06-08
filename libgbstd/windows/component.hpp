@@ -43,12 +43,12 @@ frame: public widget
 
   label*  m_label;
 
-  character_color  m_character_color;
+  color  m_color;
 
   color  m_line_color;
 
-  static character_color  m_default_character_color;
-  static color            m_default_line_color;
+  static color  m_default_character_color;
+  static color  m_default_line_color;
 
 public:
   frame(const char*  text, widget*  wg=nullptr, int  x=0, int  y=0) noexcept;
@@ -70,22 +70,20 @@ public:
 class
 label: public widget
 {
-  static character_color  m_default_color;
+  static color  m_default_color;
 
-  character_color  m_color;
+  color  m_color;
 
   std::u16string  m_text;
 
 public:
   label(const char*      s=""                            ) noexcept;
-  label(const char*      s, const character_color&  color) noexcept;
   label(const char16_t*  s                               ) noexcept;
   label(const char16_t*  s, gbstd::color  color          ) noexcept;
-  label(const char16_t*  s, const character_color&  color) noexcept;
 
   const char*  get_class_name() const noexcept override{return "label";}
 
-  static const character_color&  get_character_color() noexcept{return m_default_color;}
+  static color  get_character_color() noexcept{return m_default_color;}
 
   void  set_text(const char*      s) noexcept;
   void  set_text(const char16_t*  s) noexcept;
@@ -93,7 +91,7 @@ public:
   void  modify_text(const char*      s) noexcept;
   void  modify_text(const char16_t*  s) noexcept;
 
-  void  set_color(const character_color&  color) noexcept;
+  void  set_color(color  color) noexcept;
 
   void  render(const canvas&  cv) noexcept override;
 

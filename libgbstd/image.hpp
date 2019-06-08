@@ -2,12 +2,59 @@
 #define GMBB_GUI_IMAGE_HPP
 
 
+#include"libgbstd/utility.hpp"
 #include"libgbstd/character.hpp"
 
 
 
 
 namespace gbstd{
+
+
+
+
+struct
+color
+{
+  uint16_t  code;
+
+  static constexpr int  masked(int  v) noexcept{return v&7;}
+
+  constexpr color(int  v=0) noexcept: code((v&01000)? color(v>>6,v>>3,v).code:0){}
+  constexpr color(int  r7, int  g7, int  b7) noexcept: code(0x8000|((masked(r7)<<2)<<10)|
+                                                                   ((masked(g7)<<2)<< 5)|
+                                                                   ((masked(b7)<<2)    )){}
+
+  constexpr operator bool() const noexcept{return code>>15;}
+
+  constexpr bool  operator==(const color&  rhs) const noexcept{return code == rhs.code;}
+  constexpr bool  operator!=(const color&  rhs) const noexcept{return code != rhs.code;}
+
+  constexpr int  get_r7() const noexcept{return masked(((code>>10)>>2));}
+  constexpr int  get_g7() const noexcept{return masked(((code>> 5)>>2));}
+  constexpr int  get_b7() const noexcept{return masked(((code    )>>2));}
+
+  constexpr int  get_r255() const noexcept{return (get_r7()<<5)|0b11111;}
+  constexpr int  get_g255() const noexcept{return (get_g7()<<5)|0b11111;}
+  constexpr int  get_b255() const noexcept{return (get_b7()<<5)|0b11111;}
+
+  void  print() const noexcept{printf("0%d%d%d%d",(*this? 1:0),get_r7(),get_g7(),get_b7());}
+
+};
+
+
+namespace colors{
+constexpr color        null = 0;
+constexpr color       white = color(7,7,7);
+constexpr color       black = color(0,0,0);
+constexpr color        gray = color(3,3,3);
+constexpr color  light_gray = color(5,5,5);
+constexpr color   dark_gray = color(1,1,1);
+constexpr color         red = color(7,0,0);
+constexpr color       green = color(0,7,0);
+constexpr color        blue = color(0,0,7);
+constexpr color      yellow = color(7,7,0);
+}
 
 
 
@@ -212,33 +259,24 @@ public:
   void  draw_stripe_rectangle(color  first, color  second, int  interval, int  x, int  y, int  w, int  h) const noexcept;
   void  draw_stripe_rectangle(color  first, color  second, int  interval, const rectangle&  rect) const noexcept;
 
-  void  draw_glyph(       const character_color&  chr_color, const glyph&  gl, int  x, int  y) const noexcept;
-  void  draw_glyph_safely(const character_color&  chr_color, const glyph&  gl, int  x, int  y) const noexcept;
+  void  draw_glyph(       color  col, const glyph&  gl, int  x, int  y) const noexcept;
+  void  draw_glyph_safely(color  col, const glyph&  gl, int  x, int  y) const noexcept;
 
-  void  draw_character(const character&  c, int  x, int  y) const noexcept;
-  void  draw_character(const character&  c, point  pt) const noexcept{draw_character(c,pt.x,pt.y);}
+  void  draw_string(color  col, std::string_view     sv, int  x, int  y) const noexcept;
+  void  draw_string(color  col, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string(color  col, std::string_view     sv, point  pt) const noexcept{draw_string(col,sv,pt.x,pt.y);}
+  void  draw_string(color  col, std::u16string_view  sv, point  pt) const noexcept{draw_string(col,sv,pt.x,pt.y);}
 
-  void  draw_character_safely(const character&  c, int  x, int  y) const noexcept;
-  void  draw_character_safely(const character&  c, point  pt) const noexcept{draw_character_safely(c,pt.x,pt.y);}
+  void  draw_string_safely(color  col, std::string_view     sv, int  x, int  y) const noexcept;
+  void  draw_string_safely(color  col, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string_safely(color  col, std::string_view     sv, point  pt) const noexcept{draw_string_safely(col,sv,pt.x,pt.y);}
+  void  draw_string_safely(color  col, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely(col,sv,pt.x,pt.y);}
 
-  void  draw_string(const character_color&  color, std::string_view     sv, int  x, int  y) const noexcept;
-  void  draw_string(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
-  void  draw_string(const character_color&  color, std::string_view     sv, point  pt) const noexcept{draw_string(color,sv,pt.x,pt.y);}
-  void  draw_string(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string(color,sv,pt.x,pt.y);}
+  void  draw_string_as_right_align(color  col, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string_as_right_align(color  col, std::u16string_view  sv, point  pt) const noexcept{draw_string_as_right_align(col,sv,pt.x,pt.y);}
 
-  void  draw_string_safely(const character_color&  color, std::string_view     sv, int  x, int  y) const noexcept;
-  void  draw_string_safely(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
-  void  draw_string_safely(const character_color&  color, std::string_view     sv, point  pt) const noexcept{draw_string_safely(color,sv,pt.x,pt.y);}
-  void  draw_string_safely(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely(color,sv,pt.x,pt.y);}
-
-  void  draw_string_as_right_align(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
-  void  draw_string_as_right_align(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_as_right_align(color,sv,pt.x,pt.y);}
-
-  void  draw_string_safely_as_right_align(const character_color&  color, std::u16string_view  sv, int  x, int  y) const noexcept;
-  void  draw_string_safely_as_right_align(const character_color&  color, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely_as_right_align(color,sv,pt.x,pt.y);}
-
-//  void  draw_text(const text&  tw, int  x, int  y) const noexcept;
-//  void  draw_text(const typewriter&  tw, point  pt) const noexcept{draw_typewriter(tw,pt.x,pt.y);}
+  void  draw_string_safely_as_right_align(color  col, std::u16string_view  sv, int  x, int  y) const noexcept;
+  void  draw_string_safely_as_right_align(color  col, std::u16string_view  sv, point  pt) const noexcept{draw_string_safely_as_right_align(col,sv,pt.x,pt.y);}
 
   void  draw_canvas(const canvas&  cv, int  x, int  y) const noexcept;
   void  draw_canvas(const canvas&  cv, point  pt) const noexcept{draw_canvas(cv,pt.x,pt.y);}

@@ -755,6 +755,9 @@ public:
 
   menu_handler&  create_menu_handler() noexcept{return *(new menu_handler(*this));}
 
+  node&  create_table_column(std::initializer_list<std::reference_wrapper<node>>  ls) noexcept;
+  node&  create_table_row(   std::initializer_list<std::reference_wrapper<node>>  ls) noexcept;
+
 };
 
 

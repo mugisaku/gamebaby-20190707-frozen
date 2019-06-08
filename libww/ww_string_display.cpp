@@ -53,20 +53,20 @@ draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, string_display&  strds
 {
     if(strdsp.m_pointer)
     {
-      auto  sv = strdsp.m_pointer->get_string_view();
+      auto  color = strdsp.m_pointer->get_color();
 
-      auto  cc = gbstd::character_color(strdsp.m_pointer->get_color(),gbstd::colors::black,gbstd::colors::black);
+      auto  sv = strdsp.m_pointer->get_string_view();
 
         if(strdsp.m_align == align::left)
         {
-          cv.draw_string_safely(cc,sv,strdsp.m_pos.x,
-                                      strdsp.m_pos.y);
+          cv.draw_string_safely(color,sv,strdsp.m_pos.x,
+                                         strdsp.m_pos.y);
         }
 
       else
         {
-          cv.draw_string_safely_as_right_align(cc,sv,strdsp.m_pos.x,
-                                                     strdsp.m_pos.y);
+          cv.draw_string_safely_as_right_align(color,sv,strdsp.m_pos.x,
+                                                        strdsp.m_pos.y);
         }
     }
 }

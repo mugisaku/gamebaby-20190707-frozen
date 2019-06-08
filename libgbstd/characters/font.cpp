@@ -39,10 +39,14 @@ initializer() noexcept
 }
 
 
-const glyph*
+const glyph&
 get_glyph(char16_t  c) noexcept
 {
-  return g_table[c];
+  static const glyph  null = {0};
+
+  auto  ptr = g_table[c];
+
+  return ptr? *ptr:null;
 }
 
 

@@ -65,10 +65,8 @@ void
 spilling_text::
 draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept
 {
-  auto  cc = gbstd::character_color(spltxt.m_color,gbstd::colors::black,gbstd::colors::black);
-
-  cv.draw_string_safely(cc,spltxt.m_text.data(),spltxt.m_pos.x,
-                                                spltxt.m_pos.y);
+  cv.draw_string_safely(spltxt.m_color,spltxt.m_text.data(),spltxt.m_pos.x,
+                                                            spltxt.m_pos.y);
 }
 
 

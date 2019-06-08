@@ -161,6 +161,30 @@ process_user_input(point  pt) noexcept
 }
 
 
+node&
+operating_node::
+create_table_column(std::initializer_list<std::reference_wrapper<node>>  ls) noexcept
+{
+  auto&  nd = create_node();
+
+  nd.add_child_as_column(ls);
+
+  return nd;
+}
+
+
+node&
+operating_node::
+create_table_row(std::initializer_list<std::reference_wrapper<node>>  ls) noexcept
+{
+  auto&  nd = create_node();
+
+  nd.add_child_as_row(ls);
+
+  return nd;
+}
+
+
 
 
 }}

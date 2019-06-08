@@ -10,7 +10,7 @@ namespace gbstd{
 constexpr int  margin = 16;
 
 
-character_color
+color
 frame::
 m_default_character_color(colors::white);
 
@@ -24,7 +24,7 @@ m_default_line_color = colors::yellow;
 
 frame::
 frame(const char*  text, widget*  wg, int  x, int  y) noexcept:
-m_character_color(m_default_character_color),
+m_color(m_default_character_color),
 m_line_color(m_default_line_color)
 {
   m_container = new widget;

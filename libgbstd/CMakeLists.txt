@@ -34,7 +34,7 @@ set(SOURCES
   widgets/dial.cpp
   widgets/checkbox.cpp
   widgets/radio_button.cpp
-#  widgets/menu.cpp
+  widgets/menu_handler.cpp
   windows/window.cpp
   windows/widget.cpp
   windows/components/frame.cpp

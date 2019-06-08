@@ -4,6 +4,7 @@
 
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
+#include"libgbstd/menu.hpp"
 #include<memory>
 #include<cstdio>
 
@@ -581,8 +582,8 @@ radio_button: public checkbox
 {
   friend class operating_node;
 
-  radio_button(operating_node&  root                             ) noexcept;
-  radio_button(operating_node&  root, const radio_button&  member) noexcept;
+  radio_button(operating_node&  root                         ) noexcept;
+  radio_button(operating_node&  root, const checkbox&  member) noexcept;
 
 public:
   std::string_view  get_class_name() const noexcept override{return "radio_button";}
@@ -652,12 +653,11 @@ public:
 
 
 
-/*
-class menu;
+class menu_handler;
 
 
 class
-menu_event: public event<menu>
+menu_event: public event<menu_handler>
 {
 public:
   using event::event;
@@ -678,61 +678,36 @@ public:
 
 
 class
-menu: public node
+menu_handler: public node
 {
   friend class operating_node;
-
-  table_size  m_table_size;
-  item_size    m_item_size;
-
-  int  m_number_of_columns=0;
-  int  m_number_of_rows=0;
-
-  item_cursor  m_cursor;
 
 public:
   using callback = void(*)(menu_event  evt);
 
 private:
+  menus::view*  m_view;
+
   callback  m_callback=nullptr;
 
   void  call(menu_event::kind  k) noexcept{if(m_callback){m_callback({*this,k});}}
 
-public:
-  menu(                        callback  cb=nullptr) noexcept: m_callback(cb){}
-  menu(int  ncols, int  nrows, callback  cb=nullptr) noexcept: m_callback(cb){resize(ncols,nrows);}
-
-  int  get_number_of_columns() const noexcept{return m_number_of_columns;}
-  int  get_number_of_rows()    const noexcept{return m_number_of_rows;}
-
-  const item_size&    get_item_size() const noexcept{return m_item_size;}
-  const table_size&  get_table_size() const noexcept{return m_table_size;}
-
   void  process_before_reform() noexcept override;
 
-  void  revise_cursor() noexcept;
+  menu_handler(operating_node&  root) noexcept;
 
-  void  resize(int  ncols, int  nrows) noexcept;
+public:
+  menus::view&  get_view() const noexcept{return *m_view;}
 
-  void  set_item_size(item_size  itm_sz) noexcept;
-  void  set_table_size(table_size  tbl_sz) noexcept;
+  menu_handler&  set_view(menus::view&  v) noexcept;
+  menu_handler&  set_callback(callback  cb=nullptr) noexcept{  m_callback = cb;  return *this;}
 
-  const item_cursor&  get_item_cursor()  const noexcept{return m_cursor;}
-
-  bool  move_x_offset(int  n) noexcept;
-  bool  move_y_offset(int  n) noexcept;
-
-  void  move_base(int  x, int  y) noexcept;
-
-  void  do_on_mouse_act(point  mouse_pos) noexcept override;
+  void  on_mouse_act(point  mouse_pos) noexcept override;
 
   void  render(const canvas&  cv) noexcept override;
 
-  virtual void  render_background(const canvas&  cv) noexcept{}
-  virtual void  render_item(point  item_index, const canvas&  cv) noexcept=0;
-
 };
-*/
+
 
 
 
@@ -775,8 +750,10 @@ public:
   checkbox&  create_checkbox(                 ) noexcept{return *(new checkbox(*this       ));}
   checkbox&  create_checkbox(checkbox&  member) noexcept{return *(new checkbox(*this,member));}
 
-  radio_button&  create_radio_button(                     ) noexcept{return *(new radio_button(*this       ));}
-  radio_button&  create_radio_button(radio_button&  member) noexcept{return *(new radio_button(*this,member));}
+  radio_button&  create_radio_button(                 ) noexcept{return *(new radio_button(*this       ));}
+  radio_button&  create_radio_button(checkbox&  member) noexcept{return *(new radio_button(*this,member));}
+
+  menu_handler&  create_menu_handler() noexcept{return *(new menu_handler(*this));}
 
 };
 

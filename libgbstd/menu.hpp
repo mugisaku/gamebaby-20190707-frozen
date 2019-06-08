@@ -109,7 +109,11 @@ public:
   content*  get_content(              ) const noexcept{return  m_content_pointer                      ;}
   frame&    set_content(content*  cont)       noexcept{        m_content_pointer = cont;  return *this;}
 
-  const style&  get_style() const noexcept{return *m_style_pointer;}
+  const style&  get_style(                   ) const noexcept{return *m_style_pointer                        ;}
+  frame&        set_style(const style&  style)       noexcept{        m_style_pointer = &style;  return *this;}
+
+  const frame_assembler*  get_assembler(                          ) const noexcept{return  m_assembler_pointer                    ;}
+  frame&                  set_assembler(const frame_assembler*  as)       noexcept{        m_assembler_pointer = as;  return *this;}
 
   void  draw(const canvas&  cv) const noexcept;
 
@@ -202,7 +206,7 @@ cursor
 
   bool  m_visible=false;
 
-  gbstd::point  m_point;
+  gbstd::point  m_position;
 
 public:
   cursor&  reset(view&  v) noexcept;
@@ -214,13 +218,15 @@ public:
   cursor&  set_y(int  n) noexcept;
   cursor&  add_y(int  n) noexcept;
 
+  cursor&  set_position(point  pt) noexcept{  set_x(pt.x);  set_y(pt.y);  return *this;}
+
   template<typename  T>
   T&  get_data() const noexcept;
 
-  int  get_x() const noexcept{return m_point.x;}
-  int  get_y() const noexcept{return m_point.y;}
+  int  get_x() const noexcept{return m_position.x;}
+  int  get_y() const noexcept{return m_position.y;}
 
-  const gbstd::point&  get_point() const noexcept{return m_point;}
+  const gbstd::point&  get_position() const noexcept{return m_position;}
 
   cursor&  show() noexcept{  m_visible =  true;  return *this;}
   cursor&  hide() noexcept{  m_visible = false;  return *this;}
@@ -277,8 +283,13 @@ public:
         table&  get_table()       noexcept{return *m_table;}
   const table&  get_table() const noexcept{return *m_table;}
 
+        windows::frame&  get_window_frame()       noexcept{return m_frame;}
+  const windows::frame&  get_window_frame() const noexcept{return m_frame;}
+
   int  get_x_offset() const noexcept{return m_offset.x;}
   int  get_y_offset() const noexcept{return m_offset.y;}
+
+  const point&  get_offset() const noexcept{return m_offset;}
 
   view&  set_x_offset(int  n) noexcept;
   view&  add_x_offset(int  n) noexcept;
@@ -303,8 +314,8 @@ T&
 cursor::
 get_data() const noexcept
 {
-  int  x = m_view->get_x_offset()+m_point.x;
-  int  y = m_view->get_y_offset()+m_point.y;
+  int  x = m_view->get_x_offset()+m_position.x;
+  int  y = m_view->get_y_offset()+m_position.y;
 
   return m_view->get_table().get_entry_pointer(x,y)->get_data<T>();
 }

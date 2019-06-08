@@ -13,8 +13,6 @@ void
 view::
 draw_content(const canvas&  cv, const windows::style&  style, view&  v) noexcept
 {
-  cv.fill(gbstd::colors::blue);
-
   v.m_table->draw(v.m_offset.x,
                   v.m_offset.y,
                   v.m_width,
@@ -119,8 +117,8 @@ draw_cursor(const cursor&  cur, const gbstd::canvas&  cv) noexcept
     if(cur.is_visible())
     {
       cv.draw_canvas({gbstd::g_misc_image,0,0,24,24},
-        m_frame.get_x()-16                                +(m_table->get_entry_width() *cur.get_point().x),
-        m_frame.get_y()   +m_frame.get_style().m_top_width+(m_table->get_entry_height()*cur.get_point().y)+4);
+        m_frame.get_x()-16                                +(m_table->get_entry_width() *cur.get_x()),
+        m_frame.get_y()   +m_frame.get_style().m_top_width+(m_table->get_entry_height()*cur.get_y())+4);
     }
 }
 

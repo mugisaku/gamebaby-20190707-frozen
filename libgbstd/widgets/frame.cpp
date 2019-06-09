@@ -15,7 +15,7 @@ constexpr int  margin = 16;
 
 color
 frame::
-m_default_color(colors::white);
+m_default_color(colors::black);
 
 
 color
@@ -28,6 +28,7 @@ m_default_line_color = colors::yellow;
 frame::
 frame(operating_node&  root) noexcept
 {
+  set_minimal_content_height(g_font_height);
 }
 
 
@@ -49,6 +50,8 @@ set_string(std::string_view  sv) noexcept
 {
   m_string = make_u16string(sv);
 
+  set_minimal_content_width(g_font_width*m_string.size());
+
   request_reform();
 
   return *this;
@@ -60,6 +63,8 @@ frame::
 set_string(std::u16string_view  sv) noexcept
 {
   m_string = sv;
+
+  set_minimal_content_width(g_font_width*m_string.size());
 
   request_reform();
 

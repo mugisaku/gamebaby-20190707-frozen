@@ -344,7 +344,8 @@ label: public node
 public:
   std::string_view  get_class_name() const noexcept override{return "label";}
 
-  static const color&  get_default_color() noexcept{return m_default_color;}
+  static void          set_default_color(color  col) noexcept{       m_default_color = col;}
+  static const color&  get_default_color(          ) noexcept{return m_default_color      ;}
 
   const std::u16string&  get_string() const noexcept{return m_string;}
 

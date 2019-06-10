@@ -226,31 +226,35 @@ node&
 node::
 add_child(node&  child, point  pt) noexcept
 {
-    if(!child.m_parent)
+    if(child.m_parent)
     {
-      child.m_parent = this;
+      report;
 
-        if(m_last_child)
-        {
-                                     m_last_child->m_next_sibling = &child;
-          child.m_previous_sibling = m_last_child                         ;
-        }
-
-      else
-        {
-          m_first_child = &child;
-        }
-
-
-      m_last_child = &child;
-
-      ++m_number_of_children;
-
-      child.m_relative_position = pt;
-
-      request_reform();
+      return *this;
     }
 
+
+  child.m_parent = this;
+
+    if(m_last_child)
+    {
+                                 m_last_child->m_next_sibling = &child;
+      child.m_previous_sibling = m_last_child                         ;
+    }
+
+  else
+    {
+      m_first_child = &child;
+    }
+
+
+  m_last_child = &child;
+
+  ++m_number_of_children;
+
+  child.m_relative_position = pt;
+
+  request_reform();
 
   return *this;
 }

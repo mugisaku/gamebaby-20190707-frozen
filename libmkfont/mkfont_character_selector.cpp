@@ -16,22 +16,29 @@ void
 character_selector::
 on_mouse_act(point  pt) noexcept
 {
-  m_cursor_position.x = pt.x/(m_pixel_size*character::m_size);
-  m_cursor_position.y = pt.y/(m_pixel_size*character::m_size);
+  int  x = pt.x/(m_pixel_size*character::m_size);
+  int  y = pt.y/(m_pixel_size*character::m_size);
+
+  m_cursor_position.x = x;
+  m_cursor_position.y = y;
+
+  auto&  c  = g_characters[m_x_number*(m_offset+m_cursor_position.y)+m_cursor_position.x];
+
+  string_form  sf;
+
+  sf("U+%04X",c.m_unicode);
 
     if(g_input.test_mouse_left())
     {
-      g_current_character = std::ref(g_characters[m_x_number*(m_offset+m_cursor_position.y)+m_cursor_position.x]);
+      g_current_character = std::ref(c);
 
       m_editor.m_bitmap.request_redraw();
 
-      string_form  sf;
-
-      sf("U+%04X");
-
-      m_editor.m_character_label.set_string_without_reform(sf());
+      m_editor.m_selected_label.set_string_without_reform(sf());
     }
 
+
+  m_editor.m_character_label.set_string_without_reform(sf());
 
   request_redraw();
 }

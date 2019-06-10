@@ -123,6 +123,7 @@ editor
   combined_selector   m_cmbsel;
 
   widgets::label&  m_character_label;
+  widgets::label&  m_selected_label;
 
   widgets::button&  m_character_up_button;
   widgets::button&  m_character_down_button;

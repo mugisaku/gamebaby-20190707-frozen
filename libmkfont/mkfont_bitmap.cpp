@@ -16,6 +16,10 @@ void
 bitmap::
 on_mouse_act(point  pt) noexcept
 {
+  int  x = pt.x/m_pixel_size;
+  int  y = pt.y/m_pixel_size;
+
+
   m_cursor_position.x = pt.x/m_pixel_size;
   m_cursor_position.y = pt.y/m_pixel_size;
 

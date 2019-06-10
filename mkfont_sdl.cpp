@@ -59,7 +59,7 @@ main(int  argc, char**  argv)
   auto&  chrsel_buttons = g_root.create_table_row({g_editor.m_character_up_button,g_editor.m_character_down_button});
   auto&  cmbsel_buttons = g_root.create_table_row({g_editor.m_combined_up_button,g_editor.m_combined_down_button});
 
-  auto&  bitmap_table = g_root.create_table_row({g_editor.m_bitmap});
+  auto&  bitmap_table = g_root.create_table_column({g_editor.m_bitmap,g_editor.m_selected_label});
   auto&  chrsel_table = g_root.create_table_column({g_editor.m_chrsel,g_editor.m_character_label,chrsel_buttons});
   auto&  cmbsel_table = g_root.create_table_column({g_editor.m_cmbsel,cmbsel_buttons});
 

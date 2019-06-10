@@ -101,7 +101,7 @@ redraw_if_necessary() noexcept
 
 void
 operating_node::
-process_by_mouse_position(point  pt) noexcept
+process_by_mouse_position(point&  pt) noexcept
 {
     if(!m_current)
     {
@@ -121,16 +121,16 @@ process_by_mouse_position(point  pt) noexcept
         {
           auto  cnt_pt = m_current->get_content_position();
 
-          int    left = cnt_pt.x                                ;
-          int   right = cnt_pt.x+m_current->get_content_width() ;
-          int     top = cnt_pt.y                                ;
-          int  bottom = cnt_pt.y+m_current->get_content_height();
+          int    left = cnt_pt.x                                  ;
+          int   right = cnt_pt.x+m_current->get_content_width() -1;
+          int     top = cnt_pt.y                                  ;
+          int  bottom = cnt_pt.y+m_current->get_content_height()-1;
 
-               if(pt.x <   left){pt.x =  left  ;}
-          else if(pt.x >= right){pt.x = right-1;}
+               if(pt.x <  left){pt.x =  left;}
+          else if(pt.x > right){pt.x = right;}
 
-               if(pt.y <     top){pt.y =    top  ;}
-          else if(pt.y >= bottom){pt.y = bottom-1;}
+               if(pt.y <    top){pt.y =    top;}
+          else if(pt.y > bottom){pt.y = bottom;}
         }
 
       else

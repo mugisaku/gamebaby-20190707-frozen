@@ -726,7 +726,7 @@ operating_node: public node
   void  relay_redraw_request(node&  nd) noexcept override;
   void  relay_reform_request(         ) noexcept override;
 
-  void  process_by_mouse_position(point  pt) noexcept;
+  void  process_by_mouse_position(point&  pt) noexcept;
 
 public:
   operating_node() noexcept;

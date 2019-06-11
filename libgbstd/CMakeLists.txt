@@ -35,6 +35,7 @@ set(SOURCES
   widgets/checkbox.cpp
   widgets/radio_button.cpp
   widgets/menu_handler.cpp
+  widgets/slider.cpp
   windows/window.cpp
   windows/widget.cpp
   windows/components/frame.cpp

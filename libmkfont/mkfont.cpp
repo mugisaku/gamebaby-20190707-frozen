@@ -123,6 +123,13 @@ down_cmb(widgets::button_event  evt) noexcept
 
 
 void
+slide_chrtbl(widgets::slider_event  evt) noexcept
+{
+  evt->get_userdata<editor>().m_chrsel.set_offset(evt.get_value());
+}
+
+
+void
 save(widgets::button_event  evt) noexcept
 {
     if(evt.is_release())
@@ -199,6 +206,7 @@ m_chrsel(*this),
 m_cmbsel(*this),
 m_character_label(root.create_label().set_string(u"U+0000")),
 m_selected_label(root.create_label().set_string(u"U+0000")),
+m_character_table_slider(root.create_vertical_slider().set_length(80).set_value_max(60)),
 m_character_up_button(root.create_button().set_content(root.create_label().set_string(u"↑"))),
 m_character_down_button(root.create_button().set_content(root.create_label().set_string(u"↓"))),
 m_combined_up_button(root.create_button().set_content(root.create_label().set_string(u"↑"))),
@@ -212,6 +220,8 @@ m_save_as_combined_button(root.create_button().set_content(root.create_label().s
   m_combined_down_button.set_callback(down_cmb).set_userdata(this);
   m_save_button.set_callback(            save).set_userdata(this);
   m_save_as_combined_button.set_callback(save_as_combined).set_userdata(this);
+
+  m_character_table_slider.set_callback(slide_chrtbl).set_userdata(this);
 }
 
 

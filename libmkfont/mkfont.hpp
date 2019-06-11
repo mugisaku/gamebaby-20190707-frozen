@@ -85,6 +85,8 @@ public:
   void    up() noexcept{if(m_offset){m_offset -= 2;  request_redraw();}}
   void  down() noexcept{            {m_offset += 2;  request_redraw();}}
 
+  void  set_offset(int  v) noexcept{  m_offset = v;  request_redraw();}
+
   void  on_mouse_act(point  pt) noexcept override;
 
   void  render(const canvas&  cv) noexcept override;
@@ -124,6 +126,8 @@ editor
 
   widgets::label&  m_character_label;
   widgets::label&  m_selected_label;
+
+  widgets::slider&  m_character_table_slider;
 
   widgets::button&  m_character_up_button;
   widgets::button&  m_character_down_button;

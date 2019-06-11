@@ -712,6 +712,65 @@ public:
 
 
 
+class slider;
+
+
+class
+slider_event: public event<slider>
+{
+public:
+  using event::event;
+
+};
+
+
+class
+slider: public node
+{
+  friend class operating_node;
+
+  int  m_length=0;
+
+  int  m_value_max=0;
+
+  int  m_position=0;
+
+  enum class kind{
+    vertical,
+    horizontal,
+  } m_kind=kind::horizontal;
+
+  void  (*m_callback)(slider_event  evt)=nullptr;
+
+  slider(operating_node&  root, kind  k) noexcept;
+
+  void  process_before_reform() noexcept override;
+
+public:
+  bool  is_horizontal() const noexcept{return m_kind == kind::horizontal;}
+  bool  is_vertical()   const noexcept{return m_kind == kind::vertical;}
+
+  slider&  be_horizontal() noexcept;
+  slider&  be_vertical()   noexcept;
+
+  slider&  set_length(   int  v) noexcept;
+  slider&  set_value(    int  v) noexcept;
+  slider&  set_value_max(int  v) noexcept;
+  slider&  set_position( int  v) noexcept;
+
+  slider&  set_callback(void  (*cb)(slider_event)) noexcept{  m_callback = cb;  return *this;}
+
+  int    get_length() const noexcept{return m_length;}
+  int  get_position() const noexcept{return m_position;}
+  int     get_value() const noexcept;
+
+  void  on_mouse_act(point  mouse_pos) noexcept override;
+
+  void  render(const canvas&  cv) noexcept override;
+
+};
+
+
 class
 operating_node: public node
 {
@@ -755,6 +814,9 @@ public:
   radio_button&  create_radio_button(checkbox&  member) noexcept{return *(new radio_button(*this,member));}
 
   menu_handler&  create_menu_handler() noexcept{return *(new menu_handler(*this));}
+
+  slider&  create_vertical_slider()   noexcept{return *(new slider(*this,slider::kind::vertical));}
+  slider&  create_horizontal_slider() noexcept{return *(new slider(*this,slider::kind::horizontal));}
 
   node&  create_table_column(std::initializer_list<std::reference_wrapper<node>>  ls) noexcept;
   node&  create_table_row(   std::initializer_list<std::reference_wrapper<node>>  ls) noexcept;

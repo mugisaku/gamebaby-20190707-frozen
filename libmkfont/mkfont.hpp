@@ -42,6 +42,9 @@ extern std::reference_wrapper<combined>   g_current_combined;
 
 character&  get_character_by_unicode(char16_t  unicode) noexcept;
 
+void  initialize_table() noexcept;
+
+
 
 struct editor;
 
@@ -135,10 +138,17 @@ editor
   widgets::button&  m_combined_up_button;
   widgets::button&  m_combined_down_button;
 
+  widgets::button&  m_shift_up_button;
+  widgets::button&  m_shift_left_button;
+  widgets::button&  m_shift_right_button;
+  widgets::button&  m_shift_down_button;
+
   widgets::button&  m_save_button;
   widgets::button&  m_save_as_combined_button;
 
   editor(widgets::operating_node&  root) noexcept;
+
+  void  update() noexcept;
 
 };
 

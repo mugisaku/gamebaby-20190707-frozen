@@ -21,30 +21,30 @@ std::reference_wrapper<character>  g_current_character = std::ref(g_characters[0
 std::reference_wrapper<combined>   g_current_combined  = std::ref(g_combineds[0]);
 
 
+namespace{
+character*  g_table[0x10000];
+}
+
+
+void
+initialize_table() noexcept
+{
+    for(auto&  c: g_characters)
+    {
+      g_table[c.m_unicode] = &c;
+    }
+}
+
+
 character&
 get_character_by_unicode(char16_t  unicode) noexcept
 {
-  static character*  table[0x10000];
-
   static character  null;
 
-  auto  ptr = table[unicode];
+  auto  ptr = g_table[unicode];
 
     if(!ptr)
     {
-        for(auto&  c: g_characters)
-        {
-            if(c.m_unicode == unicode)
-            {
-              table[unicode] = &c;
-
-              return c;
-            }
-        }
-
-
-      table[unicode] = &null;
-
       return null;
     }
 
@@ -130,6 +130,78 @@ slide_chrtbl(widgets::slider_event  evt) noexcept
 
 
 void
+shu(widgets::button_event  evt) noexcept
+{
+    if(evt.is_release())
+    {
+      auto&  c = g_current_character.get();
+
+        for(int  i = 1;  i < character::m_size;  ++i)
+        {
+          c.m_data[i-1] = c.m_data[i];
+        }
+
+
+      evt->get_userdata<editor>().update();
+    }
+}
+
+
+void
+shl(widgets::button_event  evt) noexcept
+{
+    if(evt.is_release())
+    {
+      auto&  c = g_current_character.get();
+
+        for(int  i = 0;  i < character::m_size;  ++i)
+        {
+          c.m_data[i] <<= 1;
+        }
+
+
+      evt->get_userdata<editor>().update();
+    }
+}
+
+
+void
+shr(widgets::button_event  evt) noexcept
+{
+    if(evt.is_release())
+    {
+      auto&  c = g_current_character.get();
+
+        for(int  i = 0;  i < character::m_size;  ++i)
+        {
+          c.m_data[i] >>= 1;
+        }
+
+
+      evt->get_userdata<editor>().update();
+    }
+}
+
+
+void
+shd(widgets::button_event  evt) noexcept
+{
+    if(evt.is_release())
+    {
+      auto&  c = g_current_character.get();
+
+        for(int  i = 1;  i < character::m_size;  ++i)
+        {
+          c.m_data[character::m_size-i] = c.m_data[character::m_size-1-i];
+        }
+
+
+      evt->get_userdata<editor>().update();
+    }
+}
+
+
+void
 save(widgets::button_event  evt) noexcept
 {
     if(evt.is_release())
@@ -140,17 +212,22 @@ save(widgets::button_event  evt) noexcept
         {
           fprintf(f,"//characters\n");
 
-            for(auto&  c: g_characters)
+            for(auto  cptr: g_table)
             {
-              fprintf(f,"{0x%04X,{",c.m_unicode);
-
-                for(int  i = 0;  i < character::m_size;  ++i)
+                if(cptr)
                 {
-                  fprintf(f,"0x%02X,",c.m_data[i]);
+                  auto&  c = *cptr;
+
+                  fprintf(f,"{0x%04X,{",c.m_unicode);
+
+                    for(int  i = 0;  i < character::m_size;  ++i)
+                    {
+                      fprintf(f,"0x%02X,",c.m_data[i]);
+                    }
+
+
+                  fprintf(f,"}},\n");
                 }
-
-
-              fprintf(f,"}},\n");
             }
 
 
@@ -211,6 +288,10 @@ m_character_up_button(root.create_button().set_content(root.create_label().set_s
 m_character_down_button(root.create_button().set_content(root.create_label().set_string(u"↓"))),
 m_combined_up_button(root.create_button().set_content(root.create_label().set_string(u"↑"))),
 m_combined_down_button(root.create_button().set_content(root.create_label().set_string(u"↓"))),
+m_shift_up_button(root.create_button().set_content(root.create_label().set_string(u"Shift ↑"))),
+m_shift_left_button(root.create_button().set_content(root.create_label().set_string(u"Shift ←"))),
+m_shift_right_button(root.create_button().set_content(root.create_label().set_string(u"Shift →"))),
+m_shift_down_button(root.create_button().set_content(root.create_label().set_string(u"Shift ↓"))),
 m_save_button(root.create_button().set_content(root.create_label().set_string(u"Save"))),
 m_save_as_combined_button(root.create_button().set_content(root.create_label().set_string(u"Save as Combined")))
 {
@@ -221,7 +302,23 @@ m_save_as_combined_button(root.create_button().set_content(root.create_label().s
   m_save_button.set_callback(            save).set_userdata(this);
   m_save_as_combined_button.set_callback(save_as_combined).set_userdata(this);
 
+  m_shift_up_button.set_callback(   shu).set_userdata(this);
+  m_shift_left_button.set_callback( shl).set_userdata(this);
+  m_shift_right_button.set_callback(shr).set_userdata(this);
+  m_shift_down_button.set_callback( shd).set_userdata(this);
+
   m_character_table_slider.set_callback(slide_chrtbl).set_userdata(this);
+}
+
+
+
+void
+editor::
+update() noexcept
+{
+  m_bitmap.request_redraw();
+  m_chrsel.request_redraw();
+  m_cmbsel.request_redraw();
 }
 
 

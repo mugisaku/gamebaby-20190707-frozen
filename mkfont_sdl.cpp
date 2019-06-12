@@ -54,7 +54,17 @@ main_loop() noexcept
 int
 main(int  argc, char**  argv)
 {
-  auto&  save_buttons = g_root.create_table_row({g_editor.m_save_button,g_editor.m_save_as_combined_button});
+  initialize_table();
+
+  auto&  shift_buttons = g_root.create_table_column({
+    g_editor.m_shift_up_button,
+    g_editor.m_shift_left_button,
+    g_editor.m_shift_right_button,
+    g_editor.m_shift_down_button
+  });
+
+
+  auto& save_buttons = g_root.create_table_row({g_editor.m_save_button,g_editor.m_save_as_combined_button});
 
   auto&  chrsel_buttons = g_root.create_table_row({g_editor.m_character_up_button,g_editor.m_character_down_button});
   auto&  cmbsel_buttons = g_root.create_table_row({g_editor.m_combined_up_button,g_editor.m_combined_down_button});
@@ -69,7 +79,7 @@ main(int  argc, char**  argv)
   auto&  chrsel_frame = g_root.create_frame().set_content(chrsel_table2).set_string(u"character table");
   auto&  cmbsel_frame = g_root.create_frame().set_content(cmbsel_table).set_string(u"combined table");
 
-  auto&  upper_row = g_root.create_table_row({bitmap_frame,save_buttons});
+  auto&  upper_row = g_root.create_table_row({bitmap_frame,shift_buttons,save_buttons});
   auto&  lower_row = g_root.create_table_row({chrsel_frame,cmbsel_frame});
 
   g_root.add_child(g_root.create_table_column({upper_row,lower_row}),{});
@@ -79,7 +89,7 @@ main(int  argc, char**  argv)
   sdl::init(g_root.get_width(),g_root.get_height());
 
   g_screen_canvas = sdl::make_screen_canvas();
-sdl::start_screen_recording();
+
 #ifdef EMSCRIPTEN
   emscripten_set_main_loop(main_loop,0,false);
 #else

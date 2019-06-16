@@ -4,10 +4,7 @@
 
 
 std::vector<character>
-g_characters =
-{
-#include"characters.txt"
-};
+g_characters;
 
 
 std::vector<combined>
@@ -17,22 +14,75 @@ g_combineds =
 };
 
 
-std::reference_wrapper<character>  g_current_character = std::ref(g_characters[0]);
+character  g_null;
+
+
+std::reference_wrapper<character>  g_current_character = std::ref(g_null);
 std::reference_wrapper<combined>   g_current_combined  = std::ref(g_combineds[0]);
 
 
 namespace{
+std::string  g_path;
+
 character*  g_table[0x10000];
 }
 
 
 void
-initialize_table() noexcept
+initialize(std::string_view  path) noexcept
 {
+  auto  f = fopen(path.data(),"rb");
+
+    if(f)
+    {
+      g_path = path;
+
+        for(;;)
+        {
+          int  iarr[9];
+
+            if(fscanf(f,"{%x,{%x,%x,%x,%x,%x,%x,%x,%x,}},\n",iarr+0,
+              iarr+1,
+              iarr+2,
+              iarr+3,
+              iarr+4,
+              iarr+5,
+              iarr+6,
+              iarr+7,
+              iarr+8) != 9)
+            {
+              break;
+            }
+
+
+          character  c = {
+            static_cast<uint16_t>(iarr[0]),
+            static_cast<uint8_t>( iarr[1]),
+            static_cast<uint8_t>( iarr[2]),
+            static_cast<uint8_t>( iarr[3]),
+            static_cast<uint8_t>( iarr[4]),
+            static_cast<uint8_t>( iarr[5]),
+            static_cast<uint8_t>( iarr[6]),
+            static_cast<uint8_t>( iarr[7]),
+            static_cast<uint8_t>( iarr[8]),
+          };
+
+
+          g_characters.emplace_back(c);
+        }
+
+
+      fclose(f);
+    }
+
+
     for(auto&  c: g_characters)
     {
       g_table[c.m_unicode] = &c;
     }
+
+
+  g_current_character = std::ref(g_characters[0]);
 }
 
 
@@ -136,11 +186,13 @@ shu(widgets::button_event  evt) noexcept
     {
       auto&  c = g_current_character.get();
 
-        for(int  i = 1;  i < character::m_size;  ++i)
+        for(int  i = 0;  i < character::m_size-1;  ++i)
         {
-          c.m_data[i-1] = c.m_data[i];
+          c.m_data[i] = c.m_data[i+1];
         }
 
+
+      c.m_data[character::m_size-1] = 0;
 
       evt->get_userdata<editor>().update();
     }
@@ -196,6 +248,8 @@ shd(widgets::button_event  evt) noexcept
         }
 
 
+      c.m_data[0] = 0;
+
       evt->get_userdata<editor>().update();
     }
 }
@@ -206,12 +260,10 @@ save(widgets::button_event  evt) noexcept
 {
     if(evt.is_release())
     {
-      auto  f = fopen("characters.txt","wb");
+      auto  f = fopen(g_path.data(),"wb");
 
         if(f)
         {
-          fprintf(f,"//characters\n");
-
             for(auto  cptr: g_table)
             {
                 if(cptr)

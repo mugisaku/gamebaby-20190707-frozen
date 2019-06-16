@@ -8,6 +8,15 @@ namespace ww{
 
 
 
+spilling_text::
+spilling_text() noexcept:
+m_task("spilling_text",this)
+{
+}
+
+
+
+
 spilling_text&
 spilling_text::
 reset(gbstd::point  bottom_pos, int  offset) noexcept
@@ -25,8 +34,9 @@ reset(gbstd::point  bottom_pos, int  offset) noexcept
 
 void
 spilling_text::
-tick(gbstd::task_control  ctrl, spilling_text&  spltxt) noexcept
+tick(spilling_text&  spltxt) noexcept
 {
+/*
     if(ctrl.test_timer_flag())
     {
         if(!ctrl.test_timer())
@@ -38,6 +48,7 @@ tick(gbstd::task_control  ctrl, spilling_text&  spltxt) noexcept
     }
 
   else
+*/
     {
       spltxt.m_pos.y += spltxt.m_y_vector     ;
                         spltxt.m_y_vector += 2;
@@ -54,7 +65,7 @@ tick(gbstd::task_control  ctrl, spilling_text&  spltxt) noexcept
 
           else
             {
-              ctrl.set_timer(spltxt.m_time);
+              spltxt.m_task.sleep(spltxt.m_time);
             }
         }
     }
@@ -63,7 +74,7 @@ tick(gbstd::task_control  ctrl, spilling_text&  spltxt) noexcept
 
 void
 spilling_text::
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept
+draw(const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept
 {
   cv.draw_string_safely(spltxt.m_color,spltxt.m_text.data(),spltxt.m_pos.x,
                                                             spltxt.m_pos.y);

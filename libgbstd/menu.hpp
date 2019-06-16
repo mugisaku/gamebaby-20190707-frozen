@@ -360,7 +360,7 @@ private:
 
   std::vector<element>  m_container;
 
-  task_control  m_control;
+  task  m_task;
 
   stack&  internal_open(int  opening_value, view&  v, void*  data, callback<dummy>  cb) noexcept;
 
@@ -369,7 +369,7 @@ public:
 
   int  get_number_of_elements() const noexcept{return m_container.size();}
 
-  stack&  ready(clock_watch  w, uint32_t  intval, gbstd::task_list&  ls) noexcept;
+  stack&  ready(clock_watch  w, uint32_t  intval) noexcept;
 
   template<typename  T>
   stack&  open(int  opening_value, view&  v, T&  data, callback<T>  cb) noexcept
@@ -383,8 +383,8 @@ public:
 
   int  get_opening_value() const noexcept{return m_container.back().m_opening_value;}
 
-  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, stack&  stk) noexcept;
-  static void  tick(gbstd::task_control  ctrl,                           stack&  stk) noexcept;
+  static void  draw(const gbstd::canvas&  cv, stack&  stk) noexcept;
+  static void  tick(                          stack&  stk) noexcept;
 
 };
 

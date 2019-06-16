@@ -27,7 +27,7 @@ update_increment() noexcept
 
 void
 bar::
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, bar&  b) noexcept
+draw(const gbstd::canvas&  cv, bar&  b) noexcept
 {
   auto&  l = b.m_length;
 
@@ -42,7 +42,7 @@ draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, bar&  b) noexcept
 
 void
 bar::
-tick(gbstd::task_control  ctrl, bar&  b) noexcept
+tick(bar&  b) noexcept
 {
     if(!b.is_finished())
     {

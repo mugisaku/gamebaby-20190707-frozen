@@ -144,6 +144,9 @@ private:
 
   int  m_number_of_lines=0;
 
+  point  m_cursor_position;
+  point  m_base_position;
+
   static line*  m_stock_pointer;
 
   line*  new_line() noexcept;
@@ -161,6 +164,9 @@ public:
   text&  assign(      text&&  rhs) noexcept;
 
   text&  clear() noexcept;
+
+  text&  set_base_position(point  pt) noexcept{  m_base_position = pt;  return *this;}
+  point  get_base_position(         ) const noexcept {return m_base_position;}
 
   int  get_number_of_lines() const noexcept{return m_number_of_lines;}
 

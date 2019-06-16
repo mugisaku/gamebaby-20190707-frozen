@@ -54,7 +54,13 @@ main_loop() noexcept
 int
 main(int  argc, char**  argv)
 {
-  initialize_table();
+    if(argc != 2)
+    {
+      return 0;
+    }
+
+
+  initialize(argv[1]);
 
   auto&  shift_buttons = g_root.create_table_column({
     g_editor.m_shift_up_button,

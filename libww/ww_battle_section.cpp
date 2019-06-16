@@ -41,43 +41,32 @@ initialize(piece&  p, int  side_counter) noexcept
   p.m_body_direction = p.m_side;
   p.m_move_direction = p.m_side;
 }
+
+
+constexpr const char*
+g_section_name = "battle";
+
+
 }
 
 
 
 
 battle_section::
-battle_section() noexcept
+battle_section(gbstd::execution&  exec) noexcept:
+m_clock(g_section_name),
+m_task(g_section_name,this)
 {
   initialize_menu();
+
+  reset();
 }
 
 
-
-
-void
 battle_section::
-reset() noexcept
+~battle_section()
 {
-  int  n = 48;
-
-  m_number_of_lines = 1;
-  m_number_of_lines = 8;
-
-  int  side_counter = 0;
-
-    for(int  i = 0;  i < m_number_of_lines;  ++i)
-    {
-      auto&  ln = m_line_table[i];
-
-      ln.m_y_position = n      ;
-                        n += 10;
-
-
-      ln.m_piece.m_line  = &ln;
-
-      initialize(ln.m_piece,side_counter++);
-    }
+  clear();
 }
 
 
@@ -95,7 +84,7 @@ gra_img(g_human_png);
 
 
 void
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, piece&  p) noexcept
+draw(const gbstd::canvas&  cv, piece&  p) noexcept
 {
   constexpr int  size = 16;
 
@@ -109,19 +98,19 @@ draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, piece&  p) noexcept
 
 
 void
-bdraw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, battle_section&  b) noexcept
+bdraw(const gbstd::canvas&  cv, battle_section&  b) noexcept
 {
     for(int  i = 0;  i < b.m_number_of_lines;  ++i)
     {
       auto&  ln = b.m_line_table[i];
 
-      draw(ctrl,cv,ln.m_piece);
+      draw(cv,ln.m_piece);
     }
 }
 
 
 void
-tick(gbstd::task_control  ctrl, piece&  p) noexcept
+tick(piece&  p) noexcept
 {
 ++p.m_action_counter;
 ++p.m_animation_step_counter;
@@ -305,13 +294,13 @@ process(piece&  l, piece&  r) noexcept
 
 
 void
-btick(gbstd::task_control  ctrl, battle_section&  b) noexcept
+btick(battle_section&  b) noexcept
 {
     for(int  i = 0;  i < b.m_number_of_lines;  ++i)
     {
       auto&  ln = b.m_line_table[i];
 
-      tick(ctrl,ln.m_piece);
+      tick(ln.m_piece);
     }
 
 
@@ -336,7 +325,7 @@ btick(gbstd::task_control  ctrl, battle_section&  b) noexcept
 
     if(gbstd::g_input.test_p() && !b.m_first_menu_view.test_busy_flag())
     {
-      b.m_menu_stack.ready(b.m_clock_watch,20,b.m_task_list);
+      b.m_menu_stack.ready(b.m_clock,20);
 
       gbstd::barrier_input();
 
@@ -398,10 +387,12 @@ entry_party(const party&  p, battles::side  side) noexcept
 
       c.m_side = side;
 
+/*
       m_task_list.push(c).set_draw<battles::character>().set_tick<battles::character>(m_clock_watch,20);
 
       m_task_list.push(  c.m_hp_display).set_draw<string_display>();
       m_task_list.push(c.m_name_display).set_draw<string_display>();
+*/
 
       ++n;
     }
@@ -425,16 +416,37 @@ clear() noexcept
     }
 
 
-  m_task_list.clear();
-
-  reset();
-
-  m_task_list.push(*this).set_draw(bdraw).set_tick(m_clock_watch,80,btick);
-
   m_menu_stack.clear();
 }
 
 
+void
+battle_section::
+reset() noexcept
+{
+  int  n = 48;
+
+  m_number_of_lines = 1;
+  m_number_of_lines = 8;
+
+  int  side_counter = 0;
+
+    for(int  i = 0;  i < m_number_of_lines;  ++i)
+    {
+      auto&  ln = m_line_table[i];
+
+      ln.m_y_position = n      ;
+                        n += 10;
+
+
+      ln.m_piece.m_line  = &ln;
+
+      initialize(ln.m_piece,side_counter++);
+    }
+
+
+//  m_task_list.push(*this).set_draw(bdraw).set_tick(m_clock_watch,80,btick);
+}
 
 
 

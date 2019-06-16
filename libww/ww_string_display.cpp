@@ -49,7 +49,7 @@ set_string(std::u16string_view  sv) noexcept
 
 void
 string_display::
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, string_display&  strdsp) noexcept
+draw(const gbstd::canvas&  cv, string_display&  strdsp) noexcept
 {
     if(strdsp.m_pointer)
     {

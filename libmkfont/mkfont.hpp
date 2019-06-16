@@ -42,7 +42,7 @@ extern std::reference_wrapper<combined>   g_current_combined;
 
 character&  get_character_by_unicode(char16_t  unicode) noexcept;
 
-void  initialize_table() noexcept;
+void  initialize(std::string_view  path) noexcept;
 
 
 

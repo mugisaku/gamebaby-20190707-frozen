@@ -14,6 +14,8 @@ namespace ww{
 class
 spilling_text
 {
+  gbstd::task  m_task;
+
   gbstd::fixed_t  m_y_vector;
 
   gbstd::real_point  m_pos;
@@ -30,6 +32,8 @@ spilling_text
   spilling_text*  m_next;
 
 public:
+  spilling_text() noexcept;
+
   spilling_text&  set_text(std::u16string&&     text) noexcept{  m_text  = std::move(text);  return *this;}
   spilling_text&  set_text(std::u16string_view  text) noexcept{  m_text  =           text ;  return *this;}
   spilling_text&  set_color(gbstd::color    color) noexcept{  m_color =           color;  return *this;}
@@ -39,8 +43,8 @@ public:
 
   bool  is_finished() const noexcept{return m_text.empty();}
 
-  static void  tick(gbstd::task_control  ctrl,                           spilling_text&  spltxt) noexcept;
-  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept;
+  static void  tick(                          spilling_text&  spltxt) noexcept;
+  static void  draw(const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept;
 
   static spilling_text*  produce(uint32_t&  counter) noexcept;
   static void            collect(spilling_text*  ptr) noexcept;

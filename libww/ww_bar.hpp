@@ -68,8 +68,8 @@ public:
 
   void  update_increment() noexcept;
 
-  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, bar&  b) noexcept;
-  static void  tick(gbstd::task_control  ctrl,                           bar&  b) noexcept;
+  static void  draw(const gbstd::canvas&  cv, bar&  b) noexcept;
+  static void  tick(                          bar&  b) noexcept;
 
 };
 

@@ -10,144 +10,94 @@ namespace gbstd{
 
 
 
-struct
-clock_entity
+clock&
+clock::
+reset(uint32_t  time, uint32_t  fraction) noexcept
 {
-  std::string  m_name;
+  m_time     =     time;
+  m_fraction = fraction;
 
-  uint32_t  m_time;
-  uint32_t  m_buffer;
+  m_status.clear();
 
-  int  m_permil;
-
-  bool  m_working_flag;
-
-  clock_entity*  m_next;
-
-};
-
-
-
-
-const uint32_t&  clock_control::get_time()   const noexcept{return m_entity->m_time;}
-const int&       clock_control::get_permil() const noexcept{return m_entity->m_permil;}
-
-bool  clock_control::is_working() const noexcept{return  m_entity->m_working_flag;}
-bool  clock_control::is_stopped() const noexcept{return !m_entity->m_working_flag;}
-
-
-void
-clock_control::
-reset() noexcept
-{
-  m_entity->m_time   = 0;
-  m_entity->m_buffer = 0;
+  return *this;
 }
 
 
-clock_control&  clock_control::set_time(uint32_t  v) noexcept{  m_entity->m_time   = v;  return *this;}
-clock_control&  clock_control::set_permil(   int  v) noexcept{  m_entity->m_permil = v;  return *this;}
-
-void    clock_control::start() noexcept{            m_entity->m_working_flag =  true;}
-void  clock_control::restart() noexcept{  reset();  m_entity->m_working_flag =  true;}
-void     clock_control::stop() noexcept{            m_entity->m_working_flag = false;}
-
-
-
-
-const uint32_t&  clock_watch::get_time()   const noexcept{return m_entity->m_time;}
-const int&       clock_watch::get_permil() const noexcept{return m_entity->m_permil;}
-
-bool  clock_watch::is_working() const noexcept{return  m_entity->m_working_flag;}
-bool  clock_watch::is_stopped() const noexcept{return !m_entity->m_working_flag;}
-
-
-
-
-clock_master::
-~clock_master()
+clock&
+clock::
+add(uint32_t  t) noexcept
 {
-  auto  ptr = m_top_pointer;
-
-    while(ptr)
+    if(m_working_flag)
     {
-      auto  next = ptr->m_next;
+      constexpr int  shift_amount = 16;
 
-      delete ptr       ;
-             ptr = next;
+      m_fraction += (t<<shift_amount)/1000*m_permil;
+
+      m_time += (m_fraction>>shift_amount);
+
+      m_fraction &= 0xFFFF;
     }
+
+
+  return *this;
 }
 
 
-clock_control
-clock_master::
-operator[](std::string_view  name) noexcept
-{
-  auto  ptr = m_top_pointer;
+const clock
+clock_watch::
+m_null("null");
 
-    while(ptr)
+
+
+
+clock_master&
+clock_master::
+add(clock&  cl) noexcept
+{
+  m_list.emplace_back(&cl);
+
+  return *this;
+}
+
+
+clock_master&
+clock_master::
+remove(std::string_view  name) noexcept
+{
+  auto  it = m_list.begin();
+
+    while(it != m_list.end())
     {
-        if(ptr->m_name == name)
+        if((*it)->m_name == name)
         {
-          return clock_control(*ptr);
+          it = m_list.erase(it);
         }
 
-
-      ptr = ptr->m_next;
+      else
+        {
+          ++it;
+        }
     }
 
 
-  return add(name);
+  return *this;
 }
 
 
-
-
-clock_control
+clock_master&
 clock_master::
-add(std::string_view  name, int  permil) noexcept
-{
-  auto  ent = new clock_entity;
-
-  ent->m_name         =   name;
-  ent->m_permil       = permil;
-  ent->m_working_flag =  false;
-  ent->m_time         =      0;
-  ent->m_buffer       =      0;
-
-  ent->m_next = m_top_pointer      ;
-                m_top_pointer = ent;
-
-
-  return clock_control(*ent);
-}
-
-
-void
-clock_master::
-step() noexcept
+update() noexcept
 {
   auto  diff = g_time-m_last_time         ;
                       m_last_time = g_time;
 
-  auto  ptr = m_top_pointer;
-
-    while(ptr)
+    for(auto&  ptr: m_list)
     {
-        if(ptr->m_working_flag)
-        {
-          constexpr int  shift_amount = 16;
-
-          ptr->m_buffer += (diff<<shift_amount)/1000*ptr->m_permil;
-
-          ptr->m_time += (ptr->m_buffer>>shift_amount);
-
-          ptr->m_buffer &= 0xFFFF;
-        }
-
-
-      ptr = ptr->m_next;
+      ptr->add(diff);
     }
+
+
+  return *this;
 }
 
 
@@ -155,24 +105,10 @@ void
 clock_master::
 print() const noexcept
 {
-  auto  ptr = m_top_pointer;
-
-    while(ptr)
+    for(auto&  ptr: m_list)
     {
-      printf("{\"%s\": %8u}",ptr->m_name.data(),ptr->m_time);
-
-      ptr = ptr->m_next;
+      printf("{\"%s\": %8u}",ptr->get_name().data(),ptr->get_time());
     }
-}
-
-
-clock_watch
-clock_master::
-get_zero_clock_watch() noexcept
-{
-  static const clock_entity  zero = {"!zero",0,0,0};
-
-  return clock_watch(zero);
 }
 
 

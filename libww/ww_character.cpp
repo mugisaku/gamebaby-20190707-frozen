@@ -11,16 +11,16 @@ namespace battles{
 
 void
 character::
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, character&  c) noexcept
+draw(const gbstd::canvas&  cv, character&  c) noexcept
 {
-  c.m_hp_bar.draw(ctrl,cv,c.m_hp_bar);
-  c.m_ap_bar.draw(ctrl,cv,c.m_ap_bar);
+  c.m_hp_bar.draw(cv,c.m_hp_bar);
+  c.m_ap_bar.draw(cv,c.m_ap_bar);
 }
 
 
 void
 character::
-tick(gbstd::task_control  ctrl, character&  c) noexcept
+tick(character&  c) noexcept
 {
   constexpr gbstd::fixed_t  length_max = 80;
 
@@ -47,7 +47,7 @@ tick(gbstd::task_control  ctrl, character&  c) noexcept
 
   c.m_hp_bar.set_color(color);
 
-  c.m_hp_bar.tick(ctrl,c.m_hp_bar);
+  c.m_hp_bar.tick(c.m_hp_bar);
 
 
   auto  ap = c.m_ap;
@@ -62,7 +62,7 @@ tick(gbstd::task_control  ctrl, character&  c) noexcept
     }
 
 
-  c.m_ap_bar.tick(ctrl,c.m_ap_bar);
+  c.m_ap_bar.tick(c.m_ap_bar);
 }
 
 

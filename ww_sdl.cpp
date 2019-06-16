@@ -23,6 +23,10 @@ canvas
 g_screen_canvas;
 
 
+process
+g_process;
+
+
 ww::context
 g_context;
 
@@ -30,21 +34,11 @@ g_context;
 void
 main_loop() noexcept
 {
-  constexpr int  delay = 80;
-
-  static uint32_t  next;
-
   sdl::update_control();
 
-  g_context.step(nullptr);
-
-    if(gbstd::g_time >= next)
+    if(g_process.step())
     {
-      g_context.step(&g_screen_canvas);
-
       sdl::update_screen(g_screen_canvas);
-
-      next = gbstd::g_time+delay;
     }
 }
 
@@ -66,6 +60,8 @@ main(int  argc, char**  argv)
 
   sdl::init(g_context.get_screen_width(),g_context.get_screen_height(),1.0);
 
+  g_screen_canvas = sdl::make_screen_canvas();
+
     if(argc == 2)
     {
         if(std::strcmp(argv[1],"-rec") == 0)
@@ -73,14 +69,12 @@ main(int  argc, char**  argv)
           sdl::start_screen_recording();
         }
     }
-//  sdl::init_sound(24000);
-
-//  sdl::add_sound("bashi","main = noise{\"p80:v20:f48:b3\"}");
-
-//  sdl::start_sound_playing();
 
 
-  g_screen_canvas = sdl::make_screen_canvas();
+  g_process.assign("system",g_context.make_entry())
+    .set_interval(20)
+    .set_canvas(g_screen_canvas);
+
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);

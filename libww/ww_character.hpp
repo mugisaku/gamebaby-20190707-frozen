@@ -131,8 +131,8 @@ character
 
   int  m_last_ap=0;
 
-  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, character&  c) noexcept;
-  static void  tick(gbstd::task_control  ctrl,                           character&  c) noexcept;
+  static void  draw(const gbstd::canvas&  cv, character&  c) noexcept;
+  static void  tick(                          character&  c) noexcept;
 
   character() noexcept{}
 

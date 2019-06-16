@@ -55,7 +55,7 @@ public:
   string_display&  set_align_to_left()  noexcept{  m_align =  align::left;  return *this;}
   string_display&  set_align_to_right() noexcept{  m_align = align::right;  return *this;}
 
-  static void  draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, string_display&  strdsp) noexcept;
+  static void  draw(const gbstd::canvas&  cv, string_display&  strdsp) noexcept;
 
 };
 

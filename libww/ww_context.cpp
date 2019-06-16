@@ -11,23 +11,6 @@ namespace ww{
 context::
 context() noexcept
 {
-  auto  sysclock = m_clock_master.add("system",1000);
-
-  sysclock.start();
-
-  m_clock_control = sysclock;
-  s_manage.m_clock_watch  = sysclock;
-  s_battle.m_clock_watch  = sysclock;
-
-  s_manage.m_task_control = m_task_list.push(s_manage.m_task_list);
-//  s_battle.m_task_control = m_task_list.push(s_battle.m_task_list);
-
-  m_task_list.push(*this)
-             .set_draw<context>()
-             .set_tick<context>(sysclock,20);
-
-
-  m_process.push({{"context::start",start,*this,gbstd::interruptions::on}},"");
 }
 
 
@@ -45,42 +28,26 @@ push_spilling_text(gbstd::color  color, std::u16string_view  sv, gbstd::point  c
       .set_color(color)
       .set_time(time)
       .reset({center.x-(text_width/2),center.y-8},-32);
+/*
 
   m_task_list.push(*ptr).set_draw<spilling_text>()
                         .set_tick<spilling_text>(m_clock_control,20)
                         .set_collect<spilling_text>();
+*/
 }
 
 
 void
 context::
-tick(gbstd::task_control  ctrl, context&  ctx) noexcept
+tick(context&  ctx) noexcept
 {
 }
 
 
 void
 context::
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, context&  ctx) noexcept
+draw(const gbstd::canvas&  cv, context&  ctx) noexcept
 {
-}
-
-
-void
-context::
-step(const gbstd::canvas*  cv) noexcept
-{
-    if(cv)
-    {
-      cv->fill(m_background_color);
-    }
-
-
-  m_clock_master.step();
-
-  m_task_list.process(cv,true);
-
-  m_process.step();
 }
 
 

@@ -3,8 +3,6 @@
 
 
 #include"libgbstd/utility.hpp"
-#include"libgbstd/weak_reference_counter.hpp"
-#include"libgbstd/process.hpp"
 #include"libgbstd/image.hpp"
 #include"libgbstd/clock.hpp"
 #include<list>
@@ -18,95 +16,109 @@ namespace gbstd{
 
 
 
-class task;
-
-
 class
-task_control
+task
 {
-  task*  m_pointer=nullptr;
+  std::string  m_name;
+
+  void  (*m_draw_callback)(const canvas&,dummy&);
+  void  (*m_tick_callback)(              dummy&);
+
+  void*  m_data;
+
+  status_value<int>  m_status;
+
+  struct flags{
+    static constexpr int          live =  1;
+    static constexpr int         sleep =  2;
+    static constexpr int         alarm =  4;
+    static constexpr int          show =  8;
+    static constexpr int        freeze = 16;
+    static constexpr int         blink = 32;
+    static constexpr int     blink_bit = 64;
+  };
+
+
+  clock_watch  m_clock_watch;
+
+  uint32_t  m_interval;
+  uint32_t  m_next_time;
+
+  uint32_t  m_blink_show_value;
+  uint32_t  m_blink_hide_value;
+  uint32_t  m_blink_counter=0;
 
 public:
-  task_control(task*  ptr=nullptr) noexcept: m_pointer(ptr){}
-  task_control(task&  tsk) noexcept: m_pointer(&tsk){}
+  task() noexcept{}
+  task(std::string_view  name, void*  ptr) noexcept: m_name(name), m_data(ptr){}
 
-  operator bool() const noexcept{return m_pointer;}
+  const std::string&  get_name() const noexcept{return m_name;}
 
-  task_control&  clear() noexcept{  m_pointer = nullptr;  return *this;}
+  const void*  get_data() const noexcept{return m_data;}
 
-  const std::string&  get_name() const noexcept;
+  task&  live() noexcept{  m_status.set(  flags::live);  return *this;}
+  task&   die() noexcept{  m_status.unset(flags::live);  return *this;}
 
-  const void*  get_data() const noexcept;
+  task&  sleep(uint32_t  t) noexcept;
 
-  task_control    set_remove_flag() noexcept;
-  task_control  unset_remove_flag() noexcept;
+  task&  sleep() noexcept{  m_status.set(  flags::sleep);  return *this;}
+  task&  getup() noexcept{  m_status.unset(flags::sleep);  return *this;}
 
-  task_control    set_skip_draw_flag() noexcept;
-  task_control  unset_skip_draw_flag() noexcept;
+  task&  show() noexcept{  m_status.set(  flags::show);  return *this;}
+  task&  hide() noexcept{  m_status.unset(flags::show);  return *this;}
 
-  task_control    set_skip_tick_flag() noexcept;
-  task_control  unset_skip_tick_flag() noexcept;
+  task&    freeze() noexcept{  m_status.set(  flags::freeze);  return *this;}
+  task&  unfreeze() noexcept{  m_status.unset(flags::freeze);  return *this;}
 
-  task_control    set_blink_flag() noexcept;
-  task_control  unset_blink_flag() noexcept;
+  task&    blink() noexcept{  m_status.set(  flags::blink);  return *this;}
+  task&  unblink() noexcept{  m_status.unset(flags::blink);  return *this;}
 
-  task_control  set_blinking_rate(int  show, int  hide) noexcept;
+  task&  set_blinking_rate(int  show, int  hide) noexcept;
 
-  bool  test_remove_flag() const noexcept;
-  bool  test_skip_draw_flag()   const noexcept;
-  bool  test_skip_tick_flag()   const noexcept;
-  bool  test_blink_flag()   const noexcept;
-  bool  test_child_flag()   const noexcept;
-  bool  test_timer_flag()   const noexcept;
+  bool  is_living()   const noexcept{return m_status.test(flags::live);}
+  bool  is_sleeping() const noexcept{return m_status.test(flags::sleep);}
+  bool  is_blinking() const noexcept{return m_status.test(flags::blink);}
+  bool  is_freezing() const noexcept{return m_status.test(flags::freeze);}
+  bool  is_showing()  const noexcept{return m_status.test(flags::show);}
 
-  uint32_t      get_interval(           ) const noexcept;
-  task_control  set_interval(uint32_t  t)       noexcept;
+  uint32_t  get_interval(           ) const noexcept{return m_interval                   ;}
+  task&     set_interval(uint32_t  t)       noexcept{       m_interval = t;  return *this;}
 
-  bool            test_timer(           ) const noexcept;
-  task_control     set_timer(uint32_t  t)       noexcept;
-  task_control   unset_timer(           )       noexcept;
+  task&  set_clock_watch(clock_watch  w) noexcept{  m_clock_watch = w;  return *this;}
 
-  task_control  set_collect(void  (*cb)(dummy*)) noexcept;
+  task&  set_data(void*  ptr) noexcept{  m_data = ptr;  return *this;}
+
+
+  task&  set_draw(void  (*cb)(const canvas&,dummy&)) noexcept{  m_draw_callback = cb;  return *this;}
 
   template<typename  T>
-  task_control  set_collect(void  (*cb)(T*)) noexcept
+  task&  set_draw(void  (*cb)(const canvas&,T&)) noexcept
   {
-    return set_collect(reinterpret_cast<void(*)(dummy*)>(cb));
+    return set_draw(reinterpret_cast<void(*)(const canvas&,dummy&)>(cb));
   }
 
   template<typename  T>
-  task_control  set_collect() noexcept
-  {
-    return set_collect(T::collect);
-  }
-
-  task_control  set_draw(void  (*cb)(task_control,const canvas&,dummy&)) noexcept;
-
-  template<typename  T>
-  task_control  set_draw(void  (*cb)(task_control,const canvas&,T&)) noexcept
-  {
-    return set_draw(reinterpret_cast<void(*)(task_control,const canvas&,dummy&)>(cb));
-  }
-
-  template<typename  T>
-  task_control  set_draw() noexcept
+  task&  set_draw() noexcept
   {
     return set_draw(T::draw);
   }
 
-  task_control  set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(task_control,dummy&)) noexcept;
+  task&  set_tick(void  (*cb)(dummy&)) noexcept{  m_tick_callback = cb;  return *this;}
 
   template<typename  T>
-  task_control  set_tick(clock_watch  w, uint32_t  intval, void  (*cb)(task_control,T&)) noexcept
+  task&  set_tick(void  (*cb)(T&)) noexcept
   {
-    return set_tick(w,intval,reinterpret_cast<void(*)(task_control,dummy&)>(cb));
+    return set_tick(reinterpret_cast<void(*)(dummy&)>(cb));
   }
 
   template<typename  T>
-  task_control  set_tick(clock_watch  w, uint32_t  intval) noexcept
+  task&  set_tick() noexcept
   {
-    return set_tick(w,intval,T::tick);
+    return set_tick(T::tick);
   }
+
+  task&  operator()(                 ) noexcept;
+  task&  operator()(const canvas&  cv) noexcept;
 
 };
 
@@ -114,38 +126,21 @@ public:
 class
 task_list
 {
-  static task*  m_dead_node_top;
-
-  task*  m_top_pointer=nullptr;
-
-  int  m_number_of_tasks=0;
-
-  static void  unrefer(task*  ptr) noexcept;
-
-  task*  erase(task*  ptr, task*  prev_ptr) noexcept;
-
-  static void  tick_object(                   task&  tsk) noexcept;
-  static void  draw_object(const canvas&  cv, task&  tsk) noexcept;
-
-  task_control  internal_push(void*  data, bool  is_child, std::string_view  name) noexcept;
+  std::list<task*>  m_list;
 
 public:
   task_list() noexcept{}
  ~task_list(){clear();}
 
-  void  clear() noexcept;
+  void  clear() noexcept{m_list.clear();}
 
-  int  get_number_of_tasks() const noexcept{return m_number_of_tasks;}
+  task_list&  add(task&  tsk) noexcept;
 
-  task_control  push(task_list&  ls, std::string_view  name="") noexcept{return internal_push( &ls, true,name);}
-  task_control  push(                std::string_view  name="") noexcept{return internal_push(nullptr,false,name);}
-
-  template<typename  T>
-  task_control  push(T&  data, std::string_view  name="") noexcept{return internal_push(&data,false,name);}
+  task_list&  remove_by_name(std::string_view  name) noexcept;
 
   void  enforce_remove() noexcept;
 
-  void  process(const canvas*  cv, bool  tick=true) noexcept;
+  void  process(const canvas*  cv) noexcept;
 
   static void  print_dead() noexcept;
   static void  clear_dead() noexcept;

@@ -21,10 +21,7 @@ clear() noexcept
 
   m_container.clear();
 
-    if(m_control)
-    {
-      m_control.set_remove_flag().clear();
-    }
+  m_task.die();
 
 
   return *this;
@@ -33,13 +30,14 @@ clear() noexcept
 
 stack&
 stack::
-ready(clock_watch  w, uint32_t  intval, gbstd::task_list&  ls) noexcept
+ready(clock_watch  w, uint32_t  intval) noexcept
 {
     if(m_container.empty())
     {
-      m_control = ls.push(*this);
-
-      m_control.set_draw<stack>().set_tick<stack>(w,intval);
+      m_task.set_draw<stack>()
+        .set_clock_watch(w)
+        .set_interval(intval)
+        .set_tick<stack>();
     }
 
 
@@ -108,9 +106,8 @@ close_top(int  closing_value) noexcept
     }
 
   else
-    if(m_control)
     {
-      m_control.set_remove_flag().clear();
+      m_task.die();
     }
 
 
@@ -120,7 +117,7 @@ close_top(int  closing_value) noexcept
 
 void
 stack::
-draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, stack&  stk) noexcept
+draw(const gbstd::canvas&  cv, stack&  stk) noexcept
 {
     for(auto&  e: stk.m_container)
     {
@@ -136,7 +133,7 @@ draw(gbstd::task_control  ctrl, const gbstd::canvas&  cv, stack&  stk) noexcept
 
 void
 stack::
-tick(gbstd::task_control  ctrl, stack&  stk) noexcept
+tick(stack&  stk) noexcept
 {
     if(stk.m_container.size())
     {
@@ -146,7 +143,7 @@ tick(gbstd::task_control  ctrl, stack&  stk) noexcept
 
         if(stk.m_container.empty())
         {
-          stk.m_control.set_remove_flag().clear();
+          stk.m_task.die();
         }
     }
 }

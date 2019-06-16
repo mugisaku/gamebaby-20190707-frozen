@@ -234,12 +234,9 @@ battle_section
 
   using character_table = filtering_table<battles::character,m_table_length>;
 
-  gbstd::clock_watch  m_clock_watch;
+  gbstd::clock  m_clock;
 
-  gbstd::task_control  m_task_control;
-  gbstd::task_list     m_task_list;
-
-  gbstd::task_control  m_cursor_control;
+  gbstd::task  m_task;
 
 
   gbstd::menus::stack  m_menu_stack;
@@ -276,7 +273,28 @@ battle_section
 
   void  initialize_menu() noexcept;
 
-  battle_section() noexcept;
+  static void  start_battle(gbstd::execution&  exec, battle_section&  b) noexcept;
+  static void  loop_battle( gbstd::execution&  exec, battle_section&  b) noexcept;
+
+  static void  initialize_battle(gbstd::execution&  exec, battle_section&  b) noexcept;
+  static void         run_battle(gbstd::execution&  exec, battle_section&  b) noexcept;
+  static void    finalize_battle(gbstd::execution&  exec, battle_section&  b) noexcept;
+
+  static void  wait_until_end_movie(gbstd::execution&  exec, battle_section&  b) noexcept;
+
+  battle_result  judge_battle() const noexcept;
+
+  void  fight(gbstd::execution&  exec) noexcept;
+  void  distribute_ap(int  v) noexcept;
+
+  bool  judge_hit(const battles::character&  actor, const battles::character&  target) const noexcept;
+  int   calculate_damage(const battles::character&  actor, const battles::character&  target) const noexcept;
+
+  battles::character*  get_battle_character_by_ap() noexcept;
+
+
+  battle_section(gbstd::execution&  exec) noexcept;
+ ~battle_section();
 
   void  reset() noexcept;
   void  clear() noexcept;

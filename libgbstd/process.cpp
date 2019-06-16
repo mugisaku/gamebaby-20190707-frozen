@@ -13,7 +13,7 @@ constexpr uint32_t  g_offset_of_frame_nameptr = 0;
 constexpr uint32_t  g_offset_of_previous_pc   = 1;
 constexpr uint32_t  g_offset_of_previous_bp   = 2;
 constexpr uint32_t  g_offset_of_entry_array   = 3;
-constexpr uint32_t  g_size_of_entry           = 4;
+constexpr uint32_t  g_size_of_entry           = 3;
 }
 
 
@@ -37,7 +37,26 @@ operator++() noexcept
 }
 
 
-void
+execution&
+execution::
+reset() noexcept
+{
+  m_pc = 0;
+  m_lc = 0;
+  m_sp = 0;
+  m_bp = 0;
+
+  m_memory[g_offset_of_previous_pc] = 0;
+  m_memory[g_offset_of_previous_bp] = 0;
+
+  m_verbose_flag = false;
+  m_pc_barrier   = false;
+
+  return *this;
+}
+
+
+execution&
 execution::
 push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 {
@@ -59,7 +78,6 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
       m_memory[m_sp++] = ent.m_nameptr;
       m_memory[m_sp++] = ent.m_callback;
       m_memory[m_sp++] = ent.m_data;
-      m_memory[m_sp++] = static_cast<bool>(ent.m_interruption);
     }
 
 
@@ -74,10 +92,13 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 
 
   m_pc_barrier = true;
+
+
+  return *this;
 }
 
 
-void
+execution&
 execution::
 replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 {
@@ -91,15 +112,17 @@ replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
       m_memory[m_sp++] = ent.m_nameptr;
       m_memory[m_sp++] = ent.m_callback;
       m_memory[m_sp++] = ent.m_data;
-      m_memory[m_sp++] = static_cast<bool>(ent.m_interruption);
     }
 
 
   m_pc_barrier = true;
+
+
+  return *this;
 }
 
 
-void
+execution&
 execution::
 pop() noexcept
 {
@@ -122,6 +145,9 @@ pop() noexcept
 
       --m_lc;
     }
+
+
+  return *this;
 }
 
 
@@ -129,7 +155,7 @@ void
 execution::
 print() const noexcept
 {
-  printf("[exec:\"%s\"] {pc:%3u}, {bp:%3u}, {sp: %3u}",get_name(),m_pc,m_bp,m_sp);
+  printf("{pc:%3u, bp:%3u, sp: %3u",m_pc,m_bp,m_sp);
 }
 
 
@@ -137,17 +163,13 @@ print() const noexcept
 
 process&
 process::
-assign(std::initializer_list<execution_entry>  ls) noexcept
+assign(std::string_view  name, execution_entry  start) noexcept
 {
-  m_pc = 0;
-  m_lc = 0;
-  m_bp = 0;
-  m_sp = 0;
+  reset();
 
-  m_memory[g_offset_of_previous_pc] = 0;
-  m_memory[g_offset_of_previous_bp] = 0;
+  m_name = name;
 
-  push(ls);
+  push({start});
 
   return *this;
 }
@@ -155,10 +177,12 @@ assign(std::initializer_list<execution_entry>  ls) noexcept
 
 
 
-void
+bool
 process::
 step() noexcept
 {
+  m_clock_master.update();
+
   int  counter = 8;
 
     while(*this)
@@ -181,9 +205,9 @@ step() noexcept
 
           cb(*this,*data);
 
-            if(!--counter || ent.get_interruption())
+            if(!--counter || ent.test_interruption())
             {
-              return;
+              break;
             }
         }
 
@@ -192,6 +216,23 @@ step() noexcept
           pop();
         }
     }
+
+
+    if(g_time >= m_next_time)
+    {
+      m_canvas.fill(m_background_color);
+
+      m_task_list.process(&m_canvas);
+
+      m_next_time = g_time+m_interval;
+
+      return true;
+    }
+
+
+  m_task_list.process(nullptr);
+
+  return false;
 }
 
 

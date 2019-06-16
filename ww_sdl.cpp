@@ -36,7 +36,7 @@ main_loop() noexcept
 {
   sdl::update_control();
 
-    if(g_process.step())
+    if(g_process())
     {
       sdl::update_screen(g_screen_canvas);
     }

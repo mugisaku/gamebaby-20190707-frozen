@@ -89,32 +89,6 @@ public:
 };
 
 
-class
-clock_master
-{
-  std::list<clock*>  m_list;
-
-  uint32_t  m_last_time=0;
-
-public:
-  clock_master() noexcept{}
-  clock_master(const clock_master& ) noexcept=delete;
-  clock_master(      clock_master&&) noexcept=delete;
- ~clock_master(){}
-
-  clock_master&  operator=(const clock_master& ) noexcept=delete;
-  clock_master&  operator=(      clock_master&&) noexcept=delete;
-
-  clock_master&  add(clock&  cl) noexcept;
-  clock_master&  remove(std::string_view  name) noexcept;
-
-  clock_master&  update() noexcept;
-
-  void  print() const noexcept;
-
-};
-
-
 
 
 class
@@ -224,28 +198,6 @@ public:
 };
 
 
-class
-task_list
-{
-  std::list<task*>  m_list;
-
-public:
-  task_list() noexcept{}
- ~task_list(){clear();}
-
-  void  clear() noexcept{m_list.clear();}
-
-  task_list&  add(task&  tsk) noexcept;
-
-  task_list&  remove_by_name(std::string_view  name) noexcept;
-
-  void  enforce_remove() noexcept;
-
-  void  process(const canvas*  cv) noexcept;
-
-};
-
-
 
 
 class execution;
@@ -292,9 +244,10 @@ class
 execution
 {
 protected:
-  clock_master  m_clock_master;
+  std::list<clock*>  m_clock_list;
+  std::list<task*>    m_task_list;
 
-  task_list  m_task_list;
+  uint32_t  m_last_time;
 
   color  m_background_color;
 
@@ -326,11 +279,13 @@ public:
   execution&    set_verbose_flag() noexcept{  m_verbose_flag =  true;  return *this;}
   execution&  unset_verbose_flag() noexcept{  m_verbose_flag = false;  return *this;}
 
-  execution&  add_clock(clock&  cl) noexcept{  m_clock_master.add(cl);  return *this;}
-  execution&   add_task(task&  tsk) noexcept{  m_task_list.add(tsk);    return *this;}
+  execution&  add_clock(clock&  cl) noexcept{  m_clock_list.emplace_back(&cl);  return *this;}
+  execution&   add_task(task&  tsk) noexcept{  m_task_list.emplace_back(&tsk);  return *this;}
 
-  execution&  remove_clock(std::string_view  name) noexcept{  m_clock_master.remove(name);  return *this;}
-  execution&   remove_task(std::string_view  name) noexcept{  m_task_list.remove_by_name(name);  return *this;}
+  execution&  remove_clock_by_name(std::string_view  name) noexcept;
+  execution&  remove_task_by_name( std::string_view  name) noexcept;
+
+  execution&  remove_dead_task() noexcept;
 
   color       get_background_color(        ) const noexcept{return m_background_color                   ;}
   execution&  set_background_color(color  c)       noexcept{       m_background_color = c;  return *this;}
@@ -362,6 +317,9 @@ process: public execution
 
   canvas  m_canvas;
 
+  void  update_clocks() noexcept;
+  void  process_tasks(const canvas*  cv) noexcept;
+
 public:
   process() noexcept{}
 
@@ -374,7 +332,7 @@ public:
   process&  set_canvas(const canvas&  cv) noexcept{  m_canvas = cv;  return *this;}
   process&  set_interval(uint32_t  t) noexcept{  m_interval = t;  return *this;}
 
-  bool  step() noexcept;
+  bool  operator()() noexcept;
 
 };
 

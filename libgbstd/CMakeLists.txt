@@ -64,9 +64,7 @@ set(SOURCES
   weak_reference_counter.cpp
   instruction_queue.cpp
   processes/clock.cpp
-  processes/clock_master.cpp
   processes/task.cpp
-  processes/task_list.cpp
   processes/execution.cpp
   processes/process.cpp
   utility.cpp

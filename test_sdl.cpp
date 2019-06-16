@@ -1,8 +1,6 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
-#include"libgbstd/task.hpp"
-#include"libgbstd/clock.hpp"
 #include"libgbstd/file_op.hpp"
 #include"sdl.hpp"
 #include<list>

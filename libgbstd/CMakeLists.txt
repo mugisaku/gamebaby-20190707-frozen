@@ -63,9 +63,12 @@ set(SOURCES
   sounds/scale_table.cpp
   weak_reference_counter.cpp
   instruction_queue.cpp
-  clock.cpp
-  task_list.cpp
-  process.cpp
+  processes/clock.cpp
+  processes/clock_master.cpp
+  processes/task.cpp
+  processes/task_list.cpp
+  processes/execution.cpp
+  processes/process.cpp
   utility.cpp
   utility_sincos.cpp
   control.cpp

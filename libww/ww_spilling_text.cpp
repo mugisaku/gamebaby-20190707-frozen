@@ -26,11 +26,13 @@ initialize_task(gbstd::clock_watch  w) noexcept
   m_task.set_name("spilling_text")
     .live()
     .show()
+    .set_data(this)
     .set_interval(20)
     .set_draw(draw)
     .set_tick(tick)
     .set_finish(finish)
-    .set_clock_watch(w);
+    .set_clock_watch(w)
+    .update_next_time();
 
   return m_task;
 }
@@ -47,6 +49,7 @@ reset(gbstd::point  bottom_pos, int  offset) noexcept
 
   m_y_vector = -8;
 
+
   return *this;
 }
 
@@ -57,7 +60,6 @@ tick(spilling_text&  spltxt) noexcept
 {
   spltxt.m_pos.y += spltxt.m_y_vector     ;
                     spltxt.m_y_vector += 2;
-
 
     if(spltxt.m_pos.y >= spltxt.m_bottom_pos.y+16)
     {

@@ -175,6 +175,7 @@ public:
   task&     set_interval(uint32_t  t)       noexcept{       m_interval = t;  return *this;}
 
   uint32_t  get_next_time() const noexcept{return m_next_time;}
+  task&  update_next_time() noexcept;
 
   task&  set_clock_watch(clock_watch  w) noexcept{  m_clock_watch = w;  return *this;}
 
@@ -274,23 +275,45 @@ execution_entry
 
 
 class
-execution
+execution_context
 {
-protected:
-  std::list<clock*>  m_clock_list;
-  std::list<task*>    m_task_list;
-
-  uint32_t  m_last_time;
-
-  color  m_background_color;
+  friend class execution;
 
   uint32_t  m_pc=0;//Program Counter
   uint32_t  m_lc=0;//Level Counter
   uint32_t  m_sp=0;//Stack Pointer
   uint32_t  m_bp=0;//Base Pointer
 
+public:
+  uint32_t  get_pc() const noexcept{return m_pc;}
+  uint32_t  get_lc() const noexcept{return m_lc;}
+  uint32_t  get_sp() const noexcept{return m_sp;}
+  uint32_t  get_bp() const noexcept{return m_bp;}
+
+};
+
+
+class
+execution
+{
+protected:
+  std::list<clock*>  m_clock_list;
+  std::list<task*>    m_task_list;
+
+  uint32_t  m_pc=0;//Program Counter
+  uint32_t  m_lc=0;//Level Counter
+  uint32_t  m_sp=0;//Stack Pointer
+  uint32_t  m_bp=0;//Base Pointer
+
+  uint32_t  m_last_time;
+
+  color  m_background_color;
+
   std::vector<uintptr_t>  m_memory;
 
+  int  m_jump_value;
+
+  bool  m_jump_flag=false;
   bool  m_verbose_flag=false;
   bool  m_pc_barrier=false;
 
@@ -309,6 +332,10 @@ public:
  ~execution(){clear();}
 
   operator bool() const noexcept{return m_lc;}
+
+  int     set_jump(execution_context&  ctx) noexcept;
+  void  unset_jump() noexcept;
+  void  jump(const execution_context&  ctx, int  v) noexcept;
 
   bool  test_verbose_flag() const noexcept{return m_verbose_flag;}
   execution&    set_verbose_flag() noexcept{  m_verbose_flag =  true;  return *this;}

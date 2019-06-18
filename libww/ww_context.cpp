@@ -18,6 +18,10 @@ m_system(sys)
 
 
 
+gbstd::execution_context
+g_exectx;
+
+
 void
 context::
 run(gbstd::execution&  exec, context&  ctx) noexcept
@@ -40,23 +44,34 @@ void
 context::
 start_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
 {
-  auto&  spl = ctx.m_system.create_spilling_text();
+  auto  v = exec.set_jump(g_exectx);
 
-  std::u16string_view  sv = u"Game Baby";
+    if(v == 0)
+    {
+      auto&  spl = ctx.m_system.create_spilling_text();
 
-  auto  text_width = static_cast<int>(gbstd::g_font_width*sv.size());
+      std::u16string_view  sv = u"Game Baby";
 
-  int  x_center = m_screen_width/2;
-  int  y_center = m_screen_height/2;
+      auto  text_width = static_cast<int>(gbstd::g_font_width*sv.size());
 
-  spl.set_text(sv)
-    .set_color(gbstd::colors::yellow)
-    .set_time(600)
-    .reset({x_center-(text_width/2),y_center-8},-32);
+      int  x_center = m_screen_width/2;
+      int  y_center = m_screen_height/2;
 
-  exec.add_task(spl.initialize_task(ctx.m_clock));
+      spl.set_text(sv)
+        .set_color(gbstd::colors::yellow)
+        .set_time(600)
+        .reset({x_center-(text_width/2),y_center-8},-32);
 
-  ++exec;
+      exec.add_task(spl.initialize_task(ctx.m_clock));
+
+      ++exec;
+    }
+
+  else
+    if(v == 1)
+    {
+      exec.unset_jump();
+    }
 }
 
 
@@ -66,7 +81,7 @@ wait_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
 {
     if(!ctx.m_system.get_spilling_text_counter())
     {
-//      ctx.s_manage.reset();
+exec.jump(g_exectx,1);
 
 //      ++exec;
     }

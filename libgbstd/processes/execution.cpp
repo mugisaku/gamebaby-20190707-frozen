@@ -30,6 +30,8 @@ operator++() noexcept
   else
     {
       m_pc += g_size_of_entry;
+
+      unset_jump();
     }
 
 
@@ -63,6 +65,8 @@ reset() noexcept
   m_sp = 0;
   m_bp = 0;
 
+  m_jump_flag = false;
+
   m_memory[g_offset_of_previous_pc] = 0;
   m_memory[g_offset_of_previous_bp] = 0;
 
@@ -71,6 +75,52 @@ reset() noexcept
 
   return *this;
 }
+
+
+
+
+int
+execution::
+set_jump(execution_context&  ctx) noexcept
+{
+    if(m_jump_flag)
+    {
+      return m_jump_value;
+    }
+
+
+  ctx.m_pc = m_pc;
+  ctx.m_lc = m_lc;
+  ctx.m_sp = m_sp;
+  ctx.m_bp = m_bp;
+
+  return 0;
+}
+
+
+void
+execution::
+unset_jump() noexcept
+{
+  m_jump_flag = false;
+}
+
+
+void
+execution::
+jump(const execution_context&  ctx, int  v) noexcept
+{
+  m_pc = ctx.m_pc;
+  m_lc = ctx.m_lc;
+  m_sp = ctx.m_sp;
+  m_bp = ctx.m_bp;
+
+  m_jump_flag = true;
+
+  m_jump_value = !v? 1:v;
+}
+
+
 
 
 execution&

@@ -101,7 +101,7 @@ operator()() noexcept
 
           cb(*this,*data);
 
-            if(!--counter || ent.test_interruption())
+            if(!--counter || ent.test_interruption() || m_jump_flag)
             {
               break;
             }

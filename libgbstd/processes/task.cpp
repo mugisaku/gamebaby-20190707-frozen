@@ -60,7 +60,7 @@ getup() noexcept
 
   else
     {
-      m_next_time = m_clock_watch.get_time()+m_interval;
+      update_next_time();
     }
 
 
@@ -108,6 +108,16 @@ set_blinking_rate(int  show, int  hide) noexcept
 {
   m_blink_show_value = show;
   m_blink_hide_value = hide;
+
+  return *this;
+}
+
+
+task&
+task::
+update_next_time() noexcept
+{
+  m_next_time = m_clock_watch.get_time()+m_interval;
 
   return *this;
 }
@@ -195,8 +205,6 @@ finish() noexcept
       m_finish_callback(*static_cast<dummy*>(m_data));
     }
 
-
-  clear();
 
   return *this;
 }

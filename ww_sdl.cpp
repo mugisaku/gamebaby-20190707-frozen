@@ -1,7 +1,7 @@
 #include"libgbstd/image.hpp"
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
-#include"libww/ww_context.hpp"
+#include"libww/ww_system.hpp"
 #include"sdl.hpp"
 #include<cstring>
 
@@ -23,12 +23,12 @@ canvas
 g_screen_canvas;
 
 
+ww::system  
+g_system;
+
+
 process
 g_process;
-
-
-ww::context
-g_context;
 
 
 void
@@ -58,7 +58,7 @@ main(int  argc, char**  argv)
   show_github_link();
 #endif
 
-  sdl::init(g_context.get_screen_width(),g_context.get_screen_height(),1.0);
+  sdl::init(ww::context::get_screen_width(),ww::context::get_screen_height(),1.0);
 
   g_screen_canvas = sdl::make_screen_canvas();
 
@@ -71,7 +71,9 @@ main(int  argc, char**  argv)
     }
 
 
-  g_process.assign("system",g_context.make_entry())
+  auto&  ctx = g_system.create_context();
+
+  g_process.assign("system",ctx.make_entry())
     .set_interval(20)
     .set_canvas(g_screen_canvas);
 

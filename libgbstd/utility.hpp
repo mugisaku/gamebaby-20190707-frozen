@@ -297,32 +297,32 @@ public:
 
 template<typename  T>
 class
-fixed_ptr
+pointer_wrapper
 {
   T*  m_data;
 
 public:
-  constexpr fixed_ptr(T*  ptr=nullptr) noexcept: m_data(ptr){}
+  constexpr pointer_wrapper(T*  ptr=nullptr) noexcept: m_data(ptr){}
 
   template<typename  U>
-  constexpr fixed_ptr(U*  ptr) noexcept: m_data(static_cast<T*>(ptr)){}
+  constexpr pointer_wrapper(U*  ptr) noexcept: m_data(static_cast<T*>(ptr)){}
 
-  fixed_ptr&  operator=(T*  ptr) noexcept{  m_data = ptr;  return *this;}
+  pointer_wrapper&  operator=(T*  ptr) noexcept{  m_data = ptr;  return *this;}
 
   template<typename  U>
-  fixed_ptr&  operator=(U*  ptr) noexcept{  m_data = static_cast<T*>(ptr);  return *this;}
+  pointer_wrapper&  operator=(U*  ptr) noexcept{  m_data = static_cast<T*>(ptr);  return *this;}
 
   constexpr T*  operator->() const noexcept{return  m_data;}
   constexpr T&  operator *() const noexcept{return *m_data;}
 
   constexpr operator bool() const noexcept{return m_data;}
 
-  constexpr bool  operator==(const T*  ptr) const noexcept{return m_data == ptr;}
-  constexpr bool  operator!=(const T*  ptr) const noexcept{return m_data != ptr;}
-  constexpr bool  operator< (const T*  ptr) const noexcept{return m_data <  ptr;}
-  constexpr bool  operator<=(const T*  ptr) const noexcept{return m_data <= ptr;}
-  constexpr bool  operator> (const T*  ptr) const noexcept{return m_data >  ptr;}
-  constexpr bool  operator>=(const T*  ptr) const noexcept{return m_data >= ptr;}
+  constexpr bool  operator==(pointer_wrapper  ptr) const noexcept{return m_data == ptr.m_data;}
+  constexpr bool  operator!=(pointer_wrapper  ptr) const noexcept{return m_data != ptr.m_data;}
+  constexpr bool  operator< (pointer_wrapper  ptr) const noexcept{return m_data <  ptr.m_data;}
+  constexpr bool  operator<=(pointer_wrapper  ptr) const noexcept{return m_data <= ptr.m_data;}
+  constexpr bool  operator> (pointer_wrapper  ptr) const noexcept{return m_data >  ptr.m_data;}
+  constexpr bool  operator>=(pointer_wrapper  ptr) const noexcept{return m_data >= ptr.m_data;}
 
   template<typename  U>constexpr bool  operator==(const U*  ptr) const noexcept{return m_data == static_cast<const T*>(ptr);}
   template<typename  U>constexpr bool  operator!=(const U*  ptr) const noexcept{return m_data != static_cast<const T*>(ptr);}

@@ -27,7 +27,7 @@ clock&
 clock::
 add(uint32_t  t) noexcept
 {
-    if(m_working_flag)
+    if(is_working() && !is_pausing())
     {
       constexpr int  shift_amount = 16;
 
@@ -45,7 +45,7 @@ add(uint32_t  t) noexcept
 
 const clock
 clock_watch::
-m_null("null");
+m_null;
 
 
 

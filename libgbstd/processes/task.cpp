@@ -10,12 +10,93 @@ namespace gbstd{
 
 task&
 task::
+clear() noexcept
+{
+  clear_status();
+
+  m_name.clear();
+  m_id.clear();
+
+  m_data = nullptr;
+
+  m_draw_callback   = nullptr;
+  m_tick_callback   = nullptr;
+  m_finish_callback = nullptr;
+
+  m_interval  = 0;
+  m_next_time = 0;
+
+  return *this;
+}
+
+
+task&
+task::
+die() noexcept
+{
+  m_status.unset(flags::live);
+
+    if(m_status.test(flags::discard_when_die))
+    {
+      discard();
+    }
+
+
+  return *this;
+}
+
+
+task&
+task::
+getup() noexcept
+{
+  m_status.unset(flags::sleep);
+  m_status.unset(flags::alarm);
+
+    if(m_status.test(flags::die_when_getup))
+    {
+      die();
+    }
+
+  else
+    {
+      m_next_time = m_clock_watch.get_time()+m_interval;
+    }
+
+
+  return *this;
+}
+
+
+task&
+task::
+sleep() noexcept
+{
+  m_status.set(  flags::sleep);
+  m_status.unset(flags::alarm);
+
+  return *this;
+}
+
+
+task&
+task::
 sleep(uint32_t  t) noexcept
 {
   m_status.set(flags::sleep);
   m_status.set(flags::alarm);
 
-  m_next_time = g_time*t;
+  m_next_time = m_clock_watch.get_time()+t;
+
+  return *this;
+}
+
+
+task&
+task::
+discard_when_die() noexcept
+{
+  m_status.set(flags::discard_when_die);
 
   return *this;
 }
@@ -36,36 +117,31 @@ task&
 task::
 operator()() noexcept
 {
+  auto  now = m_clock_watch.get_time();
+
     if(is_living())
     {
-      auto  now = m_clock_watch.get_time();
-
         if(is_sleeping())
         {
             if(m_status.test(flags::alarm) && (now >= m_next_time))
             {
-              m_status.unset(flags::alarm);
-            }
-
-          else
-            {
-              return *this;
+              getup();
             }
         }
+    }
 
 
-        while((now >= m_next_time) && m_tick_callback && !is_freezing())
+    while(is_living() && !is_sleeping() && (now >= m_next_time) && m_tick_callback)
+    {
+      m_tick_callback(*static_cast<dummy*>(m_data));
+
+        if(!m_interval)
         {
-          m_tick_callback(*static_cast<dummy*>(m_data));
-
-            if(!m_interval)
-            {
-              break;
-            }
-
-
-          m_next_time += m_interval;
+          break;
         }
+
+
+      m_next_time += m_interval;
     }
 
 
@@ -77,7 +153,7 @@ task&
 task::
 operator()(const canvas&  cv) noexcept
 {
-    if(is_living() && !is_sleeping())
+    if(is_living())
     {
         if(is_blinking())
         {
@@ -105,6 +181,22 @@ operator()(const canvas&  cv) noexcept
         }
     }
 
+
+  return *this;
+}
+
+
+task&
+task::
+finish() noexcept
+{
+    if(m_finish_callback)
+    {
+      m_finish_callback(*static_cast<dummy*>(m_data));
+    }
+
+
+  clear();
 
   return *this;
 }

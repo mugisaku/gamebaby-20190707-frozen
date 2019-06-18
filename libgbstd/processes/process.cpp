@@ -42,13 +42,30 @@ void
 process::
 process_tasks(const canvas*  cv) noexcept
 {
-    for(auto  ptr: m_task_list)
-    {
-      (*ptr)();
+  auto  it = m_task_list.begin();
 
-        if(cv)
+    while(it != m_task_list.end())
+    {
+      auto&  tsk = **it;
+
+        if(tsk.is_discarded())
         {
-          (*ptr)(*cv);
+          tsk.finish();
+
+          it = m_task_list.erase(it);
+        }
+
+      else
+        {
+          tsk();
+
+            if(cv)
+            {
+              tsk(*cv);
+            }
+
+
+          ++it;
         }
     }
 }

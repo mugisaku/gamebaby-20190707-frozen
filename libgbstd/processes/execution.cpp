@@ -39,6 +39,23 @@ operator++() noexcept
 
 execution&
 execution::
+clear() noexcept
+{
+    for(auto  ptr: m_task_list)
+    {
+      ptr->finish();
+    }
+
+
+  m_clock_list.clear();
+  m_task_list.clear();
+
+  return *this;
+}
+
+
+execution&
+execution::
 reset() noexcept
 {
   m_pc = 0;
@@ -155,7 +172,7 @@ pop() noexcept
 
 execution&
 execution::
-remove_clock_by_name(std::string_view  name) noexcept
+remove_clocks_by_name(std::string_view  name) noexcept
 {
   auto  it = m_clock_list.begin();
 
@@ -179,7 +196,7 @@ remove_clock_by_name(std::string_view  name) noexcept
 
 execution&
 execution::
-remove_task_by_name(std::string_view  name) noexcept
+remove_tasks_by_name(std::string_view  name) noexcept
 {
   auto  it = m_task_list.begin();
 
@@ -187,6 +204,8 @@ remove_task_by_name(std::string_view  name) noexcept
     {
         if((*it)->get_name() == name)
         {
+          (*it)->finish();
+
           it = m_task_list.erase(it);
         }
 
@@ -203,7 +222,61 @@ remove_task_by_name(std::string_view  name) noexcept
 
 execution&
 execution::
-remove_dead_task() noexcept
+remove_clock_by_id(std::string_view  id) noexcept
+{
+  auto  it = m_clock_list.begin();
+
+    while(it != m_clock_list.end())
+    {
+        if((*it)->get_id() == id)
+        {
+          m_clock_list.erase(it);
+
+          break;
+        }
+
+      else
+        {
+          ++it;
+        }
+    }
+
+
+  return *this;
+}
+
+
+execution&
+execution::
+remove_task_by_id(std::string_view  id) noexcept
+{
+  auto  it = m_task_list.begin();
+
+    while(it != m_task_list.end())
+    {
+        if((*it)->get_id() == id)
+        {
+          (*it)->finish();
+
+          m_task_list.erase(it);
+
+          break;
+        }
+
+      else
+        {
+          ++it;
+        }
+    }
+
+
+  return *this;
+}
+
+
+execution&
+execution::
+remove_dead_tasks() noexcept
 {
   auto  it = m_task_list.begin();
 
@@ -211,6 +284,8 @@ remove_dead_task() noexcept
     {
         if(!(*it)->is_living())
         {
+          (*it)->finish();
+
           it = m_task_list.erase(it);
         }
 
@@ -227,16 +302,71 @@ remove_dead_task() noexcept
 
 
 
+pointer_wrapper<clock>
+execution::
+get_clock_by_id(std::string_view  id) const noexcept
+{
+    for(auto  ptr: m_clock_list)
+    {
+        if(ptr->get_id() == id)
+        {
+          return ptr;
+        }
+    }
+
+
+  return nullptr;
+}
+
+
+pointer_wrapper<task>
+execution::
+get_task_by_id(std::string_view  id) const noexcept
+{
+    for(auto  ptr: m_task_list)
+    {
+        if(ptr->get_id() == id)
+        {
+          return ptr;
+        }
+    }
+
+
+  return nullptr;
+}
+
+
+
+
 void
 execution::
 print() const noexcept
 {
-  printf("{pc:%3u, bp:%3u, sp: %3u",m_pc,m_bp,m_sp);
+  printf("{pc:%3u, bp:%3u, sp: %3u}\n",m_pc,m_bp,m_sp);
 
+  printf("clock_list: {\n");
+ 
     for(auto  ptr: m_clock_list)
     {
-      printf("{\"%s\": %8u}",ptr->get_name().data(),ptr->get_time());
+      printf("{name:\"%s\", id:\"%s\", time: %8u}\n",ptr->get_name().data(),ptr->get_id().data(),ptr->get_time());
     }
+
+
+  printf("}\n");
+
+  printf("task_list: {\n");
+ 
+    for(auto  ptr: m_task_list)
+    {
+      printf("{name:\"%s\", id:\"%s\", next_time:%d, %s}\n",ptr->get_name().data(),ptr->get_id().data(),
+        ptr->get_next_time(),
+        !ptr->is_living()? "dead"
+       :ptr->is_sleeping()? "sleeping"
+       :"living");
+    }
+
+
+  printf("}\n");
 }
 
 

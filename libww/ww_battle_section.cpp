@@ -54,8 +54,7 @@ g_section_name = "battle";
 
 battle_section::
 battle_section(gbstd::execution&  exec) noexcept:
-m_clock(g_section_name),
-m_task(g_section_name,this)
+m_task(this)
 {
   initialize_menu();
 

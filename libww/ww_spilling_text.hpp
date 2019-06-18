@@ -9,11 +9,16 @@
 namespace ww{
 
 
+class system;
 
 
 class
 spilling_text
 {
+  friend class system;
+
+  system&  m_system;
+
   gbstd::task  m_task;
 
   gbstd::fixed_t  m_y_vector;
@@ -27,12 +32,10 @@ spilling_text
 
   uint32_t  m_time;
 
-  uint32_t*  m_counter;
-
-  spilling_text*  m_next;
+  spilling_text(system&  sys) noexcept;
 
 public:
-  spilling_text() noexcept;
+  gbstd::task&  initialize_task(gbstd::clock_watch  w) noexcept;
 
   spilling_text&  set_text(std::u16string&&     text) noexcept{  m_text  = std::move(text);  return *this;}
   spilling_text&  set_text(std::u16string_view  text) noexcept{  m_text  =           text ;  return *this;}
@@ -43,11 +46,9 @@ public:
 
   bool  is_finished() const noexcept{return m_text.empty();}
 
-  static void  tick(                          spilling_text&  spltxt) noexcept;
-  static void  draw(const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept;
-
-  static spilling_text*  produce(uint32_t&  counter) noexcept;
-  static void            collect(spilling_text*  ptr) noexcept;
+  static void    tick(                          spilling_text&  spltxt) noexcept;
+  static void    draw(const gbstd::canvas&  cv, spilling_text&  spltxt) noexcept;
+  static void  finish(                          spilling_text&  spltxt) noexcept;
 
 };
 

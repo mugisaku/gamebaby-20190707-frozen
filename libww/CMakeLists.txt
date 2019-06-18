@@ -13,7 +13,7 @@ set(SOURCES
   ww_battle_section_menu.cpp
   ww_opening_section.cpp
   ww_context.cpp
-  ww_context_callbacks.cpp
+  ww_system.cpp
 )
 
 

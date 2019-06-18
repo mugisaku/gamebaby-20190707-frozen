@@ -22,6 +22,7 @@ class
 clock
 {
   std::string  m_name;
+  std::string    m_id;
 
   uint32_t  m_time=0;
   uint32_t  m_fraction=0;
@@ -29,8 +30,6 @@ clock
   int  m_permil=1000;
 
   status_value<int>  m_status;
-
-  bool  m_working_flag=false;
 
   struct flags{
     static constexpr int  working = 1;
@@ -42,11 +41,14 @@ clock
 
 public:
   clock() noexcept{}
-  clock(std::string_view name, int  permil=1000) noexcept: m_name(name), m_permil(permil){reset();}
 
   operator bool() const noexcept{return m_status.test(flags::working) && !m_status.test(flags::pausing);}
 
+  clock&  set_name(std::string_view  sv) noexcept{  m_name = sv;  return *this;}
+  clock&    set_id(std::string_view  sv) noexcept{  m_id   = sv;  return *this;}
+
   const std::string&  get_name() const noexcept{return m_name;}
+  const std::string&  get_id()   const noexcept{return m_id;}
 
   const uint32_t&   get_time() const noexcept{return m_time;}
   const int&      get_permil() const noexcept{return m_permil;}
@@ -66,10 +68,6 @@ public:
 
   clock&  set_permil(int  v) noexcept{  m_permil = v;  return *this;}
 
-  clock&    start() noexcept{            m_working_flag =  true;  return *this;}
-  clock&  restart() noexcept{  reset();  m_working_flag =  true;  return *this;}
-  clock&     stop() noexcept{            m_working_flag = false;  return *this;}
-
 };
 
 
@@ -84,6 +82,9 @@ public:
   clock_watch() noexcept{}
   clock_watch(const clock&  ref) noexcept: m_pointer(&ref){}
 
+  const std::string&  get_name() const noexcept{return m_pointer->get_name();}
+  const std::string&  get_id()   const noexcept{return m_pointer->get_id();}
+
   const uint32_t&   get_time() const noexcept{return m_pointer->get_time();}
 
 };
@@ -95,69 +96,85 @@ class
 task
 {
   std::string  m_name;
+  std::string  m_id;
 
-  void  (*m_draw_callback)(const canvas&,dummy&);
-  void  (*m_tick_callback)(              dummy&);
+  void  (*m_draw_callback)(const canvas&,dummy&)=nullptr;
+  void  (*m_tick_callback)(              dummy&)=nullptr;
+  void  (*m_finish_callback)(            dummy&)=nullptr;
 
-  void*  m_data;
+  void*  m_data=nullptr;
 
   status_value<int>  m_status;
 
   struct flags{
-    static constexpr int          live =  1;
-    static constexpr int         sleep =  2;
-    static constexpr int         alarm =  4;
-    static constexpr int          show =  8;
-    static constexpr int        freeze = 16;
-    static constexpr int         blink = 32;
-    static constexpr int     blink_bit = 64;
+    static constexpr int              live =   1;
+    static constexpr int             sleep =   2;
+    static constexpr int             alarm =   4;
+    static constexpr int              show =   8;
+    static constexpr int             blink =  32;
+    static constexpr int         blink_bit =  64;
+    static constexpr int    die_when_getup = 128;
+    static constexpr int  discard_when_die = 256;
+    static constexpr int           discard = 512;
   };
 
 
   clock_watch  m_clock_watch;
 
-  uint32_t  m_interval;
-  uint32_t  m_next_time;
+  uint32_t  m_interval=0;
+  uint32_t  m_next_time=0;
 
-  uint32_t  m_blink_show_value;
-  uint32_t  m_blink_hide_value;
+  uint32_t  m_blink_show_value=0;
+  uint32_t  m_blink_hide_value=0;
   uint32_t  m_blink_counter=0;
 
 public:
-  task() noexcept{}
-  task(std::string_view  name, void*  ptr) noexcept: m_name(name), m_data(ptr){}
+  task(void*  ptr=nullptr) noexcept: m_data(ptr){}
+
+  task&  set_name(std::string_view  sv) noexcept{  m_name = sv;  return *this;}
+  task&    set_id(std::string_view  sv) noexcept{  m_id   = sv;  return *this;}
 
   const std::string&  get_name() const noexcept{return m_name;}
+  const std::string&    get_id() const noexcept{return m_id;}
 
-  const void*  get_data() const noexcept{return m_data;}
+  template<typename  T>T*  get_data() const noexcept{return static_cast<T*>(m_data);}
 
-  task&  live() noexcept{  m_status.set(  flags::live);  return *this;}
-  task&   die() noexcept{  m_status.unset(flags::live);  return *this;}
+  task&  clear() noexcept;
+ 
+  task&  clear_status() noexcept{  m_status.clear();  return *this;}
+
+  task&  live() noexcept{  m_status.set(flags::live);  return *this;}
+  task&   die() noexcept;
+
+  task&  die_when_getup() noexcept{  m_status.set(flags::die_when_getup);  return *this;}
 
   task&  sleep(uint32_t  t) noexcept;
 
-  task&  sleep() noexcept{  m_status.set(  flags::sleep);  return *this;}
-  task&  getup() noexcept{  m_status.unset(flags::sleep);  return *this;}
+  task&  sleep() noexcept;
+  task&  getup() noexcept;
 
   task&  show() noexcept{  m_status.set(  flags::show);  return *this;}
   task&  hide() noexcept{  m_status.unset(flags::show);  return *this;}
 
-  task&    freeze() noexcept{  m_status.set(  flags::freeze);  return *this;}
-  task&  unfreeze() noexcept{  m_status.unset(flags::freeze);  return *this;}
-
   task&    blink() noexcept{  m_status.set(  flags::blink);  return *this;}
   task&  unblink() noexcept{  m_status.unset(flags::blink);  return *this;}
+
+  task&  discard() noexcept{  m_status.set(flags::discard);  return *this;}
+
+  task&  discard_when_die() noexcept;
 
   task&  set_blinking_rate(int  show, int  hide) noexcept;
 
   bool  is_living()   const noexcept{return m_status.test(flags::live);}
   bool  is_sleeping() const noexcept{return m_status.test(flags::sleep);}
   bool  is_blinking() const noexcept{return m_status.test(flags::blink);}
-  bool  is_freezing() const noexcept{return m_status.test(flags::freeze);}
   bool  is_showing()  const noexcept{return m_status.test(flags::show);}
+  bool  is_discarded()  const noexcept{return m_status.test(flags::discard);}
 
   uint32_t  get_interval(           ) const noexcept{return m_interval                   ;}
   task&     set_interval(uint32_t  t)       noexcept{       m_interval = t;  return *this;}
+
+  uint32_t  get_next_time() const noexcept{return m_next_time;}
 
   task&  set_clock_watch(clock_watch  w) noexcept{  m_clock_watch = w;  return *this;}
 
@@ -192,8 +209,24 @@ public:
     return set_tick(T::tick);
   }
 
+  task&  set_finish(void  (*cb)(dummy&)) noexcept{  m_finish_callback = cb;  return *this;}
+
+  template<typename  T>
+  task&  set_finish(void  (*cb)(T&)) noexcept
+  {
+    return set_finish(reinterpret_cast<void(*)(dummy&)>(cb));
+  }
+
+  template<typename  T>
+  task&  set_finish() noexcept
+  {
+    return set_finish(T::finish);
+  }
+
   task&  operator()(                 ) noexcept;
   task&  operator()(const canvas&  cv) noexcept;
+
+  task&  finish() noexcept;
 
 };
 
@@ -261,8 +294,7 @@ protected:
   bool  m_verbose_flag=false;
   bool  m_pc_barrier=false;
 
-   execution() noexcept: m_memory(800){}
-  ~execution(){}
+  execution() noexcept: m_memory(800){}
 
   execution(const execution& )=default;
   execution(      execution&&)=default;
@@ -270,9 +302,12 @@ protected:
   execution&  operator=(const execution& )=default;
   execution&  operator=(      execution&&)=default;
 
+  execution&  clear() noexcept;
   execution&  reset() noexcept;
 
 public:
+ ~execution(){clear();}
+
   operator bool() const noexcept{return m_lc;}
 
   bool  test_verbose_flag() const noexcept{return m_verbose_flag;}
@@ -282,10 +317,16 @@ public:
   execution&  add_clock(clock&  cl) noexcept{  m_clock_list.emplace_back(&cl);  return *this;}
   execution&   add_task(task&  tsk) noexcept{  m_task_list.emplace_back(&tsk);  return *this;}
 
-  execution&  remove_clock_by_name(std::string_view  name) noexcept;
-  execution&  remove_task_by_name( std::string_view  name) noexcept;
+  execution&  remove_clocks_by_name(std::string_view  name) noexcept;
+  execution&  remove_tasks_by_name( std::string_view  name) noexcept;
 
-  execution&  remove_dead_task() noexcept;
+  execution&  remove_clock_by_id(std::string_view  name) noexcept;
+  execution&  remove_task_by_id( std::string_view  name) noexcept;
+
+  execution&  remove_dead_tasks() noexcept;
+
+  pointer_wrapper<clock>  get_clock_by_id(std::string_view  name) const noexcept;
+  pointer_wrapper< task>   get_task_by_id(std::string_view  name) const noexcept;
 
   color       get_background_color(        ) const noexcept{return m_background_color                   ;}
   execution&  set_background_color(color  c)       noexcept{       m_background_color = c;  return *this;}

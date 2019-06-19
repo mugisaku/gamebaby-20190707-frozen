@@ -124,6 +124,12 @@ task
   uint32_t  m_interval=0;
   uint32_t  m_next_time=0;
 
+  uint32_t  m_last_time=0;
+  uint32_t  m_elapsed_time=0;
+  uint32_t  m_living_time=0;
+  uint32_t  m_getup_count=0;
+  uint32_t  m_die_count=0;
+
   uint32_t  m_blink_show_value=0;
   uint32_t  m_blink_hide_value=0;
   uint32_t  m_blink_counter=0;
@@ -148,10 +154,9 @@ public:
 
   task&  die_when_getup() noexcept{  m_status.set(flags::die_when_getup);  return *this;}
 
+  task&  sleep(           ) noexcept;
   task&  sleep(uint32_t  t) noexcept;
-
-  task&  sleep() noexcept;
-  task&  getup() noexcept;
+  task&  getup(           ) noexcept;
 
   task&  show() noexcept{  m_status.set(  flags::show);  return *this;}
   task&  hide() noexcept{  m_status.unset(flags::show);  return *this;}
@@ -176,6 +181,18 @@ public:
 
   uint32_t  get_next_time() const noexcept{return m_next_time;}
   task&  update_next_time() noexcept;
+
+  uint32_t  get_elapsed_time()  const noexcept{return m_elapsed_time;}
+  uint32_t  get_living_time()   const noexcept{return m_living_time;}
+
+  uint32_t  get_die_count()   const noexcept{return m_die_count;}
+  uint32_t  get_getup_count() const noexcept{return m_getup_count;}
+
+  task&  reset_elapsed_time( uint32_t  t=0) noexcept{  m_elapsed_time  = t;  return *this;}
+  task&  reset_living_time(  uint32_t  t=0) noexcept{  m_living_time   = t;  return *this;}
+
+  task&  reset_die_count(  uint32_t  v=0) noexcept{  m_die_count   = v;  return *this;}
+  task&  reset_getup_count(uint32_t  v=0) noexcept{  m_getup_count = v;  return *this;}
 
   task&  set_clock_watch(clock_watch  w) noexcept{  m_clock_watch = w;  return *this;}
 

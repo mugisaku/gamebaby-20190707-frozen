@@ -8,30 +8,11 @@ namespace gbstd{
 
 
 
-text::line*
+text::node*
 text::
 m_stock_pointer;
 
 
-
-
-text&
-text::
-assign(const text&   rhs) noexcept
-{
-    if(this != &rhs)
-    {
-      clear();
-
-        for(auto&  ln: rhs)
-        {
-          push(ln.get_view());
-        }
-    }
-
-
-  return *this;
-}
 
 
 text&
@@ -44,6 +25,7 @@ assign(text&&  rhs) noexcept
 
       std::swap(m_top_pointer    ,rhs.m_top_pointer);
       std::swap(m_bottom_pointer ,rhs.m_bottom_pointer);
+      std::swap(m_current_pointer,rhs.m_current_pointer);
       std::swap(m_number_of_lines,rhs.m_number_of_lines);
     }
 
@@ -60,8 +42,9 @@ clear() noexcept
 {
   auto  ptr = m_top_pointer;
 
-  m_top_pointer    = nullptr;
-  m_bottom_pointer = nullptr;
+  m_top_pointer     = nullptr;
+  m_bottom_pointer  = nullptr;
+  m_current_pointer = nullptr;
 
     while(ptr)
     {
@@ -79,39 +62,41 @@ clear() noexcept
 }
 
 
-text::line*
+text::node*
 text::
-new_line() noexcept
+new_node() noexcept
 {
     if(!m_stock_pointer)
     {
-      m_stock_pointer = new line;
+      m_stock_pointer = new node;
 
       m_stock_pointer->m_next = nullptr;
     }
 
 
-  auto  ln = m_stock_pointer                          ;
+  auto  nd = m_stock_pointer                          ;
              m_stock_pointer = m_stock_pointer->m_next;
 
     if(m_bottom_pointer)
     {
-      m_bottom_pointer->m_next = ln;
+      m_bottom_pointer->m_next = nd;
     }
 
   else
     {
-      m_top_pointer = ln;
+      m_top_pointer     = nd;
+      m_current_pointer = nd;
     }
 
 
-  m_bottom_pointer = ln;
+  m_bottom_pointer = nd;
 
-  ln->m_length = 0;
+  nd->m_line.m_content_length = 0;
+  nd->m_line.m_display_length = 0;
 
   ++m_number_of_lines;
 
-  return ln;
+  return nd;
 }
 
 
@@ -119,21 +104,31 @@ text&
 text::
 push(std::string_view  sv) noexcept
 {
-  auto  ln = new_line();
-
-  char16_t*  p = ln->m_buffer;
+  auto  nd = new_node();
 
   utf8_decoder  dec(sv.data());
 
     while(dec)
     {
-      *p++ = dec();
+        if(nd->m_line.is_full())
+        {
+          nd = new_node();
+        }
 
-      ++ln->m_length;
+
+      auto  c = dec();
+
+        if(c == '\n')
+        {
+          nd = new_node();
+        }
+
+      else
+        {
+          nd->m_line.push(c);
+        }
     }
 
-
-  *p = 0;
 
   return *this;
 }
@@ -143,19 +138,27 @@ text&
 text::
 push(std::u16string_view  sv) noexcept
 {
-  auto  ln = new_line();
-
-  char16_t*  p = ln->m_buffer;
+  auto  nd = new_node();
 
     for(auto  c: sv)
     {
-      *p++ = c;
+        if(nd->m_line.is_full())
+        {
+          nd = new_node();
+        }
 
-      ++ln->m_length;
+
+        if(c == '\n')
+        {
+          nd = new_node();
+        }
+
+      else
+        {
+          nd->m_line.push(c);
+        }
     }
 
-
-  *p = 0;
 
   return *this;
 }
@@ -167,11 +170,17 @@ pop() noexcept
 {
     if(m_top_pointer)
     {
-      auto  ln = m_top_pointer                        ;
+        if(m_current_pointer == m_top_pointer)
+        {
+          m_current_pointer = m_current_pointer->m_next;
+        }
+
+
+      auto  nd = m_top_pointer                        ;
                  m_top_pointer = m_top_pointer->m_next;
 
-      ln->m_next = m_stock_pointer     ;
-                   m_stock_pointer = ln;
+      nd->m_next = m_stock_pointer     ;
+                   m_stock_pointer = nd;
 
         if(!--m_number_of_lines)
         {
@@ -184,6 +193,108 @@ pop() noexcept
 }
 
 
+bool
+text::
+expose_one_character() noexcept
+{
+START:
+    if(m_current_pointer)
+    {
+      auto&  ln = m_current_pointer->m_line;
+
+        if(ln.m_display_length < ln.m_content_length)
+        {
+          ++ln.m_display_length;
+
+          return true;
+        }
+
+      else
+        if(m_current_pointer->m_next)
+        {
+          m_current_pointer = m_current_pointer->m_next;
+
+          goto START;
+        }
+    }
+
+
+  return false;
+}
+
+
+bool
+text::
+expose_all_characters_of_current_line() noexcept
+{
+START:
+    if(m_current_pointer)
+    {
+      auto&  ln = m_current_pointer->m_line;
+
+        if(ln.m_display_length < ln.m_content_length)
+        {
+          ln.m_display_length = ln.m_content_length;
+
+          return true;
+        }
+
+      else
+        if(m_current_pointer->m_next)
+        {
+          m_current_pointer = m_current_pointer->m_next;
+
+          goto START;
+        }
+    }
+
+
+  return false;
+}
+
+
+
+
+text::iterator
+text::iterator::
+operator++(int) noexcept
+{
+  auto  tmp = *this;
+
+  m_pointer = m_pointer->m_next;
+
+  return tmp;
+}
+
+
+text::iterator
+text::iterator::
+operator+(int  n) const noexcept
+{
+  auto  ptr = m_pointer;
+
+    while(n--)
+    {
+      ptr = ptr->m_next;
+    }
+
+
+  return iterator(ptr);
+}
+
+
+text::iterator&
+text::iterator::
+operator+=(int  n) noexcept
+{
+    while(n--)
+    {
+      m_pointer = m_pointer->m_next;
+    }
+
+
+  return *this;
+}
 
 
 }

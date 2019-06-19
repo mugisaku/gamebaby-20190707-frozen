@@ -73,36 +73,90 @@ std::u16string  make_u16string(std::string_view  sv) noexcept;
 void  print(std::u16string_view  sv) noexcept;
 
 
+class text;
+
+
+class
+text_line
+{
+  friend class text;
+
+  static constexpr int  m_buffer_length = 80;
+
+  char16_t  m_buffer[m_buffer_length];
+
+  int  m_content_length=0;
+  int  m_display_length=0;
+
+public:
+  const char16_t&  operator[](int  i) const noexcept{return m_buffer[i];}
+
+  bool  is_full() const noexcept{return m_content_length >= m_buffer_length;}
+
+  void  push(char16_t  c) noexcept{m_buffer[m_content_length++] = c;}
+
+  int  get_length() const noexcept{return m_content_length;}
+
+  std::u16string  get_view() const noexcept{return std::u16string(m_buffer,m_display_length);}
+
+  const char16_t*  begin() const noexcept{return m_buffer                 ;}
+  const char16_t*    end() const noexcept{return m_buffer+m_display_length;}
+
+};
+
+
 class
 text
 {
-private:
-  struct line{
-    static constexpr int  m_buffer_length = 80;
+  struct node{
+    text_line  m_line;
 
-    char16_t  m_buffer[m_buffer_length];
-
-    int  m_length;
-
-    line*  m_next;
-
-    std::u16string  get_view(      ) const noexcept{return std::u16string(m_buffer,m_length);}
-    std::u16string  get_view(int  l) const noexcept{return std::u16string(m_buffer,l);}
-
-    const char16_t*  begin() const noexcept{return m_buffer         ;}
-    const char16_t*    end() const noexcept{return m_buffer+m_length;}
-
+    node*  m_next;
   };
 
+  static node*  m_stock_pointer;
+
+  node*     m_top_pointer=nullptr;
+  node*  m_bottom_pointer=nullptr;
+
+  node*  m_current_pointer=nullptr;
+
+  int  m_number_of_lines=0;
+
+  node*  new_node() noexcept;
+
 public:
+  text() noexcept{}
+  text(const text&   rhs) noexcept=delete;
+  text(      text&&  rhs) noexcept{assign(std::move(rhs));}
+ ~text(){clear();}
+
+  text&  operator=(const text&   rhs) noexcept=delete;
+  text&  operator=(      text&&  rhs) noexcept{return assign(std::move(rhs));}
+
+//  text&  assign(const text&   rhs) noexcept;
+  text&  assign(      text&&  rhs) noexcept;
+
+  text&  clear() noexcept;
+
+  int  get_number_of_lines() const noexcept{return m_number_of_lines;}
+
+  text&  push(std::string_view     sv) noexcept;
+  text&  push(std::u16string_view  sv) noexcept;
+
+  text&   pop() noexcept;
+
+  bool  expose_one_character() noexcept;
+  bool  expose_all_characters_of_current_line() noexcept;
+
   class iterator{
-    const line*  m_pointer=nullptr;
+    const node*  m_pointer=nullptr;
 
   public:
-    iterator(const line*  ptr) noexcept: m_pointer(ptr){}
+    iterator(const node*  ptr) noexcept: m_pointer(ptr){}
 
-    const line&  operator *() const noexcept{return *m_pointer;}
-    const line*  operator->() const noexcept{return  m_pointer;}
+    const text_line&  operator *() const noexcept{return  m_pointer->m_line;}
+    const text_line*  operator->() const noexcept{return &m_pointer->m_line;}
 
     operator bool() const noexcept{return m_pointer;}
 
@@ -110,69 +164,13 @@ public:
     bool  operator!=(iterator  rhs) noexcept{return m_pointer != rhs.m_pointer;}
 
     iterator&  operator++() noexcept{  m_pointer = m_pointer->m_next;  return *this;}
+    iterator  operator++(int) noexcept;
 
-    iterator  operator+(int  n) const noexcept
-    {
-      auto  ptr = m_pointer;
-
-        while(n--)
-        {
-          ptr = ptr->m_next;
-        }
-
-
-      return iterator(ptr);
-    }
-
-    iterator&  operator+=(int  n) noexcept
-    {
-        while(n--)
-        {
-          m_pointer = m_pointer->m_next;
-        }
-
-
-      return *this;
-    }
+    iterator  operator+(int  n) const noexcept;
+    iterator&  operator+=(int  n) noexcept;
 
   };
 
-
-private:
-  line*     m_top_pointer=nullptr;
-  line*  m_bottom_pointer=nullptr;
-
-  int  m_number_of_lines=0;
-
-  point  m_cursor_position;
-  point  m_base_position;
-
-  static line*  m_stock_pointer;
-
-  line*  new_line() noexcept;
-
-public:
-  text() noexcept{}
-  text(const text&   rhs) noexcept{assign(rhs);}
-  text(      text&&  rhs) noexcept{assign(std::move(rhs));}
- ~text(){clear();}
-
-  text&  operator=(const text&   rhs) noexcept{return assign(rhs);}
-  text&  operator=(      text&&  rhs) noexcept{return assign(std::move(rhs));}
-
-  text&  assign(const text&   rhs) noexcept;
-  text&  assign(      text&&  rhs) noexcept;
-
-  text&  clear() noexcept;
-
-  text&  set_base_position(point  pt) noexcept{  m_base_position = pt;  return *this;}
-  point  get_base_position(         ) const noexcept {return m_base_position;}
-
-  int  get_number_of_lines() const noexcept{return m_number_of_lines;}
-
-  text&  push(std::string_view     sv) noexcept;
-  text&  push(std::u16string_view  sv) noexcept;
-  text&   pop() noexcept;
 
   iterator  bottom() const noexcept{return iterator(m_bottom_pointer);}
 

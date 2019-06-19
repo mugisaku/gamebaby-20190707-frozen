@@ -299,6 +299,43 @@ public:
 };
 
 
+
+struct
+animation_frame
+{
+  canvas  m_canvas;
+  point   m_point;
+
+  uint32_t  m_delay;
+
+};
+
+
+class
+animation_record
+{
+  int  m_width ;
+  int  m_height;
+
+  color  m_background_color;
+
+  std::vector<animation_frame>  m_frame_list;
+
+public:
+
+};
+
+
+class
+animation_player
+{
+  const animation_record*  m_record_pointer;
+
+public:
+
+};
+
+
 extern const image  g_misc_image;
 
 

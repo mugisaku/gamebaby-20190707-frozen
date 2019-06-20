@@ -1,20 +1,16 @@
-#include"sdl.hpp"
-#include"libgbstd/image.hpp"
 #include"libgbpng/png.hpp"
-#include<vector>
 
 
 
 
 using namespace gbpng;
-using namespace gbstd;
 
 
 namespace{
 
 
-constexpr int  g_screen_w = 400;
-constexpr int  g_screen_h = 400;
+constexpr int  g_screen_w = 16*24;
+constexpr int  g_screen_h = 16*24;
 
 constexpr uint8_t  fg_l = 0x00;
 constexpr uint8_t  bg_l = 0xFF;
@@ -22,111 +18,6 @@ constexpr uint8_t  bg_l = 0xFF;
 
 constexpr int  g_static_line_width = 1;
 constexpr int  g_moving_line_width = 1;
-
-
-template<int  N>
-void
-draw_vline(direct_color_image&  img, int  x, int  y, int  n, uint8_t  l) noexcept
-{
-  x -= N/2;
-
-    for(int  nn = 0;  nn < N;  ++nn)
-    {
-        if((x >= 0) && (x < g_screen_w))
-        {
-          auto  p = img.get_pixel_pointer(x,y);
-
-            for(int  yy = 0;  yy < n;  ++yy)
-            {
-              p[0] = l;
-              p[1] = l;
-              p[2] = l;
-              p[3] = 0xFF;
-
-              p += 4*g_screen_w;
-            }
-        }
-
-
-      ++x;
-    }
-}
-
-
-template<int  N>
-void
-draw_hline(direct_color_image&  img, int  x, int  y, int  n, uint8_t  l) noexcept
-{
-  y -= N/2;
-
-    for(int  nn = 0;  nn < N;  ++nn)
-    {
-        if((y >= 0) && (y < g_screen_h))
-        {
-          auto  p = img.get_pixel_pointer(x,y);
-
-            for(int  xx = 0;  xx < n;  ++xx)
-            {
-              *p++ = l;
-              *p++ = l;
-              *p++ = l;
-              *p++ = 0xFF;
-            }
-        }
-
-
-      ++y;
-    }
-}
-
-
-
-
-struct
-rectangle
-{
-  int  x;
-  int  y;
-  int  w;
-  int  h;
-
-};
-
-
-template<int  N>
-void
-draw_rect(direct_color_image&  img, rectangle  rect, uint8_t  l) noexcept
-{
-    if((rect.w >= 0) && (rect.h >= 0))
-    {
-      draw_hline<N>(img,rect.x         ,rect.y         ,rect.w,l);
-      draw_hline<N>(img,rect.x         ,rect.y+rect.h-1,rect.w,l);
-      draw_vline<N>(img,rect.x         ,rect.y         ,rect.h,l);
-      draw_vline<N>(img,rect.x+rect.w-1,rect.y         ,rect.h,l);
-    }
-}
-
-
-
-
-constexpr int
-rmul(int  value, int  denominator, int  numerator) noexcept
-{
-  constexpr int  shift_amount = 16;
-
-  return (((value<<shift_amount)/denominator)*numerator)>>shift_amount;
-}
-
-
-constexpr
-rectangle
-get_rect(int  denominator, int  numerator) noexcept
-{
-  return {(g_screen_w/2)-rmul(g_screen_w/2,denominator,numerator),
-          (g_screen_h/2)-rmul(g_screen_h/2,denominator,numerator),
-                         rmul(g_screen_w  ,denominator,numerator),
-                         rmul(g_screen_h  ,denominator,numerator)};
-}
 
 
 
@@ -142,85 +33,101 @@ put(uint8_t  l, uint8_t*  p) noexcept
 
 
 void
-draw_line(direct_color_image&  img) noexcept
+fill(direct_color_image&  img, uint8_t  l) noexcept
 {
-  int  center_x = g_screen_w/2;
-  int  center_y = g_screen_h/2;
+  auto  it     = img.get_pixel_pointer(0,0);
+  auto  it_end = img.get_pixel_pointer(img.get_width(),img.get_height());
 
-  gbstd::liner  ln(0,0,center_x,center_y);
-
-    for(;;)
+    while(it < it_end)
     {
-      int  x = ln.get_x();
-      int  y = ln.get_y();
+      put(l,it);
 
-      put(fg_l,img.get_pixel_pointer(             x,             y));
-      put(fg_l,img.get_pixel_pointer(g_screen_w-1-x,             y));
-      put(fg_l,img.get_pixel_pointer(             x,g_screen_h-1-y));
-      put(fg_l,img.get_pixel_pointer(g_screen_w-1-x,g_screen_h-1-y));
-
-        if(!ln.get_distance())
-        {
-          break;
-        }
-
-
-      ln.step();
+      it += 4;
     }
 }
 
 
-direct_color_image
-make_base_image(const direct_color_image&  src) noexcept
+void
+draw_cross(direct_color_image&  img, uint8_t  l) noexcept
 {
-  auto  img = src;
+  int  w = img.get_width() ;
+  int  h = img.get_height();
 
-  auto  p = img.get_pixel_pointer(0,0);
+  auto  a = img.get_pixel_pointer(0  ,h/2);
+  auto  b = img.get_pixel_pointer(w/2,0  );
 
-    for(int  y = 0;  y < g_screen_h;  ++y){
-    for(int  x = 0;  x < g_screen_w;  ++x){
-      *p++ = bg_l;
-      *p++ = bg_l;
-      *p++ = bg_l;
-      *p++ = 0xFF;
-    }}
-
-
-  draw_line(img);
-
-  p = img.get_pixel_pointer(g_screen_w/2,0);
-
-    for(int  y = 0;  y < g_screen_h;  ++y)
+    for(int  x = 0;  x < w;  ++x)
     {
-      p[0] = fg_l;
-      p[1] = fg_l;
-      p[2] = fg_l;
-      p[3] = 0xFF;
-
-      p += 4*g_screen_w;
+      put(l,a+(4*x));
     }
 
 
-  p = img.get_pixel_pointer(0,g_screen_h/2);
-
-    for(int  x = 0;  x < g_screen_w;  ++x)
+    for(int  y = 0;  y < h;  ++y)
     {
-      *p++ = fg_l;
-      *p++ = fg_l;
-      *p++ = fg_l;
-      *p++ = 0xFF;
+      put(l,b+(4*w*y));
+    }
+}
+
+
+void
+draw_rect(direct_color_image&  img, uint8_t  l, int  x, int  y, int  w, int  h) noexcept
+{
+  auto  base = img.get_pixel_pointer(x,y);
+
+  int  pitch = 4*img.get_width();
+
+    if(w)
+    {
+      auto  a = base              ;
+      auto  b = base+(pitch*(h-1));
+
+        for(int  xx = 0;  xx < w;  ++xx)
+        {
+          put(l,a+(4*xx));
+          put(l,b+(4*xx));
+        }
     }
 
 
-    for(int  n = 0;  n < 6;  ++n)
+    if(h)
     {
-      auto  rect = get_rect(g_screen_w,16<<n);
+      auto  a = base          ;
+      auto  b = base+(4*(w-1));
 
-      draw_rect<g_static_line_width>(img,rect,fg_l);
+        for(int  yy = 0;  yy < h;  ++yy)
+        {
+          put(l,a+(pitch*yy));
+          put(l,b+(pitch*yy));
+        }
     }
+}
 
 
-  return std::move(img);
+void
+draw_rect(direct_color_image&  img, uint8_t  l, int  n, double  time, double  t) noexcept
+{
+  auto  diff = (time-t)*(1-(t/time));
+
+  int  w = (img.get_width() /time*(diff));
+  int  h = (img.get_height()/time*(diff));
+
+  int  x = (img.get_width() /2)-(w/2);
+  int  y = (img.get_height()/2)-(h/2);
+
+    while(n--)
+    {
+      draw_rect(img,l,x,y,w,h);
+
+      x += 1;
+      y += 1;
+      w -= 2;
+      h -= 2;
+
+        if((w <= 0) || (h <= 0))
+        {
+          break;
+        }
+    }
 }
 
 
@@ -245,11 +152,12 @@ save(const direct_color_image&  img) noexcept
 int
 main(int  argc, char**  argv)
 {
+  constexpr int   time_ms = 20*1000;
   constexpr int  delay_ms = 60;
 
   image_header  ihdr(g_screen_w,g_screen_h);
 
-  ihdr.set_bit_depth(1);
+  ihdr.set_bit_depth(2);
   ihdr.set_pixel_format(pixel_format::grayscale);
 
 
@@ -259,56 +167,29 @@ main(int  argc, char**  argv)
 
   img.allocate(g_screen_w,g_screen_h);
 
-
-  auto  base_img = make_base_image(img);
-
-  constexpr int  den = 200;
-  constexpr int  shift_amount = 16;
-
-    for(int  n = den;  n > 5;  --n)
+    for(double  t = 0;  t < time_ms;  t += delay_ms)
     {
-printf("\r%3d processing...",n);
-fflush(stdout);
-      img = base_img;
+      fill(img,bg_l);
 
-      auto  rect = get_rect(den,n);
+      constexpr int  div_amount = 5;
 
-      draw_rect<2>(img,rect,fg_l);
+        for(int  n = 0;  n < div_amount;  ++n)
+        {
+          draw_rect(img,fg_l,1,time_ms,time_ms/div_amount*(1+n));
+        }
+
+
+      draw_cross(img,fg_l);
+
+      draw_rect(img,fg_l,3,time_ms,t);
 
       ani.append(img);
-
-      save(img);
     }
 
-
-    for(int  n = 5; n < den;  ++n)
-    {
-printf("\r%3d processing...",n);
-fflush(stdout);
-      img = base_img;
-
-      auto  rect = get_rect(den,0);
-
-      draw_rect<2>(img,rect,fg_l);
-
-      ani.append(img);
-
-      save(img);
-    }
-
-
-printf("finished\n");
-fflush(stdout);
 
   auto  ls = ani.build();
 
-  ls.write_png_to_file("eyesquat.png");
-
-  char  buf[256];
-
-  snprintf(buf,sizeof(buf),"../mkgif.sh %d",delay_ms);
-
-  system(buf);
+  ls.write_png_to_file("eyesquat.apng");
 
 
   return 0;

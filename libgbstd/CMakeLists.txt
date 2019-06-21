@@ -9,6 +9,7 @@ set(SOURCES
   characters/unicode.cpp
   characters/font.cpp
   characters/text.cpp
+  characters/string_set.cpp
   images/image.cpp
   images/image__png.cpp
   images/canvas.cpp

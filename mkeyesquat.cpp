@@ -9,15 +9,11 @@ using namespace gbpng;
 namespace{
 
 
-constexpr int  g_screen_w = 16*24;
-constexpr int  g_screen_h = 16*24;
+constexpr int  g_screen_w = 16*26;
+constexpr int  g_screen_h = 16*26;
 
 constexpr uint8_t  fg_l = 0x00;
 constexpr uint8_t  bg_l = 0xFF;
-
-
-constexpr int  g_static_line_width = 1;
-constexpr int  g_moving_line_width = 1;
 
 
 
@@ -106,7 +102,7 @@ draw_rect(direct_color_image&  img, uint8_t  l, int  x, int  y, int  w, int  h) 
 void
 draw_rect(direct_color_image&  img, uint8_t  l, int  n, double  time, double  t) noexcept
 {
-  auto  diff = (time-t)*(1-(t/time));
+  auto  diff = (time-t)/*(1-(t/time))*/;
 
   int  w = (img.get_width() /time*(diff));
   int  h = (img.get_height()/time*(diff));
@@ -131,19 +127,6 @@ draw_rect(direct_color_image&  img, uint8_t  l, int  n, double  time, double  t)
 }
 
 
-void
-save(const direct_color_image&  img) noexcept
-{
-  static int  i = 0;
-
-  char  buf[256];
-
-  snprintf(buf,sizeof(buf),"%03d.png",i++);
-
-  img.write_png_to_file(buf,pixel_format::rgba,8);
-}
-
-
 }
 
 
@@ -152,7 +135,7 @@ save(const direct_color_image&  img) noexcept
 int
 main(int  argc, char**  argv)
 {
-  constexpr int   time_ms = 20*1000;
+  constexpr int   time_ms = 6*1000;
   constexpr int  delay_ms = 60;
 
   image_header  ihdr(g_screen_w,g_screen_h);

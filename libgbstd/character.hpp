@@ -180,6 +180,41 @@ public:
 };
 
 
+class
+string_set
+{
+public:
+  class section{
+    friend class string_set;
+
+    std::string  m_name;
+
+    std::vector<std::pair<std::string,std::u16string>>  m_table;
+
+  public:
+    section() noexcept{}
+    section(std::string&&  name) noexcept: m_name(std::move(name)){}
+
+    std::u16string_view  get(std::string_view  name) const noexcept;
+
+  };
+
+private:
+  std::vector<section>  m_sections;
+
+  section*  get_section(std::string_view  name) noexcept;
+
+public:
+  string_set() noexcept{m_sections.emplace_back("");}
+
+  const section*  get_section(std::string_view  name) const noexcept;
+
+  int  load_from_file(  std::string_view  path) noexcept;
+  int  load_from_string(std::string_view    sv) noexcept;
+
+  void  print() const noexcept;
+
+};
 
 
 }

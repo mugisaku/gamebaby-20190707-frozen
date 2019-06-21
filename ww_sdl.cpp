@@ -77,7 +77,9 @@ main(int  argc, char**  argv)
     .set_interval(20)
     .set_canvas(g_screen_canvas);
 
-
+gbstd::string_set  ss;
+ss.load_from_file("../__test.txtset");
+ss.print();
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(main_loop,0,false);
 #else

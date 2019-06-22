@@ -23,10 +23,11 @@ assign(text&&  rhs) noexcept
     {
       clear();
 
-      std::swap(m_top_pointer    ,rhs.m_top_pointer);
-      std::swap(m_bottom_pointer ,rhs.m_bottom_pointer);
-      std::swap(m_current_pointer,rhs.m_current_pointer);
-      std::swap(m_number_of_lines,rhs.m_number_of_lines);
+      std::swap(m_top_pointer      ,rhs.m_top_pointer);
+      std::swap(m_bottom_pointer   ,rhs.m_bottom_pointer);
+      std::swap(m_current_pointer  ,rhs.m_current_pointer);
+      std::swap(m_character_counter,rhs.m_character_counter);
+      std::swap(m_number_of_lines  ,rhs.m_number_of_lines);
     }
 
 
@@ -56,7 +57,8 @@ clear() noexcept
     }
 
 
-  m_number_of_lines = 0;
+  m_character_counter = 0;
+  m_number_of_lines   = 0;
 
   return *this;
 }
@@ -90,6 +92,8 @@ new_node() noexcept
 
 
   m_bottom_pointer = nd;
+
+  nd->m_next = nullptr;
 
   nd->m_line.m_content_length = 0;
   nd->m_line.m_display_length = 0;
@@ -126,6 +130,8 @@ push(std::string_view  sv) noexcept
       else
         {
           nd->m_line.push(c);
+
+          ++m_character_counter;
         }
     }
 
@@ -156,6 +162,8 @@ push(std::u16string_view  sv) noexcept
       else
         {
           nd->m_line.push(c);
+
+          ++m_character_counter;
         }
     }
 
@@ -170,6 +178,8 @@ pop() noexcept
 {
     if(m_top_pointer)
     {
+      m_character_counter -= m_top_pointer->m_line.m_display_length;
+
         if(m_current_pointer == m_top_pointer)
         {
           m_current_pointer = m_current_pointer->m_next;
@@ -202,9 +212,11 @@ START:
     {
       auto&  ln = m_current_pointer->m_line;
 
-        if(ln.m_display_length < ln.m_content_length)
+        if(!ln.is_displaying_all())
         {
           ++ln.m_display_length;
+
+          --m_character_counter;
 
           return true;
         }
@@ -232,8 +244,10 @@ START:
     {
       auto&  ln = m_current_pointer->m_line;
 
-        if(ln.m_display_length < ln.m_content_length)
+        if(!ln.is_displaying_all())
         {
+          m_character_counter -= ln.m_content_length-ln.m_display_length;
+
           ln.m_display_length = ln.m_content_length;
 
           return true;
@@ -250,6 +264,30 @@ START:
 
 
   return false;
+}
+
+
+void
+text::
+print() const noexcept
+{
+  printf("text{\n");
+
+    for(auto&  ln: *this)
+    {
+      utf8_encoder  enc;
+
+        for(auto  c: ln)
+        {
+          printf("%s",enc(c).codes);
+        }
+
+
+      printf("\n");
+    }
+
+
+  printf("}\n");
 }
 
 

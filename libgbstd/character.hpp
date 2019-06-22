@@ -93,11 +93,14 @@ public:
 
   bool  is_full() const noexcept{return m_content_length >= m_buffer_length;}
 
+  bool  is_displaying_all() const noexcept{return m_display_length == m_content_length;}
+
   void  push(char16_t  c) noexcept{m_buffer[m_content_length++] = c;}
 
   int  get_length() const noexcept{return m_content_length;}
+  int  get_display_length() const noexcept{return m_display_length;}
 
-  std::u16string  get_view() const noexcept{return std::u16string(m_buffer,m_display_length);}
+  std::u16string_view  get_view() const noexcept{return std::u16string_view(m_buffer,m_display_length);}
 
   const char16_t*  begin() const noexcept{return m_buffer                 ;}
   const char16_t*    end() const noexcept{return m_buffer+m_display_length;}
@@ -120,6 +123,8 @@ text
   node*  m_bottom_pointer=nullptr;
 
   node*  m_current_pointer=nullptr;
+
+  uint32_t  m_character_counter=0;
 
   int  m_number_of_lines=0;
 
@@ -148,6 +153,11 @@ public:
 
   bool  expose_one_character() noexcept;
   bool  expose_all_characters_of_current_line() noexcept;
+
+  bool  is_displaying_all_characters() const noexcept{return !m_character_counter;}
+
+  void  print() const noexcept;
+
 
   class iterator{
     const node*  m_pointer=nullptr;

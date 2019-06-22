@@ -24,10 +24,10 @@ clock
   std::string  m_name;
   std::string    m_id;
 
+  int  m_permil=1000;
+
   uint32_t  m_time=0;
   uint32_t  m_fraction=0;
-
-  int  m_permil=1000;
 
   status_value<int>  m_status;
 
@@ -36,11 +36,15 @@ clock
     static constexpr int  pausing = 2;
   };
 
-
   friend class clock_master;
 
 public:
   clock() noexcept{}
+
+  clock&  clear() noexcept;
+  clock&  reset(uint32_t  time=0, uint32_t  fraction=0) noexcept;
+
+  clock&  add(uint32_t  t) noexcept;
 
   operator bool() const noexcept{return m_status.test(flags::working) && !m_status.test(flags::pausing);}
 
@@ -51,7 +55,6 @@ public:
   const std::string&  get_id()   const noexcept{return m_id;}
 
   const uint32_t&   get_time() const noexcept{return m_time;}
-  const int&      get_permil() const noexcept{return m_permil;}
 
   bool  is_working() const noexcept{return m_status.test(flags::working);}
   bool  is_pausing() const noexcept{return m_status.test(flags::pausing);}
@@ -62,11 +65,8 @@ public:
   clock&    pause() noexcept{  m_status.set(  flags::pausing);  return *this;}
   clock&  unpause() noexcept{  m_status.unset(flags::pausing);  return *this;}
 
-  clock&  reset(uint32_t  time=0, uint32_t  fraction=0) noexcept;
-
-  clock&  add(uint32_t  t) noexcept;
-
-  clock&  set_permil(int  v) noexcept{  m_permil = v;  return *this;}
+  int     get_permil(      ) const noexcept{return m_permil;}
+  clock&  set_permil(int  v)       noexcept{  m_permil = v;  return *this;}
 
 };
 
@@ -330,6 +330,8 @@ protected:
 
   int  m_jump_value;
 
+  clock  m_equipped_clock;
+
   bool  m_jump_flag=false;
   bool  m_verbose_flag=false;
   bool  m_pc_barrier=false;
@@ -349,6 +351,8 @@ public:
  ~execution(){clear();}
 
   operator bool() const noexcept{return m_lc;}
+
+  clock&  get_equipped_clock() noexcept{return m_equipped_clock;}
 
   int     set_jump(execution_context&  ctx) noexcept;
   void  unset_jump() noexcept;

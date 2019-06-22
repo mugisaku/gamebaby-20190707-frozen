@@ -22,6 +22,8 @@ void
 context::
 run(gbstd::execution&  exec, context&  ctx) noexcept
 {
+  exec.set_background_color(gbstd::colors::black);
+
   ctx.m_clock.set_name("standard")
     .set_id("standard")
     .set_permil(1000)
@@ -72,7 +74,7 @@ wait_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
 
         if(!v)
         {
-          ctx.m_section.load_opening(exec,xctx);
+          ctx.m_section.load_opening(ctx.m_system,exec,xctx);
         }
 
       else

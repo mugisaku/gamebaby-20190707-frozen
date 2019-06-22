@@ -35,6 +35,9 @@ update_clocks() noexcept
     {
       ptr->add(diff);
     }
+
+
+  m_equipped_clock.add(diff);
 }
 
 

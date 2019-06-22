@@ -102,10 +102,10 @@ draw_rect(direct_color_image&  img, uint8_t  l, int  x, int  y, int  w, int  h) 
 void
 draw_rect(direct_color_image&  img, uint8_t  l, int  n, double  time, double  t) noexcept
 {
-  auto  diff = (time-t)/*(1-(t/time))*/;
+  auto  diff = (time-t)*(1-(t/time));
 
-  int  w = (img.get_width() /time*(diff));
-  int  h = (img.get_height()/time*(diff));
+  int  w = (img.get_width() /time*diff);
+  int  h = (img.get_height()/time*diff);
 
   int  x = (img.get_width() /2)-(w/2);
   int  y = (img.get_height()/2)-(h/2);
@@ -135,7 +135,16 @@ draw_rect(direct_color_image&  img, uint8_t  l, int  n, double  time, double  t)
 int
 main(int  argc, char**  argv)
 {
-  constexpr int   time_ms = 6*1000;
+  int  sec = 10;
+
+    if(argc == 2)
+    {
+      sscanf(argv[1],"%d",&sec);
+    }
+
+
+  int  time_ms = sec*1000;
+
   constexpr int  delay_ms = 60;
 
   image_header  ihdr(g_screen_w,g_screen_h);

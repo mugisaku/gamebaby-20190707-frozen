@@ -67,6 +67,8 @@ reset() noexcept
 
   m_jump_flag = false;
 
+  m_equipped_clock.reset();
+
   m_memory[g_offset_of_previous_pc] = 0;
   m_memory[g_offset_of_previous_bp] = 0;
 

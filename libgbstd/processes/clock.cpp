@@ -12,12 +12,22 @@ namespace gbstd{
 
 clock&
 clock::
+clear() noexcept
+{
+  reset();
+
+  m_status.clear();
+
+  return *this;
+}
+
+
+clock&
+clock::
 reset(uint32_t  time, uint32_t  fraction) noexcept
 {
   m_time     =     time;
   m_fraction = fraction;
-
-  m_status.clear();
 
   return *this;
 }

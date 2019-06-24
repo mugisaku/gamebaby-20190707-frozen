@@ -31,7 +31,7 @@ run(gbstd::execution&  exec, context&  ctx) noexcept
 
   exec.add_clock(ctx.m_clock);
 
-  exec.push({
+  exec.push_frame({
     {"*",start_display_logo,ctx},
     {"*", wait_display_logo,ctx},
   });
@@ -68,19 +68,7 @@ wait_display_logo(gbstd::execution&  exec, context&  ctx) noexcept
 {
     if(!ctx.m_system.get_spilling_text_counter())
     {
-      gbstd::execution_context  xctx;
-
-      auto  v = exec.set_jump(xctx);
-
-        if(!v)
-        {
-          ctx.m_section.load_opening(ctx.m_system,exec,xctx);
-        }
-
-      else
-        {
-          exec.unset_jump();
-        }
+      new(&ctx.m_front_section) front_section(ctx.m_system,exec);
     }
 }
 

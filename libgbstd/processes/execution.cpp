@@ -22,7 +22,7 @@ execution&
 execution::
 operator++() noexcept
 {
-    if(m_pc_barrier)
+    if(m_status.test(flags::pc_barrier))
     {
       printf("execution error: pc is barriered\n");
     }
@@ -52,6 +52,8 @@ clear() noexcept
   m_clock_list.clear();
   m_task_list.clear();
 
+  m_status.clear();
+
   return *this;
 }
 
@@ -65,15 +67,12 @@ reset() noexcept
   m_sp = 0;
   m_bp = 0;
 
-  m_jump_flag = false;
-
   m_equipped_clock.reset();
 
   m_memory[g_offset_of_previous_pc] = 0;
   m_memory[g_offset_of_previous_bp] = 0;
 
-  m_verbose_flag = false;
-  m_pc_barrier   = false;
+  m_status.clear();
 
   return *this;
 }
@@ -81,20 +80,32 @@ reset() noexcept
 
 
 
-int
+execution_context
 execution::
-set_jump(execution_context&  ctx) noexcept
+get_context() const noexcept
 {
-    if(m_jump_flag)
-    {
-      return m_jump_value;
-    }
-
+  execution_context  ctx;
 
   ctx.m_pc = m_pc;
   ctx.m_lc = m_lc;
   ctx.m_sp = m_sp;
   ctx.m_bp = m_bp;
+
+  return ctx;
+}
+
+
+int
+execution::
+set_jump(execution_context&  ctx) noexcept
+{
+    if(m_status.test(flags::jumped))
+    {
+      return m_jump_value;
+    }
+
+
+  ctx = get_context();
 
   return 0;
 }
@@ -102,10 +113,22 @@ set_jump(execution_context&  ctx) noexcept
 
 void
 execution::
-unset_jump() noexcept
+pop_current_context(int  v) noexcept
 {
-  m_jump_flag = false;
+    if(m_context_stack.empty())
+    {
+      report;
+    }
+
+  else
+    {
+      jump(m_context_stack.back(),v);
+
+      m_context_stack.pop_back();
+    }
 }
+
+
 
 
 void
@@ -117,7 +140,7 @@ jump(const execution_context&  ctx, int  v) noexcept
   m_sp = ctx.m_sp;
   m_bp = ctx.m_bp;
 
-  m_jump_flag = true;
+  m_status.set(flags::jumped);
 
   m_jump_value = !v? 1:v;
 }
@@ -127,7 +150,7 @@ jump(const execution_context&  ctx, int  v) noexcept
 
 execution&
 execution::
-push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
+push_frame(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 {
   auto  prev_pc = m_pc;
   auto  prev_bp = m_bp;
@@ -152,7 +175,7 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 
   ++m_lc;
 
-    if(test_verbose_flag())
+    if(m_status.test(flags::verbose))
     {
       print();
 
@@ -160,32 +183,9 @@ push(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
     }
 
 
-  m_pc_barrier = true;
+  m_status.set(flags::pc_barrier);
 
-
-  return *this;
-}
-
-
-execution&
-execution::
-replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
-{
-  m_memory[m_bp+g_offset_of_frame_nameptr] = name? reinterpret_cast<uintptr_t>(name):0;
-
-         m_pc = m_bp+g_offset_of_entry_array;
-  m_sp = m_pc                               ;
-
-    for(auto  ent: ls)
-    {
-      m_memory[m_sp++] = ent.m_nameptr;
-      m_memory[m_sp++] = ent.m_callback;
-      m_memory[m_sp++] = ent.m_data;
-    }
-
-
-  m_pc_barrier = true;
-
+  unset_jump();
 
   return *this;
 }
@@ -193,7 +193,7 @@ replace(std::initializer_list<execution_entry>  ls, const char*  name) noexcept
 
 execution&
 execution::
-pop() noexcept
+pop_frame() noexcept
 {
     if(m_lc)
     {
@@ -215,6 +215,8 @@ pop() noexcept
       --m_lc;
     }
 
+
+  unset_jump();
 
   return *this;
 }

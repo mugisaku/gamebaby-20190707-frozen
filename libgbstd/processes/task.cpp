@@ -77,7 +77,8 @@ sleep(uint32_t  t) noexcept
   m_status.set(flags::sleep);
   m_status.set(flags::alarm);
 
-  update_next_time();
+  m_last_time = m_clock_watch.get_time();
+  m_next_time = m_last_time+t;
 
   return *this;
 }

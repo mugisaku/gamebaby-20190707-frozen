@@ -328,13 +328,19 @@ protected:
 
   std::vector<uintptr_t>  m_memory;
 
+  std::vector<execution_context>  m_context_stack;
+
   int  m_jump_value;
 
   clock  m_equipped_clock;
 
-  bool  m_jump_flag=false;
-  bool  m_verbose_flag=false;
-  bool  m_pc_barrier=false;
+  status_value<int>  m_status;
+
+  struct flags{
+    static constexpr int  verbose    = 1;
+    static constexpr int  pc_barrier = 2;
+    static constexpr int  jumped     = 4;
+  };
 
   execution() noexcept: m_memory(800){}
 
@@ -354,13 +360,22 @@ public:
 
   clock&  get_equipped_clock() noexcept{return m_equipped_clock;}
 
+  execution_context  get_context() const noexcept;
+
+  execution&  push_current_context(      ) noexcept{  m_context_stack.emplace_back(get_context());  return *this;}
+  void         pop_current_context(int  v) noexcept;
+
   int     set_jump(execution_context&  ctx) noexcept;
-  void  unset_jump() noexcept;
+  void  unset_jump() noexcept{m_status.unset(flags::jumped);}
   void  jump(const execution_context&  ctx, int  v) noexcept;
 
-  bool  test_verbose_flag() const noexcept{return m_verbose_flag;}
-  execution&    set_verbose_flag() noexcept{  m_verbose_flag =  true;  return *this;}
-  execution&  unset_verbose_flag() noexcept{  m_verbose_flag = false;  return *this;}
+  bool  is_jumped() const noexcept{return m_status.test(flags::jumped);}
+
+  int  get_jump_value() const noexcept{return m_jump_value;}
+
+  bool  test_verbose_flag() const noexcept{return m_status.test(flags::verbose);}
+  execution&    set_verbose_flag() noexcept{  m_status.set(  flags::verbose);  return *this;}
+  execution&  unset_verbose_flag() noexcept{  m_status.unset(flags::verbose);  return *this;}
 
   execution&  add_clock(clock&  cl) noexcept{  m_clock_list.emplace_back(&cl);  return *this;}
   execution&   add_task(task&  tsk) noexcept{  m_task_list.emplace_back(&tsk);  return *this;}
@@ -384,10 +399,8 @@ public:
   const uint32_t&  get_sp() const noexcept{return m_sp;}
   const uint32_t&  get_bp() const noexcept{return m_bp;}
 
-  execution&     push(std::initializer_list<execution_entry>  ls, const char*  name=nullptr) noexcept;
-  execution&  replace(std::initializer_list<execution_entry>  ls, const char*  name=nullptr) noexcept;
-
-  execution&  pop() noexcept;
+  execution&  push_frame(std::initializer_list<execution_entry>  ls, const char*  name=nullptr) noexcept;
+  execution&   pop_frame() noexcept;
 
   execution&  operator++() noexcept;
 

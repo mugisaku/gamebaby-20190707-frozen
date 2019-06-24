@@ -16,7 +16,7 @@ assign(std::string_view  name, execution_entry  start) noexcept
 
   m_name = name;
 
-  push({start});
+  push_frame({start},"initial frame");
 
   return *this;
 }
@@ -86,7 +86,7 @@ operator()() noexcept
 
     while(*this)
     {
-      m_pc_barrier = false;
+      m_status.unset(flags::pc_barrier);
 
         if(m_pc < m_sp)
         {
@@ -104,7 +104,7 @@ operator()() noexcept
 
           cb(*this,*data);
 
-            if(!--counter || ent.test_interruption() || m_jump_flag)
+            if(!--counter || ent.test_interruption())
             {
               break;
             }
@@ -112,7 +112,7 @@ operator()() noexcept
 
       else
         {
-          pop();
+          pop_frame();
         }
     }
 

@@ -2,7 +2,7 @@
 #define ww_context_hpp_is_included
 
 
-#include"libww/ww_section.hpp"
+#include"libww/ww_front_section.hpp"
 
 
 
@@ -27,7 +27,9 @@ context
   static constexpr int  m_screen_width  = 288;
   static constexpr int  m_screen_height = 288;
 
-  section  m_section;
+  union{
+    front_section  m_front_section;
+  };
 
   party  m_left_party;
   party  m_right_party;

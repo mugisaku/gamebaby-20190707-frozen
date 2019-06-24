@@ -35,6 +35,12 @@ initializer() noexcept
     {
       g_table[gly.unicode] = &gly;
     }
+
+
+    for(int  i = 0x00;  i <= 0x5E;  ++i)
+    {
+      g_table[0xFF00+i] = g_table[' '+i];
+    }
 }
 }
 

@@ -2,22 +2,32 @@
 #include"libgbstd/utility.hpp"
 #include"libgbstd/process.hpp"
 #include"libgbstd/file_op.hpp"
+#include"libgbstd/gadget.hpp"
 #include"sdl.hpp"
-#include<list>
-#include<vector>
 
 
-
-
-#ifdef EMSCRIPTEN
-#include<emscripten.h>
-#endif
 
 
 using namespace gbstd;
 
 
 namespace{
+
+
+tile_source
+g_source;
+
+
+tile_map
+g_map;
+
+
+tile_map_view
+g_map_view;
+
+
+canvas
+g_screen_canvas;
 
 
 void
@@ -29,11 +39,19 @@ main_loop() noexcept
 
   sdl::update_control();
 
+constexpr int  v = 1;
+if(g_input.test_up()   ){g_map_view.add_offset_y(-v);}
+if(g_input.test_down() ){g_map_view.add_offset_y( v);}
+if(g_input.test_left() ){g_map_view.add_offset_x(-v);}
+if(g_input.test_right()){g_map_view.add_offset_x( v);}
+
     if(gbstd::g_time >= next)
     {
-//      g_screen_canvas.fill(color());
+      g_screen_canvas.fill(color());
 
-//      sdl::update_screen(g_screen_canvas);
+      g_map_view.render(g_screen_canvas);
+
+      sdl::update_screen(g_screen_canvas);
 
       next = gbstd::g_time+delay;
     }
@@ -48,13 +66,30 @@ main_loop() noexcept
 int
 main(int  argc, char**  argv)
 {
-/*
   constexpr int  screen_w = 320;
   constexpr int  screen_h = 320;
+
+  constexpr int  tile_size = 16;
 
   sdl::init(screen_w,screen_h);
 
   g_screen_canvas = sdl::make_screen_canvas();
+
+  g_source.make(tile_size,tile_size,4);
+
+  auto  cv = g_source.get_canvas(0);
+
+  cv.draw_rectangle(colors::white,0,0,tile_size,tile_size);
+  cv.draw_rectangle(colors::black,1,1,tile_size-2,tile_size-2);
+  cv.draw_string(colors::red,"A",0,0);
+
+  g_map.resize(320/tile_size,320/tile_size);
+
+  g_map_view.set_source(&g_source)
+    .set_map(&g_map)
+    .set_width(320)
+    .set_height(320)
+  ;
 
     for(;;)
     {
@@ -65,27 +100,6 @@ main(int  argc, char**  argv)
 
 
   sdl::quit();
-*/
-auto  s = make_string_from_file(argv[1]);
-auto  p = reinterpret_cast<const uint8_t*>(s.data());
-auto  end = reinterpret_cast<const uint8_t*>(s.data()+s.size());
-
-while(p < end)
-{
-    if(ogg_page::test(p))
-    {
-      ogg_page  pg;
-
-      p = pg.read(p);
-    }
-
-  else
-    {
-      ++p;
-    }
-}
-
-
 
   return 0;
 }

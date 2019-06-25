@@ -181,6 +181,7 @@ canvas
 
 public:
   canvas() noexcept{}
+  canvas(pixel*  ptr, int  src_w, int  w, int  h) noexcept{assign(ptr,src_w,w,h);}
   canvas(const image&  img) noexcept{assign(img);}
   canvas(const image&  img, int  x, int  y, int  w, int  h) noexcept{assign(img,x,y,w,h);}
   canvas(const image&  img, const rectangle&  rect) noexcept{assign(img,rect);}
@@ -192,6 +193,7 @@ public:
   bool  operator==(const canvas&  rhs) const noexcept;
   bool  operator!=(const canvas&  rhs) const noexcept{return !(*this == rhs);}
 
+  canvas&  assign(pixel*  ptr, int  src_w, int  w, int  h) noexcept;
   canvas&  assign(const image&  img                                ) noexcept;
   canvas&  assign(const image&  img, int  x, int  y, int  w, int  h) noexcept;
   canvas&  assign(const image&  img, const rectangle&  rect) noexcept{return assign(img,rect.x,rect.y,rect.w,rect.h);}

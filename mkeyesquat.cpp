@@ -179,7 +179,7 @@ main(int  argc, char**  argv)
     }
 
 
-  auto  ls = ani.build();
+  auto  ls = ani.build(delay_ms);
 
   ls.write_png_to_file("eyesquat.apng");
 

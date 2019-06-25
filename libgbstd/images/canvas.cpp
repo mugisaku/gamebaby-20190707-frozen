@@ -23,6 +23,21 @@ operator==(const canvas&  rhs) const noexcept
 
 canvas&
 canvas::
+assign(pixel*  ptr, int  src_w, int  w, int  h) noexcept
+{
+  m_pointer = ptr;
+
+  m_source_width = src_w;
+
+  m_width  = w;
+  m_height = h;
+
+  return *this;
+}
+
+
+canvas&
+canvas::
 assign(const image&  img) noexcept
 {
   return assign(img,0,0,img.get_width(),img.get_height());

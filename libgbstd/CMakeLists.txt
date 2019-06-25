@@ -16,6 +16,9 @@ set(SOURCES
   images/canvas__draw.cpp
   images/canvas__draw_string.cpp
   images/liner.cpp
+  gadgets/tile_source.cpp
+  gadgets/tile_map.cpp
+  gadgets/tile_map_view.cpp
   values/object.cpp
   values/array.cpp
   values/object.cpp
